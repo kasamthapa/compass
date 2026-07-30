@@ -6,6 +6,7 @@ import { WeekPage } from './pages/WeekPage'
 import { GoalsPage } from './pages/GoalsPage'
 import { JournalPage } from './pages/JournalPage'
 import { InsightsPage } from './pages/InsightsPage'
+import { DevPage } from './pages/DevPage'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/goals" element={<GoalsPage />} />
         <Route path="/journal" element={<JournalPage />} />
         <Route path="/insights" element={<InsightsPage />} />
+        <Route path="/dev" element={<DevPage />} />
         <Route path="*" element={<Navigate to="/today" replace />} />
       </Routes>
     </AppShell>
