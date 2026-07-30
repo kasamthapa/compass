@@ -10,7 +10,21 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+build
+coverage
 *.local
+
+# Env files — never commit secrets
+.env
+.env.*
+!.env.example
+
+# vite-plugin-pwa generated artifacts — regenerated on every build,
+# should never be tracked from source
+dev-dist
+sw.js
+workbox-*.js
+registerSW.js
 
 # Editor directories and files
 .vscode/*

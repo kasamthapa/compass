@@ -1,5 +1,14 @@
 # Progress
 
+## Standing note: pre-commit hygiene
+
+Before every `git add`/commit, verify the staged set does not include
+`node_modules`, `dist`, `dev-dist`, any `.env`/`.env.*` file, `.DS_Store`, or
+other OS/editor junk. `git status --short` after staging is the quick check.
+Never commit secrets or generated build output — `.gitignore` covers all of
+the above (see the 2026-07-30 hygiene audit below), but it only prevents
+*accidental* `git add .`; anything added by explicit path still bypasses it.
+
 ## Phase 0 — Scaffold
 
 ### What was built
@@ -177,3 +186,19 @@ UI-only pass. No new routes, features, or data logic.
 - Add a11y live-region announcement when a capture item saves.
 - Consider adding `prefers-contrast: more` support once real content
   exists to test against.
+
+## Repo hygiene audit — 2026-07-30
+
+Ran a full audit (`git ls-files` cross-checked against `node_modules/`,
+`dist/`, `.env*`, `.DS_Store` patterns) to look for anything tracked that
+shouldn't be. Result: **nothing was actually tracked** — `node_modules` and
+`dist` exist on disk but were already correctly excluded by the original
+`.gitignore`, and no `.env` or `.DS_Store` file has ever existed in this
+repo. No secrets were ever committed or pushed; nothing to rotate.
+
+Still hardened `.gitignore` per request, adding: `build/`, `coverage/`,
+explicit `.env`/`.env.*` (with a `!.env.example` exception, standard
+practice), and the `vite-plugin-pwa` generated artifacts (`dev-dist/`,
+`sw.js`, `workbox-*.js`, `registerSW.js`) that only exist post-build and
+should never be tracked from source. No files were untracked since none
+matched.
