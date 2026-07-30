@@ -1,13 +1,19 @@
+import type { ComponentType } from 'react'
+import { PageHeader } from './PageHeader'
+import { EmptyState } from './EmptyState'
+
 interface PagePlaceholderProps {
   title: string
+  icon: ComponentType<{ className?: string }>
+  emptyTitle: string
+  emptyMessage: string
 }
 
-export function PagePlaceholder({ title }: PagePlaceholderProps) {
+export function PagePlaceholder({ title, icon, emptyTitle, emptyMessage }: PagePlaceholderProps) {
   return (
-    <div className="flex min-h-[50vh] items-center justify-center">
-      <h1 className="font-display text-2xl font-semibold text-text">
-        {title}
-      </h1>
+    <div>
+      <PageHeader title={title} />
+      <EmptyState icon={icon} title={emptyTitle} message={emptyMessage} />
     </div>
   )
 }
