@@ -246,3 +246,97 @@ UI-only. Fixes specific "not-native" tells left over from Phase 0.5.
 ### Known issues / follow-ups
 
 - None new. Carries forward the Phase 0.5 follow-ups list above.
+
+## Phase 1 — Local data layer (Dexie)
+
+Data only. No new screens/visual features except wiring the existing
+capture dialog to persist for real.
+
+### What was built
+
+- **`src/db/db.ts`**: `CompassDB` (Dexie, database name `compass`), version 1,
+  one table per `src/types/models.ts` interface (`captures`, `habits`,
+  `habitLogs`, `tasks`, `goals`, `milestones`, `weeklyPriorities`,
+  `journalEntries`, `reviews`, `syncQueue`), indexed per the requested query
+  patterns (`habitLogs`: `[habitId+date]` + `date`; `tasks`: `date`,
+  `weeklyPriorityId`, `goalId`, `status`; `milestones`: `goalId`, `month`;
+  `weeklyPriorities`: `weekOf`; `journalEntries`: `date`; `reviews`:
+  `[type+periodKey]`). `captures.processed` and `tasks.isMIT` are
+  deliberately *not* indexed — see "Boolean fields are never Dexie indexes"
+  in [DECISIONS.md](DECISIONS.md).
+- **`src/db/rules.ts`**: `canActivateHabit()`, `canAddMIT(date)`,
+  `canAddWeeklyPriority(weekOf)`, and `RuleViolationError` (typed, carries a
+  `code`). Enforces the product-law limits from CLAUDE.md rule 3.
+- **`src/db/repo/*.ts`** — the only files besides `db.ts`/`rules.ts` that
+  touch Dexie directly: `captures.ts`, `habits.ts`, `tasks.ts`, `goals.ts`,
+  `milestones.ts`, `weeklyPriorities.ts`, `journal.ts`, `reviews.ts`. Every
+  mutation sets `updatedAt`; every read filters out `deletedAt` records;
+  `create`/soft-delete/update per the phase spec, plus:
+  - `habits.logHabit(habitId, date, status)` — toggle: same status again
+    removes the log (soft-delete), different status switches it, no log
+    creates one. Returns the resulting log or `null` if removed.
+  - `habits.weeklyHitRate(habitId, weekOf)` — uses the `[habitId+date]`
+    compound index via `.anyOf()` over the week's 7 dates.
+  - `goals.progress(goalId)` — % of that goal's non-deleted milestones with
+    `status === 'done'`.
+  - `tasks.update()` re-checks the MIT limit only when a task is newly
+    becoming an MIT for a given date (not on every unrelated field edit).
+- **`src/lib/dates.ts`**: `todayISO`, `nowISO`, `weekOf` (Monday-start, see
+  DECISIONS.md), `monthKey`, `addDays`, `formatDay`. All date-only values
+  are parsed via local `Date` components (`parseDateISO`), never
+  `new Date(isoString)` directly, to avoid UTC-offset day-shift bugs.
+- **Capture dialog now persists for real**: `captureStore.ts` is down to
+  just `isOpen`/`open`/`close`; `CaptureDialog.tsx` calls
+  `captures.create(text)` directly and closes optimistically (fire-and-
+  forget with a `.catch` that logs, per CLAUDE.md's "no spinners for local
+  operations" — Dexie writes are fast enough that waiting isn't
+  necessary). No other visual change.
+- **`src/db/seed.ts`** + hidden **`/dev`** route (`src/pages/DevPage.tsx`,
+  not in `navConfig`): `seedDatabase()` is idempotent (skips if any habit
+  already exists) and creates 3 active habits with 3 weeks of varied
+  done/skipped/empty logs, 2 goals with 2 milestones each, 5 tasks this
+  week (2 MIT today), and 4 journal entries with mood/energy.
+  `wipeAllData()` clears every table in one transaction; the Seed/Wipe
+  buttons on `/dev` are plain buttons, Wipe gated by `window.confirm`.
+- **Tests** (`src/db/__tests__/`, Vitest + `fake-indexeddb`): habit toggle
+  (empty→done→removed, done→skipped switch), max-5 active habits, max-3
+  MITs/day, `weeklyHitRate` math, capture create→getUnprocessed→
+  markProcessed flow, and soft-delete exclusion. 8 tests, all passing.
+
+### Key decisions
+
+- **Boolean fields are not Dexie indexes.** IndexedDB has no valid boolean
+  key type — an index on `processed`/`isMIT` would silently never match any
+  record. Filtered client-side after an indexed lookup on a sibling field
+  instead. Full writeup in DECISIONS.md; flagging here since the phase
+  prompt explicitly asked for `captures processed` and `tasks isMIT` as
+  indexes and this deviates from a literal reading of that ask.
+- **`vite.config.ts`'s `defineConfig` now imports from `vitest/config`**
+  (not `vite`) so the same config file can carry a `test` block with proper
+  types, instead of a separate `vitest.config.ts`. Test environment is
+  `node` (not `jsdom`) since these are pure data-layer tests — no DOM
+  needed, `fake-indexeddb/auto` (imported in `src/test/setup.ts`) is the
+  only polyfill required.
+- **Capture dialog closes optimistically, not after awaiting the write.**
+  Matches CLAUDE.md's speed/no-spinner rule; the write failure path is
+  `console.error`, not a user-facing error — acceptable for a personal
+  local-first app where writes practically never fail.
+- **`update()` on tasks/habits takes a `Partial<Pick<...>>` of just the
+  mutable fields**, not the full record — keeps callers from
+  accidentally overwriting `id`/`createdAt`/etc., and keeps the MIT
+  re-check in `tasks.update()` scoped to only when MIT-ness or its date
+  actually changes (not every edit).
+
+### Known issues / follow-ups
+
+- No UI reads any of this data yet (Today/Inbox/Week/etc. are still empty
+  placeholders) — that's the next phase's job; this phase only had to prove
+  the data layer works, which the test suite plus a manual seed/capture/
+  wipe pass in a real browser (not just `fake-indexeddb`) confirmed.
+- `RuleViolationError` is thrown but nothing catches it yet outside tests —
+  UI-level error messaging (e.g. "You already have 5 active habits") is
+  future work once habit-creation UI exists.
+- `tasks.getForWeek` / `weeklyPriorities.getForWeek` both take a Monday
+  `weekOf` string directly rather than accepting an arbitrary date and
+  resolving it internally — callers are expected to pass `weekOf(date)`
+  themselves, consistent with how `WeeklyPriority.weekOf` is stored.
