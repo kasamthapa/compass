@@ -25,7 +25,7 @@
   /* radii */
   --radius-sm: 0.5rem; /* 8px — chips, small controls */
   --radius-md: 0.75rem; /* 12px — buttons, inputs */
-  --radius-lg: 1rem; /* 16px — inset-grouped cards */
+  --radius-lg: 1.125rem; /* 18px — inset-grouped cards */
   --radius-xl: 1.5rem; /* 24px — sheet top corners */
   --radius-full: 999px;
 
