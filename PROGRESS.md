@@ -72,5 +72,108 @@
 
 - Add an ErrorBoundary around the route tree / capture dialog.
 - Add a11y live-region announcement when a capture item saves.
-- Consider `prefers-color-scheme` light theme support once dark theme is
-  validated (spec says dark-only "for now").
+
+## Phase 0.5 — iOS-feel polish + light/dark theme system
+
+UI-only pass. No new routes, features, or data logic.
+
+### What was built
+
+- **Semantic theme tokens** (`src/styles/tokens.css`): every color is now a
+  semantic variable (`--bg`, `--surface`, `--surface-elevated`,
+  `--border-hairline`, `--text`, `--text-muted`, `--text-faint`, `--accent`,
+  `--accent-on`, `--accent-wash`, `--accent-ring`, `--good`, `--overlay`,
+  `--tabbar-bg`) defined twice — once under `:root, :root[data-theme='dark']`
+  and once under `:root[data-theme='light']`. No component references a raw
+  hex value. Also added motion (`--ease-ios`), shadow (`--shadow-card`,
+  `--shadow-fab`, `--shadow-sheet`), and an expanded radius scale
+  (`--radius-sm/md/lg/xl/full`).
+- **Theme store** (`src/store/themeStore.ts`): Zustand store holding
+  `preference: 'system' | 'light' | 'dark'`, persisted to `localStorage`
+  (`compass-theme`), resolves to `light`/`dark` and applies `data-theme` on
+  `<html>` plus updates the `theme-color` meta tag so the mobile status bar
+  matches. Listens to the `prefers-color-scheme` media query and re-resolves
+  live when `preference === 'system'`.
+- **No-flash boot**: an inline synchronous script in `index.html` (before any
+  other head tag) reads the stored preference and system preference and sets
+  `data-theme` before first paint, so there's no flash of the wrong theme.
+- **ThemeToggle** (`src/components/ThemeToggle.tsx`): a small unobtrusive
+  3-way segmented control (System/Light/Dark icons) placed in each page's
+  header — temporary, until a real settings screen exists.
+- **iOS type scale** (`tailwind.config.js`): `large-title` (34px/700,
+  tight tracking), `title` (22px/600), `headline` (17px/600), `body`
+  (17px), `subhead` (15px), `caption` (13px), `caption-2` (11px, tab bar
+  labels).
+- **Inset-grouped cards**: `EmptyState` renders each placeholder page's
+  empty message inside a `rounded-lg` (16px) `bg-surface` card with
+  `shadow-card` — soft elevation instead of a hard border.
+- **iOS-native nav**: `BottomTabBar` is a frosted (`backdrop-blur-xl`),
+  translucent (`bg-tabbar`), safe-area-aware
+  (`pb-[env(safe-area-inset-bottom)]`) tab bar with icon-over-label per tab,
+  active tab in accent. `LeftRail` softened — hairline instead of a hard
+  border, accent-wash pill for the active item, icons added for parity.
+- **Capture sheet**: `CaptureDialog` now presents as a true iOS sheet on
+  mobile — slides up from the bottom, rounded top corners, grab handle,
+  dimmed backdrop — and as a centered fade/scale modal on desktop (`md:`).
+  Built with a `mounted`/`entered` state pair (not a library) so it can
+  animate on both mount *and* unmount; exit takes 220ms before actually
+  unmounting.
+- **Motion**: `.ios-press` utility class (`src/styles/tokens.css`) gives
+  buttons/rows/nav items a 0.97 scale + opacity dip on `:active` using the
+  `--ease-ios` cubic-bezier. Centralized in plain CSS (not Tailwind
+  `active:` variants) so the `prefers-reduced-motion` override reliably
+  wins regardless of utility ordering — it forces `transform: none` on
+  `.ios-press:active` and `.ios-sheet` under reduced motion, not just a
+  faster transition.
+- **Icons** (`src/components/icons.tsx`): minimal inline stroke SVGs
+  (24px, `currentColor`, no icon library dependency) for all six nav
+  items and the three theme states, plus a plus-icon for the FAB.
+- **Tap targets**: all interactive controls (nav links, tab bar items,
+  theme toggle segments, dialog buttons) are ≥44px (Tailwind's `11` =
+  2.75rem = 44px).
+
+### Key decisions
+
+- **CSS-variable colors, not Tailwind's `dark:` class strategy.** Every
+  component already only ever references semantic Tailwind color
+  utilities (`bg-surface`, `text-muted`, etc.) that resolve through CSS
+  custom properties gated on `[data-theme]`. This means zero `dark:`
+  variants needed anywhere — the same class works in both themes. Removed
+  `darkMode: 'class'` from `tailwind.config.js` since it's unused.
+- **Dedicated `--accent-wash`/`--accent-ring` tokens instead of Tailwind
+  opacity modifiers** (`bg-accent/10`). Tailwind v3's color-opacity
+  modifier syntax needs the color defined as an RGB triplet fed through
+  `rgb(var(--x) / <alpha-value>)`; our tokens are plain hex/rgba strings,
+  so `/10` wouldn't reliably resolve. Explicit translucent tokens are
+  simpler and correct in both themes.
+- **No animation library.** The capture sheet's enter/exit transitions are
+  done with a `mounted`/`entered` boolean pair and plain Tailwind
+  transition utilities, not Framer Motion — this is a UI-only polish
+  pass, so no new runtime dependency.
+- **Reduced-motion handled via a dedicated CSS class, not Tailwind's
+  `motion-reduce:` variant.** Combining `active:scale-97` with
+  `motion-reduce:active:scale-100` risks losing to Tailwind's utility
+  source-order rules. Centralizing press-state and sheet-transform
+  overrides in tokens.css under one `@media (prefers-reduced-motion:
+  reduce)` block guarantees the override wins.
+- **Empty-state copy is static per page**, not computed — kept simple to
+  avoid introducing any data logic ahead of Phase 1.
+
+### Known issues / follow-ups
+
+- `ThemeToggle` is intentionally temporary UI (per phase prompt) — replace
+  with a real settings screen entry later.
+- No automated tests for theme persistence/system-preference syncing;
+  verified manually in-browser (localStorage persistence across
+  navigation, live system-preference change via `matchMedia`).
+- Accent hex differs between themes (`#e8a33d` dark / `#b4741f` light) by
+  design — the darker light-mode amber is needed for text contrast on a
+  white/near-white surface; flagged here in case it's ever compared
+  pixel-for-pixel against the original single-hex spec.
+
+### Suggestions (not built — out of scope for this phase)
+
+- Add an ErrorBoundary around the route tree / capture dialog.
+- Add a11y live-region announcement when a capture item saves.
+- Consider adding `prefers-contrast: more` support once real content
+  exists to test against.
