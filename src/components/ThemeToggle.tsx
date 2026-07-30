@@ -15,7 +15,7 @@ export function ThemeToggle() {
     <div
       role="group"
       aria-label="Theme"
-      className="flex items-center gap-0.5 rounded-full bg-surface p-1 shadow-card"
+      className="flex shrink-0 items-center gap-0.5 rounded-full bg-surface p-0.5"
     >
       {OPTIONS.map(({ value, icon: Icon, label }) => {
         const active = preference === value
@@ -26,11 +26,11 @@ export function ThemeToggle() {
             onClick={() => setPreference(value)}
             aria-label={label}
             aria-pressed={active}
-            className={`ios-press flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
-              active ? 'bg-bg text-accent' : 'text-text-faint'
+            className={`ios-press flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+              active ? 'bg-bg text-text-muted' : 'text-text-faint'
             }`}
           >
-            <Icon className="h-[18px] w-[18px]" />
+            <Icon className="h-3.5 w-3.5" />
           </button>
         )
       })}
