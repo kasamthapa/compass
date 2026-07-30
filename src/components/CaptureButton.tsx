@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useCaptureStore } from '../store/captureStore'
+import { IconPlus } from './icons'
 
 export function CaptureButton() {
   const open = useCaptureStore((state) => state.open)
@@ -28,9 +29,9 @@ export function CaptureButton() {
       type="button"
       onClick={open}
       aria-label="Capture a thought"
-      className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-2xl font-display text-bg shadow-lg transition-transform hover:scale-105 active:scale-95 md:bottom-6 md:right-6"
+      className="ios-press fixed bottom-[calc(var(--nav-height)_+_env(safe-area-inset-bottom)_+_1rem)] right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-on shadow-fab md:bottom-8 md:right-8"
     >
-      +
+      <IconPlus className="h-6 w-6" />
     </button>
   )
 }
