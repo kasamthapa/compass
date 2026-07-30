@@ -202,3 +202,47 @@ practice), and the `vite-plugin-pwa` generated artifacts (`dev-dist/`,
 `sw.js`, `workbox-*.js`, `registerSW.js`) that only exist post-build and
 should never be tracked from source. No files were untracked since none
 matched.
+
+## Phase 0.6 — iOS refinement pass
+
+UI-only. Fixes specific "not-native" tells left over from Phase 0.5.
+
+### What was built
+
+- **Empty states no longer a card.** `EmptyState` dropped the
+  `bg-surface`/`shadow-card`/padded-box wrapper entirely — it's now just a
+  small icon circle + headline + muted subtitle, centered, capped at
+  `max-w-[15rem]`, sitting with `mt-10`/`sm:mt-14` under the header. Reads
+  as a compact native empty-state group instead of a web "hero card."
+- **Radii softened**: `--radius-lg` (grouped/card radius) bumped
+  16px → 18px per spec; `--radius-md` (12px, buttons/inputs) and the FAB's
+  `rounded-full` were already correct and untouched.
+- **ThemeToggle quieted**: segments shrunk 44px → 32px, icons 18px → 14px,
+  padding tightened, dropped `shadow-card`, and the active-state color
+  changed from `text-accent` to a neutral `text-text-muted` on a recessed
+  `bg-bg` — it no longer pulls the eye next to the page title. (This is a
+  deliberate, called-out exception to the ≥44px tap-target rule from Phase
+  0.5 — it's explicitly temporary scaffolding pending a real Settings
+  screen, not a permanent control.)
+- **Large-title spacing**: `PageHeader` switched from `items-start` to
+  `items-center` so the toggle sits on the title's baseline instead of
+  top-aligned; header bottom padding tightened (`pb-6` → `pb-2`) since
+  `EmptyState`'s own top margin now owns that gap. `AppShell`'s top padding
+  increased (`pt-6`/`md:pt-9` → `pt-8`/`md:pt-11`) for more breathing room
+  above the title.
+
+### Key decisions
+
+- **ThemeToggle's 32px targets intentionally violate the 44px tap-target
+  guideline.** The phase prompt explicitly asked to shrink it because it's
+  temporary and shouldn't compete visually with the large title; noting
+  the tradeoff here so it isn't mistaken for an oversight once a permanent
+  Settings entry replaces it.
+- **`max-w-[15rem]` on `EmptyState`** (not a token) — this is a one-off
+  layout constraint specific to keeping empty-state text from growing too
+  wide, not a reusable design value, so it stays as an arbitrary Tailwind
+  value rather than a new token.
+
+### Known issues / follow-ups
+
+- None new. Carries forward the Phase 0.5 follow-ups list above.
