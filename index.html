@@ -1,14 +1,26 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('compass-theme')
+          var pref =
+            stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
+          var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          var resolved = pref === 'system' ? (systemDark ? 'dark' : 'light') : pref
+          document.documentElement.setAttribute('data-theme', resolved)
+        } catch (e) {}
+      })()
+    </script>
     <link rel="icon" type="image/svg+xml" href="/icon.svg" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#0E1116" />
+    <meta name="theme-color" content="#14171d" />
     <title>Compass</title>
   </head>
-  <body class="bg-bg text-text font-body">
+  <body class="bg-bg text-text font-body antialiased">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
