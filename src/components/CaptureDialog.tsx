@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useCaptureStore } from '../store/captureStore'
+import { create as createCapture } from '../db/repo/captures'
 
 const EXIT_DURATION_MS = 220
 
 export function CaptureDialog() {
   const isOpen = useCaptureStore((state) => state.isOpen)
   const close = useCaptureStore((state) => state.close)
-  const addItem = useCaptureStore((state) => state.addItem)
   const [text, setText] = useState('')
   const [mounted, setMounted] = useState(isOpen)
   const [entered, setEntered] = useState(false)
@@ -55,7 +55,9 @@ export function CaptureDialog() {
   function handleSave() {
     const trimmed = text.trim()
     if (trimmed) {
-      addItem(trimmed)
+      createCapture(trimmed).catch((error: unknown) => {
+        console.error('Failed to save capture', error)
+      })
     }
     close()
   }
