@@ -36,3 +36,6 @@ registerSW.js
 *.njsproj
 *.sln
 *.sw?
+
+# Claude Code local session/working directory — machine-local, like .vscode/
+.claude/
