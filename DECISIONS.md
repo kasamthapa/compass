@@ -12,6 +12,15 @@ This is a fixed convention — do not introduce a Sunday-start code path
 elsewhere; if the product ever needs a configurable week start, that's a
 deliberate future change, not an accidental inconsistency.
 
+## Year grain is a Monday-first GitHub-style grid
+
+`YearGrain` (`src/components/today/YearGrain.tsx`) lays out weeks as columns
+of 7 rows, Monday through Sunday — not Sunday-first like GitHub's own
+contribution graph. This keeps it consistent with `weekOf()` (Monday is the
+week start everywhere else in the app); introducing a Sunday-first grid just
+for this one widget would be a silent inconsistency with no product reason
+behind it.
+
 ## Boolean fields are never Dexie indexes
 
 IndexedDB has no valid "boolean" key type (per the IndexedDB spec, valid keys

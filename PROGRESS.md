@@ -517,3 +517,74 @@ changes beyond one repo query shape change (still read-only).
 ### Known issues / follow-ups
 
 - None new.
+
+## Phase 2A.2 — Year grain rebuilt as a GitHub-contributions grid
+
+UI-only rebuild of the year grain on `/today`. No data changes beyond the
+score-read query added in 2A.1 (already in place, reused as-is).
+
+### What was built
+
+- **`YearGrain.tsx` fully rewritten** to the classic GitHub-contributions
+  anatomy: weeks as columns (Monday-first — see DECISIONS.md), month
+  labels along the top aligned to where each month's 1st falls, weekday
+  labels (M / W / F only, to avoid clutter) down the left. Cells are
+  small rounded squares (`rounded-[2px]`), filled with the `--ink` token
+  at an opacity scaled by that day's review score, empty days use
+  `--grid-empty`, today gets the amber outline ring — same fill logic as
+  2A.1, just laid out GitHub-style instead of 12 stacked month-rows.
+- **Responsive cell size via CSS custom properties, not a fixed
+  constant.** The wrapper carries `[--cell:11px] [--gap:2px]
+  md:[--cell:9px] md:[--gap:1.5px]` (Tailwind arbitrary-property syntax)
+  and every cell/gap style reads `var(--cell)`/`var(--gap)`. Mobile keeps
+  the readable ~11px cells the phase prompt asked for and scrolls;
+  desktop needed a smaller ~9px to fit the full 53-column year inside the
+  app's 720px content column without scrolling — measured the real
+  available width in-browser (the scroll container's `clientWidth` at
+  1280px viewport is 555px, not the ~656px a naive `720 - 2×32px padding`
+  estimate suggested — the left rail alone accounts for most of the
+  difference), then sized cells to fit that measured width with the gap
+  ratio unchanged.
+- **Horizontal scroll on mobile**: the day-grid (plus its month-label row,
+  scrolling together so labels stay aligned to their columns) sits in an
+  `overflow-x-auto` container styled `.scroll-thin` (new utility in
+  `tokens.css`: `scrollbar-width: thin` + a quiet `::-webkit-scrollbar`
+  thumb using `--border-hairline`, track transparent). A `useLayoutEffect`
+  sets `scrollLeft = scrollWidth` once on mount so the most recent weeks
+  (today) are in view immediately, before first paint — a direct
+  `scrollLeft` assignment is already an instant jump, so there's no
+  animated scroll to gate behind `prefers-reduced-motion` in the first
+  place.
+- **Cells are non-interactive** (`aria-hidden`, plain `<span>`s, no
+  `onClick`) — no popover exists yet to show on tap, and the phase prompt
+  said to leave cells inert rather than build one now.
+- **Removed the whole-grid "tap to open /insights" button** that the
+  previous (2A/2A.1) versions had. Wrapping a horizontally-scrollable,
+  now much larger grid in a single full-area button risked the classic
+  mobile bug where a drag-to-scroll gesture also fires a click on release.
+  Since cells have no popover yet and the phase prompt frames this as "a
+  calm glance, not a hero," dropping the navigation-on-tap for now was the
+  right trade — revisit once a per-cell popover exists and can carry its
+  own affordance instead.
+
+### Key decisions
+
+- **Monday-first, not GitHub's native Sunday-first.** Documented in
+  DECISIONS.md — every other week-keyed concept in the app (`weekOf`,
+  `WeeklyPriority.weekOf`, the habit week-strip) is Monday-first, and this
+  is the one place a naive "just copy GitHub" instinct would have
+  introduced a silent inconsistency.
+- **Desktop cell size is smaller than mobile's, not the same ~11px
+  everywhere.** The phase prompt's "~11px on desktop" was a starting
+  point, not a hard requirement — it also explicitly required the full
+  year to fit on desktop without scrolling, and 11px cells measurably
+  don't fit inside this app's intentionally narrow 720px content column.
+  Between the two, "fits without scrolling" is the functional requirement
+  and won; ~9px is close enough to still read clearly.
+
+### Known issues / follow-ups
+
+- No popover exists for tapping a day cell yet (date · score · that day's
+  "one win") — cells are inert for now, per the phase prompt. Building
+  that is natural follow-up work once there's a reason to (e.g. from
+  `/insights`).
