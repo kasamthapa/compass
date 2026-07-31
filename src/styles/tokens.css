@@ -51,6 +51,8 @@
   --accent-ring: rgba(232, 163, 61, 0.4);
   --good: #57ab7c;
   --skip-fill: rgba(255, 255, 255, 0.14);
+  --ink: #6f9bd1;
+  --grid-empty: rgba(255, 255, 255, 0.1);
   --overlay: rgba(0, 0, 0, 0.55);
   --tabbar-bg: rgba(28, 32, 41, 0.72);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.28);
@@ -73,6 +75,8 @@
   --accent-ring: rgba(180, 116, 31, 0.35);
   --good: #2f8659;
   --skip-fill: rgba(0, 0, 0, 0.1);
+  --ink: #3f6f9e;
+  --grid-empty: rgba(0, 0, 0, 0.08);
   --overlay: rgba(0, 0, 0, 0.35);
   --tabbar-bg: rgba(255, 255, 255, 0.72);
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 20px rgba(0, 0, 0, 0.06);
