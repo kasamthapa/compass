@@ -34,6 +34,10 @@ export interface Task extends Base {
   isMIT: boolean
   weeklyPriorityId?: string
   goalId?: string
+  /** The tiny first physical action to start this task — added Phase 2A, UI lands in 2B. */
+  firstMove?: string
+  /** Rough estimate in minutes — added Phase 2A, UI lands in 2B. */
+  estimateMin?: number
 }
 
 export interface Goal extends Base {

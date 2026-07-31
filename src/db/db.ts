@@ -47,6 +47,13 @@ export class CompassDB extends Dexie {
       reviews: 'id, [type+periodKey]',
       syncQueue: 'id, synced',
     })
+
+    // v2 (Phase 2A): Task gained `firstMove?: string` and `estimateMin?:
+    // number`. Neither is indexed, so no store's index string changes —
+    // this bump exists to formally version the schema and demonstrate the
+    // migration path; Dexie carries all existing data forward untouched
+    // since no store is redeclared here.
+    this.version(2).stores({})
   }
 }
 
