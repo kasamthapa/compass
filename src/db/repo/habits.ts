@@ -113,6 +113,23 @@ export async function logHabit(
   return log
 }
 
+export interface WeekLogEntry {
+  date: string
+  status: HabitLog['status'] | null
+}
+
+/** One entry per day of the week starting `weekOf` (Monday), in order. */
+export async function getWeekLogs(habitId: string, weekOf: string): Promise<WeekLogEntry[]> {
+  const days = Array.from({ length: 7 }, (_, i) => addDays(weekOf, i))
+  const logs = await db.habitLogs
+    .where('[habitId+date]')
+    .anyOf(days.map((date) => [habitId, date]))
+    .filter((log) => !log.deletedAt)
+    .toArray()
+  const statusByDate = new Map(logs.map((log) => [log.date, log.status]))
+  return days.map((date) => ({ date, status: statusByDate.get(date) ?? null }))
+}
+
 export async function weeklyHitRate(
   habitId: string,
   weekOf: string,

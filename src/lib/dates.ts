@@ -48,3 +48,25 @@ export function formatDay(date: string): string {
     day: 'numeric',
   })
 }
+
+const WEEKDAYS_SHORT = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
+const MONTHS_SHORT = [
+  'JAN',
+  'FEB',
+  'MAR',
+  'APR',
+  'MAY',
+  'JUN',
+  'JUL',
+  'AUG',
+  'SEP',
+  'OCT',
+  'NOV',
+  'DEC',
+]
+
+/** e.g. "THU · 31 JUL" — the mono header date format. */
+export function formatHeaderDate(date: string): string {
+  const d = parseDateISO(date)
+  return `${WEEKDAYS_SHORT[d.getDay()]} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
+}

@@ -32,6 +32,19 @@ export async function upsert(
   return review
 }
 
+/** periodKeys of completed 'daily' reviews whose periodKey falls within [startDate, endDate]. */
+export async function getCompletedDailyPeriodKeys(
+  startDate: string,
+  endDate: string,
+): Promise<string[]> {
+  const reviews = await db.reviews
+    .where('[type+periodKey]')
+    .between(['daily', startDate], ['daily', endDate], true, true)
+    .filter((review) => !review.deletedAt && Boolean(review.completedAt))
+    .toArray()
+  return reviews.map((review) => review.periodKey)
+}
+
 export async function getByPeriod(
   type: Review['type'],
   periodKey: string,
