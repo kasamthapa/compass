@@ -109,6 +109,25 @@ body {
   opacity: 0.85;
 }
 
+/* Subtle horizontal scrollbar for the year grain on mobile — present but quiet. */
+.scroll-thin {
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scroll-thin::-webkit-scrollbar {
+  height: 4px;
+}
+
+.scroll-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scroll-thin::-webkit-scrollbar-thumb {
+  background: var(--border-hairline);
+  border-radius: var(--radius-full);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
