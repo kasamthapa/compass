@@ -340,3 +340,119 @@ capture dialog to persist for real.
   `weekOf` string directly rather than accepting an arbitrary date and
   resolving it internally — callers are expected to pass `weekOf(date)`
   themselves, consistent with how `WeeklyPriority.weekOf` is stored.
+
+## Phase 2A — Today screen
+
+The first real screen: daily header, MITs, habits, and an evening review
+flow. No other pages touched except extracting a shared sheet component
+(used only by the existing capture dialog and the new review dialog).
+
+### What was built
+
+- **Schema v2** (`src/db/db.ts`): `Task` gained `firstMove?: string` and
+  `estimateMin?: number` (`src/types/models.ts`) — no UI yet, Phase 2B's
+  job. Neither is indexed, so `version(2).stores({})` bumps the version
+  number without redeclaring any store; existing data carries forward
+  untouched. Documented in `db.ts` and here as the migration precedent.
+- **Repo additions**: `habits.getWeekLogs(habitId, weekOf)` (one entry per
+  day of the week via the `[habitId+date]` compound index) and
+  `reviews.getCompletedDailyPeriodKeys(start, end)` (which days in a range
+  have a completed daily review, for the year grain).
+- **`src/lib/dates.ts`**: `formatHeaderDate` ("THU · 31 JUL"). **`src/lib/
+  useNow.ts`**: a 60s-ticking clock hook so "today," the greeting, and the
+  18:00 evening-review gate all roll over live without a page refresh.
+- **`src/lib/reviewResume.ts`**: `resumeStepFor(review)` — a small pure
+  function (score → step 1, win → step 2, lesson → step 3, else step 4)
+  extracted out of the dialog specifically so the resume logic is unit
+  testable without rendering React.
+- **`src/components/Sheet.tsx`**: extracted the mount/enter/exit iOS-sheet
+  mechanics out of `CaptureDialog` into a shared component (props:
+  `isOpen`, `onClose`, `ariaLabel`, `children`). `CaptureDialog` now just
+  supplies its input + buttons; behavior unchanged, verified in-browser.
+  Used by the new `EveningReviewDialog` too.
+- **Today screen** (`src/pages/TodayPage.tsx` + `src/components/today/*`):
+  - `TodayHeader` + `YearGrain`: mono date, greeting, and a compact
+    Jan-1–Dec-31 dot grid (GitHub-contribution-graph layout via CSS grid
+    `grid-auto-flow: column` with leading blank spacers so the flat date
+    array lands on the right weekday row). Completed-review days get a
+    quiet `bg-good` fill; today gets an amber outline ring; tapping
+    navigates to `/insights`.
+  - `TodayFocus`: up to 3 MIT rows (amber-fill circular check, 250ms
+    transition, goal-link glyph when `goalId` is set), an inline add-focus
+    input whose placeholder itself carries the empty-state invitation
+    ("What matters most today?" / "Add another focus"), replaced by "Three
+    is enough for today" at the cap. Collapsed-by-default "Other tasks
+    today" disclosure below.
+  - `TodayHabits`: each active habit as a two-line row (name + hit-rate
+    on one line, cue below, then a full-width 7-cell Mon–Sun strip with
+    single-letter mono day labels). Only today's cell is a `<button>`
+    (pointerdown/up timing for long-press → skipped, `onContextMenu` for
+    right-click → skipped, tap → done, both toggle back to empty on
+    repeat). Quiet green ✓ once `done >= target`. Inline add-habit form
+    (name/cue/target) below the list, replaced by "Five is plenty for
+    now" at the 5-habit cap.
+  - `EveningReviewCard` + `EveningReviewDialog`: card only renders when
+    `now.getHours() >= 18` and today's daily review isn't completed
+    (reactive via `useLiveQuery`). Dialog is 4 steps (score 1–5 dots →
+    win → lesson → tomorrow's-focus picker/creator) in one `Sheet`,
+    autosaving each answer (`reviews.upsert('daily', today, …)`) as you
+    go, resuming at `resumeStepFor(review)` when reopened. Finishing sets
+    `completedAt`, shows a ~700ms amber checkmark ("Day closed."), then
+    closes — after which the card disappears and the year grain fills in,
+    both live.
+- **New tokens**: `--skip-fill` (neutral gray fill for "skipped" habit
+  cells — explicitly not red, per spec) in both themes, mapped to Tailwind
+  as `bg-skip`. New icons: `IconCheck`, `IconChevronRight`,
+  `IconChevronDown`.
+- **Tests**: `src/db/__tests__/reviews.test.ts` — upsert merges `score`/
+  `answers`/`completedAt` across separate calls without clobbering earlier
+  fields (this only works because callers always pass the *full* merged
+  `answers` object; `upsert`'s Dexie `.update()` replaces that field
+  wholesale, it doesn't deep-merge), plus all 5 `resumeStepFor` branches.
+
+### Key decisions
+
+- **`reviews.upsert`'s `answers` patch replaces, not merges.** Since
+  `Review.answers` is `Record<string, string>`, `EveningReviewDialog`
+  keeps `win`/`lesson` in local state and always sends the complete
+  merged object on every save — documented at the call sites and covered
+  by the new test, since it's an easy place for a future caller to
+  accidentally clobber a sibling answer.
+- **Resume-hydration effect depends only on `[isOpen]`, not `[isOpen,
+  review]`.** The dialog's own autosaves re-fire the `review` live query
+  while it's open; syncing local state from that on every emission would
+  overwrite in-progress typing with the (momentarily stale) saved value.
+  Only re-hydrate on the open transition.
+- **`today`/`tomorrow` are derived from the live `useNow()` clock**, not a
+  static `todayISO()` call, so the whole page's notion of "today" — MITs,
+  habits, the header date, the evening gate — rolls over automatically at
+  midnight if the app is left open, without requiring a manual refresh.
+- **Habit row is two lines, not one**, after an in-browser check caught a
+  real horizontal-overflow bug: name + week-strip + hit-rate all on one
+  flex row doesn't fit at 393px once a habit has a real name. Fixed to
+  name+hit-rate on line 1, cue on line 2, full-width `justify-between`
+  strip on line 3 — verified `scrollWidth === clientWidth` afterward.
+- **Long-press/right-click skip uses raw pointer events** (`onPointerDown`
+  /`onPointerUp`/`onPointerLeave` + a 500ms timer, plus `onContextMenu`
+  with `preventDefault`), not a gesture library — this is the only
+  interaction in the app that needs press-duration detection, so a small
+  local timer is simpler than a new dependency.
+
+### Known issues / follow-ups
+
+- `firstMove`/`estimateMin` have no UI yet (by design — Phase 2B).
+- No settings screen exists yet for editing/pausing/archiving a habit
+  once created — only creation is exposed on Today.
+- The "Other tasks today" and tomorrow's-focus "other tasks" lists don't
+  paginate or sort explicitly; fine at the data volumes a personal planner
+  produces, revisit if that changes.
+- Manual browser verification hit two unrelated environment quirks worth
+  recording so they're not mistaken for app bugs later: (1) the automated
+  pointer-click tool intermittently failed to deliver clicks to specific
+  buttons in one browser-pane session (confirmed via direct DOM
+  `.click()` + IndexedDB read that the underlying app logic was correct
+  every time); (2) the same session rendered the desktop viewport's
+  screenshot at a different pixel ratio than the real viewport, making
+  the page look tiny/offset in screenshots despite `scrollWidth ===
+  clientWidth` confirming no actual layout bug. Neither reflects a
+  problem in the app.
