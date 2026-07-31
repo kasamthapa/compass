@@ -1,33 +1,118 @@
-# React + TypeScript + Vite
+# Compass
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A personal, local-first PWA that combines a habit tracker, daily planner,
+journal, and goal cascade into one calm system.
 
-Currently, two official plugins are available:
+## Why
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Compass exists to connect daily actions to long-term goals for a brain that
+gets distracted — the system is meant to carry the load, not willpower.
+Flexible habits instead of punishing streaks, a hard cap on how much you can
+pile onto one day, and a 2-minute evening review that closes the loop: the
+goal is a tool that stays calm and useful even on the days you're not.
 
-## React Compiler
+It's a single-user app, built for one person's laptop and phone, fully
+functional offline.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Screenshots
 
-## Expanding the Oxlint configuration
+_Coming soon — drop images into [`docs/`](docs)._
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+| Today (dark) | Today (light) |
+| --- | --- |
+| ![Today screen, dark theme](./docs/today-dark.png) | ![Today screen, light theme](./docs/today-light.png) |
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+## Features
+
+What's actually built so far:
+
+- **Today screen** — the daily home of the app:
+  - **MITs ("Most Important Tasks")**, capped at 3 per day. No error
+    messages when you hit the cap — the input just quietly becomes "Three
+    is enough for today."
+  - **Flexible habit tracking**: up to 5 active habits, each with an
+    X-of-7-per-week target instead of an all-or-nothing streak. Missing a
+    day doesn't reset anything — "skipped" is a neutral, non-judgmental
+    state, not a broken streak.
+  - **Year contribution grid**, GitHub-style: a quiet glance at completed
+    daily reviews across the whole year, colored by that day's review
+    score.
+  - **Guided evening review**: a 4-step, ~2-minute daily check-in (how the
+    day went, one win, one lesson, tomorrow's focus) that autosaves as you
+    go and resumes if you close it partway through.
+- **Light and dark themes**, following the system setting by default.
+- **Installable, offline-first PWA** — the app shell is precached, so it
+  loads and works with no network connection.
+- **Local-first storage** — all data lives in IndexedDB on-device; nothing
+  leaves your browser today.
+
+## Tech stack
+
+- **React 18** + **TypeScript**, built with **Vite**
+- **Tailwind CSS** for styling, driven entirely by design tokens
+- **Dexie** (IndexedDB) for local-first storage, with `dexie-react-hooks`
+  for reactive queries
+- **Zustand** for UI-only state (theme preference, dialog open/closed)
+- **React Router** for navigation
+- **vite-plugin-pwa** (Workbox) for the installable, offline app shell
+- **Vitest** + `fake-indexeddb` for testing the data layer
+
+Cloud sync (Supabase) is planned but not yet built — today the app is
+entirely local, single-device.
+
+## Getting started
+
+Requires **Node `^20.19.0` or `>=22.12.0`** (Vite 8's requirement).
+
+```bash
+npm install
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
-# compass
+```bash
+npm run dev
+```
+
+```bash
+npm run build
+```
+
+```bash
+npm run test
+```
+
+## Project structure
+
+```
+src/
+  db/            Dexie database, schema, and product-rule enforcement
+    repo/        The ONLY files allowed to touch Dexie directly — one
+                 module per domain (habits, tasks, goals, journal, ...)
+  types/         Shared TypeScript interfaces — the data contract
+  components/    Reusable UI (shell, nav, dialogs, icons, design-system
+                 primitives) and today/ for Today-screen-specific pieces
+  pages/         Route-level screens
+  styles/        tokens.css — the only place raw colors/spacing/type live
+  lib/           Small framework-agnostic helpers (dates, hooks)
+```
+
+Components never import Dexie directly — they call into `src/db/repo/*.ts`,
+which is the only layer that touches the database.
+
+## Roadmap
+
+- [x] Project scaffold (Vite + React + TS + Tailwind + PWA)
+- [x] Design system: theming (light/dark) and iOS-inspired polish
+- [x] Local data layer (Dexie schema, repos, product-rule enforcement)
+- [x] Today screen (MITs, habits, year grain, evening review)
+- [ ] Focus mode & "I'm stuck" support
+- [ ] Inbox (quick capture triage)
+- [ ] Goals cascade (year → month → week)
+- [ ] Week view
+- [ ] Journal
+- [ ] Insights
+- [ ] PWA hardening
+- [ ] Cloud sync (Supabase)
+
+---
+
+Personal project / portfolio piece — not affiliated with any company.
