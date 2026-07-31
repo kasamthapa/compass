@@ -92,3 +92,27 @@ export function IconPlus({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconCheck({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M4.5 12.5l5 5 10-11" />
+    </svg>
+  )
+}
+
+export function IconChevronRight({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M9 5l7 7-7 7" />
+    </svg>
+  )
+}
+
+export function IconChevronDown({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M5 9l7 7 7-7" />
+    </svg>
+  )
+}

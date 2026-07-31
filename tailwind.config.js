@@ -16,6 +16,7 @@ export default {
         'accent-wash': 'var(--accent-wash)',
         'accent-ring': 'var(--accent-ring)',
         good: 'var(--good)',
+        skip: 'var(--skip-fill)',
         overlay: 'var(--overlay)',
         tabbar: 'var(--tabbar-bg)',
       },
