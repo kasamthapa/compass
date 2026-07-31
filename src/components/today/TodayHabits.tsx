@@ -70,16 +70,25 @@ function HabitRow({ habit, today, weekStart }: HabitRowProps) {
       </div>
       <p className="mt-0.5 truncate text-caption text-text-muted">{habit.cue}</p>
 
-      <div className="mt-2.5 flex justify-between">
+      <div className="mt-2.5 grid grid-cols-7">
         {(weekLogs ?? []).map((entry, index) => {
           const isToday = entry.date === today
           const fillClass =
             entry.status === 'done'
-              ? 'bg-accent text-accent-on'
+              ? 'bg-accent'
               : entry.status === 'skipped'
-                ? 'bg-skip text-text-muted'
-                : 'border border-border-hairline text-text-faint'
+                ? 'bg-skip'
+                : 'border border-border-hairline bg-grid-empty'
           const dayLetter = DAY_LETTERS[index]
+
+          const square = (
+            <span
+              aria-hidden="true"
+              className={`block h-[22px] w-[22px] rounded-[6px] transition-colors duration-[250ms] ease-ios ${fillClass} ${
+                isToday && !entry.status ? 'outline outline-1 outline-accent-ring outline-offset-[1px]' : ''
+              }`}
+            />
+          )
 
           if (isToday) {
             return (
@@ -97,23 +106,19 @@ function HabitRow({ habit, today, weekStart }: HabitRowProps) {
                       ? 'Today: skipped. Tap to clear.'
                       : 'Mark today done. Long-press or right-click to skip.'
                 }
-                className={`ios-press flex h-7 w-7 items-center justify-center rounded-full font-mono text-caption-2 transition-colors duration-[250ms] ease-ios ${fillClass} ${
-                  entry.status ? '' : 'outline outline-1 outline-accent-ring'
-                }`}
+                className="ios-press flex min-h-11 flex-col items-center justify-center gap-1"
               >
-                {dayLetter}
+                {square}
+                <span className="font-mono text-caption-2 text-text-faint">{dayLetter}</span>
               </button>
             )
           }
 
           return (
-            <span
-              key={entry.date}
-              aria-hidden="true"
-              className={`flex h-7 w-7 items-center justify-center rounded-full font-mono text-caption-2 ${fillClass}`}
-            >
-              {dayLetter}
-            </span>
+            <div key={entry.date} className="flex flex-col items-center justify-center gap-1 py-1">
+              {square}
+              <span className="font-mono text-caption-2 text-text-faint">{dayLetter}</span>
+            </div>
           )
         })}
       </div>
