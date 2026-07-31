@@ -4,19 +4,19 @@ import { YearGrain } from './YearGrain'
 interface TodayHeaderProps {
   today: string
   greeting: string
-  completedDates: Set<string>
+  scoresByDate: Map<string, 1 | 2 | 3 | 4 | 5 | undefined>
 }
 
-export function TodayHeader({ today, greeting, completedDates }: TodayHeaderProps) {
+export function TodayHeader({ today, greeting, scoresByDate }: TodayHeaderProps) {
   return (
-    <div className="flex items-center justify-between gap-4 pb-6">
-      <div>
-        <p className="font-mono text-caption uppercase tracking-wide text-text-faint">
-          {formatHeaderDate(today)}
-        </p>
-        <p className="mt-0.5 text-subhead text-text-muted">{greeting}</p>
+    <div className="pb-6">
+      <p className="font-mono text-caption uppercase tracking-wide text-text-faint">
+        {formatHeaderDate(today)}
+      </p>
+      <p className="mt-0.5 text-subhead text-text-muted">{greeting}</p>
+      <div className="mt-4">
+        <YearGrain today={today} scoresByDate={scoresByDate} />
       </div>
-      <YearGrain today={today} completedDates={completedDates} />
     </div>
   )
 }

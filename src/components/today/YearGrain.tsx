@@ -1,60 +1,72 @@
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { addDays, parseDateISO } from '../../lib/dates'
+import { parseDateISO } from '../../lib/dates'
 
 interface YearGrainProps {
   today: string
-  completedDates: Set<string>
+  scoresByDate: Map<string, 1 | 2 | 3 | 4 | 5 | undefined>
 }
 
-/** Jan 1 .. Dec 31 of `today`'s year, prefixed with blank spacers so the grid's
- * column-major auto-flow lines each date up with its correct weekday row. */
-function buildYearCells(today: string): string[] {
+const CELL_PX = 9
+const GAP_PX = 1.5
+
+/** One array of date strings per month (Jan .. Dec) of `today`'s year. */
+function buildYearMonths(today: string): string[][] {
   const year = parseDateISO(today).getFullYear()
-  const jan1 = `${year}-01-01`
-  const dec31 = `${year}-12-31`
-  const weekday = parseDateISO(jan1).getDay() // 0 = Sun .. 6 = Sat
-  const mondayIndexed = weekday === 0 ? 6 : weekday - 1 // Mon = 0 .. Sun = 6
-  const spacers = Array.from({ length: mondayIndexed }, () => '')
-
-  const dates: string[] = []
-  let cursor = jan1
-  while (cursor <= dec31) {
-    dates.push(cursor)
-    cursor = addDays(cursor, 1)
+  const months: string[][] = []
+  for (let month = 0; month < 12; month++) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate()
+    const days: string[] = []
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(`${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`)
+    }
+    months.push(days)
   }
-  return [...spacers, ...dates]
+  return months
 }
 
-export function YearGrain({ today, completedDates }: YearGrainProps) {
+/** Score 1 -> faint ink tint, score 5 -> fully saturated ink. */
+function intensityForScore(score: 1 | 2 | 3 | 4 | 5 | undefined): number {
+  const value = score ?? 3
+  return 0.28 + (value - 1) * 0.18
+}
+
+export function YearGrain({ today, scoresByDate }: YearGrainProps) {
   const navigate = useNavigate()
-  const cells = useMemo(() => buildYearCells(today), [today])
+  const months = useMemo(() => buildYearMonths(today), [today])
 
   return (
     <button
       type="button"
       onClick={() => navigate('/insights')}
       aria-label="View insights"
-      className="ios-press grid gap-[1px] rounded-sm p-1"
-      style={{ gridTemplateRows: 'repeat(7, 3px)', gridAutoFlow: 'column', gridAutoColumns: '3px' }}
+      className="ios-press flex flex-col rounded-sm"
+      style={{ gap: `${GAP_PX}px` }}
     >
-      {cells.map((date, index) => {
-        if (date === '') {
-          return <span key={index} aria-hidden="true" className="invisible h-[3px] w-[3px]" />
-        }
-        const isToday = date === today
-        const isCompleted = completedDates.has(date)
-        const isFuture = date > today
-        const fill = isCompleted ? 'bg-good' : isFuture ? 'bg-transparent' : 'bg-border-hairline'
-        const ring = isToday ? 'outline outline-1 outline-accent outline-offset-[1px]' : ''
-        return (
-          <span
-            key={index}
-            aria-hidden="true"
-            className={`h-[3px] w-[3px] rounded-[1px] ${fill} ${ring}`}
-          />
-        )
-      })}
+      {months.map((days, monthIndex) => (
+        <div key={monthIndex} className="flex" style={{ gap: `${GAP_PX}px` }}>
+          {days.map((date) => {
+            const isToday = date === today
+            const score = scoresByDate.get(date)
+            const isCompleted = scoresByDate.has(date)
+            const ring = isToday ? 'outline outline-1 outline-accent outline-offset-[1px]' : ''
+
+            return (
+              <span
+                key={date}
+                aria-hidden="true"
+                className={`rounded-[2px] ${isCompleted ? '' : 'bg-grid-empty'} ${ring}`}
+                style={{
+                  height: CELL_PX,
+                  width: CELL_PX,
+                  backgroundColor: isCompleted ? 'var(--ink)' : undefined,
+                  opacity: isCompleted ? intensityForScore(score) : undefined,
+                }}
+              />
+            )
+          })}
+        </div>
+      ))}
     </button>
   )
 }
