@@ -456,3 +456,64 @@ flow. No other pages touched except extracting a shared sheet component
   the page look tiny/offset in screenshots despite `scrollWidth ===
   clientWidth` confirming no actual layout bug. Neither reflects a
   problem in the app.
+
+## Phase 2A.1 — Year grain and habit-cell legibility fixes
+
+UI-only fixes to `/today`, found at iPhone width. No new features or data
+changes beyond one repo query shape change (still read-only).
+
+### What was built
+
+- **Year grain switched from a 53-column weekly layout to 12 month-rows**
+  (`YearGrain.tsx`). The weekly layout forced 3px cells to fit the content
+  width, which read as a smudge; a 12-row month layout (each row is that
+  month's days, 28–31 cells) affords 9px cells at the same width and is
+  visibly a grid. Moved to its own full-width row below the greeting in
+  `TodayHeader.tsx` (doesn't fit beside the date/greeting at 393px, per
+  the phase prompt's own fallback instruction).
+- **Score-based ink-blue fill**: completed days are filled with a new
+  `--ink` token (a calm blue, tuned separately per theme) at an opacity
+  that scales with that day's review score (1 → 0.28 opacity, 5 → 1.0),
+  instead of a flat `bg-good` fill. `reviews.getCompletedDailyPeriodKeys`
+  (returned only dates) was replaced with `reviews.
+  getCompletedDailyReviews` (returns `{periodKey, score}[]`) so the grain
+  can read the score.
+- **New `--grid-empty` token**: a visibly-gray (not near-transparent)
+  fill for cells with no completed review, tuned per theme so the grid
+  reads clearly on both dark and light backgrounds — this was the core of
+  the "near-invisible smudge" complaint; `--border-hairline` (designed for
+  1px separators) was too faint to double as a standalone cell fill.
+- **Habit week-strip cells switched from filled circles with a letter
+  inside to rounded squares** (`rounded-[6px]`) with the weekday letter
+  moved to a small mono label below the square, per spec. Colors
+  unchanged (amber done / `bg-skip` skipped / `bg-grid-empty` empty,
+  bordered). Today's square gets the amber outline ring only when empty
+  (unchanged logic, same conditional as before — just moved from the
+  circle to the square and the ring no longer competes with a letter
+  glyph inside the same shape).
+- Row layout changed from `flex justify-between` to `grid grid-cols-7` so
+  all 7 day-columns (square + label stacked) are equal width; the
+  interactive "today" cell is still a real `<button>` with `min-h-11` so
+  the tap target stays ≥44px even though the visible square is small
+  (22px).
+
+### Key decisions
+
+- **Month-row grid over the week-column grid.** The phase prompt offered
+  both layouts and asked to "pick whichever is clearer at 393px." Did the
+  arithmetic first: 53 columns forces ~5px cells to fit 353px of content
+  width; 12 rows of up to 31 columns affords ~9px cells in the same
+  width. Bigger cells at the same footprint is a strictly better
+  legibility trade, so month-rows won.
+- **Intensity is computed opacity on one `--ink` token, not five discrete
+  color tokens.** Consistent with how `--accent-wash`/`--accent-ring`
+  already parameterize a base color by opacity rather than hand-picking
+  multiple named shades — keeps the token surface small.
+- **Empty-cell contrast is a new token, not a reuse of
+  `--border-hairline`.** They serve different jobs (a 1px separator line
+  vs. a standalone small filled cell needs more contrast to read as part
+  of a grid) and conflating them was the root cause of the original bug.
+
+### Known issues / follow-ups
+
+- None new.
