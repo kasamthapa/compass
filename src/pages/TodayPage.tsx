@@ -26,11 +26,17 @@ export function TodayPage() {
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
 
   const dailyReview = useLiveQuery(() => reviewsRepo.getByPeriod('daily', today), [today])
-  const completedDatesArray = useLiveQuery(
-    () => reviewsRepo.getCompletedDailyPeriodKeys(`${year}-01-01`, `${year}-12-31`),
+  const completedReviews = useLiveQuery(
+    () => reviewsRepo.getCompletedDailyReviews(`${year}-01-01`, `${year}-12-31`),
     [year],
   )
-  const completedDates = useMemo(() => new Set(completedDatesArray ?? []), [completedDatesArray])
+  const scoresByDate = useMemo(() => {
+    const map = new Map<string, 1 | 2 | 3 | 4 | 5 | undefined>()
+    for (const review of completedReviews ?? []) {
+      map.set(review.periodKey, review.score)
+    }
+    return map
+  }, [completedReviews])
 
   const isEvening = now.getHours() >= 18
   const showEveningCard = isEvening && !dailyReview?.completedAt
@@ -38,7 +44,7 @@ export function TodayPage() {
   return (
     <div>
       <PageHeader title="Today" />
-      <TodayHeader today={today} greeting={greetingFor(now.getHours())} completedDates={completedDates} />
+      <TodayHeader today={today} greeting={greetingFor(now.getHours())} scoresByDate={scoresByDate} />
       <TodayFocus today={today} />
       <TodayHabits today={today} weekStart={weekStart} />
       {showEveningCard && <EveningReviewCard onOpen={() => setReviewDialogOpen(true)} />}
