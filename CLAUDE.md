@@ -42,6 +42,14 @@ A personal, local-first PWA: habit tracker + planner + journal + goal cascade
 - No console errors
 - PROGRESS.md updated
 
+## Docs
+
+- At the end of every phase, update README.md to reflect newly built
+  features (Features section + Roadmap checklist) and keep the Getting
+  Started commands accurate. Also update PROGRESS.md and DECISIONS.md as
+  before. The README must always describe the app as it actually exists,
+  never unbuilt phases as done.
+
 ## Git workflow
 
 - Commit at every small logical checkpoint (a working function, a fix) with a
