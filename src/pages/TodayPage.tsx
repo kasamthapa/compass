@@ -2,6 +2,9 @@ import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { PageHeader } from '../components/PageHeader'
 import { TodayHeader } from '../components/today/TodayHeader'
+import { RightNowCard } from '../components/today/RightNowCard'
+import { FocusMode } from '../components/today/FocusMode'
+import { StuckOverlay } from '../components/today/StuckOverlay'
 import { TodayFocus } from '../components/today/TodayFocus'
 import { TodayHabits } from '../components/today/TodayHabits'
 import { EveningReviewCard } from '../components/today/EveningReviewCard'
@@ -24,6 +27,8 @@ export function TodayPage() {
   const year = now.getFullYear()
 
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false)
+  const [focusModeOpen, setFocusModeOpen] = useState(false)
+  const [stuckOpen, setStuckOpen] = useState(false)
 
   const dailyReview = useLiveQuery(() => reviewsRepo.getByPeriod('daily', today), [today])
   const completedReviews = useLiveQuery(
@@ -44,7 +49,13 @@ export function TodayPage() {
   return (
     <div>
       <PageHeader title="Today" />
-      <TodayHeader today={today} greeting={greetingFor(now.getHours())} scoresByDate={scoresByDate} />
+      <TodayHeader
+        today={today}
+        greeting={greetingFor(now.getHours())}
+        scoresByDate={scoresByDate}
+        onStuck={() => setStuckOpen(true)}
+      />
+      <RightNowCard onOpen={() => setFocusModeOpen(true)} />
       <TodayFocus today={today} />
       <TodayHabits today={today} weekStart={weekStart} />
       {showEveningCard && <EveningReviewCard onOpen={() => setReviewDialogOpen(true)} />}
@@ -54,6 +65,8 @@ export function TodayPage() {
         today={today}
         tomorrow={tomorrow}
       />
+      <FocusMode isOpen={focusModeOpen} onClose={() => setFocusModeOpen(false)} today={today} />
+      <StuckOverlay isOpen={stuckOpen} onClose={() => setStuckOpen(false)} today={today} />
     </div>
   )
 }
