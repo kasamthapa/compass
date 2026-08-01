@@ -58,6 +58,16 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.28);
   --shadow-fab: 0 8px 20px rgba(232, 163, 61, 0.32), 0 2px 6px rgba(0, 0, 0, 0.3);
   --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.4);
+  --shadow-elevated:
+    0 24px 60px rgba(0, 0, 0, 0.45),
+    0 4px 16px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  --breathe-glow: radial-gradient(
+    circle at 50% 45%,
+    rgba(232, 163, 61, 0.38) 0%,
+    rgba(111, 155, 209, 0.2) 55%,
+    transparent 78%
+  );
 }
 
 /* ---- Light theme ---- */
@@ -82,6 +92,16 @@
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 20px rgba(0, 0, 0, 0.06);
   --shadow-fab: 0 8px 20px rgba(180, 116, 31, 0.26), 0 2px 6px rgba(0, 0, 0, 0.12);
   --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.12);
+  --shadow-elevated:
+    0 24px 60px rgba(0, 0, 0, 0.16),
+    0 4px 16px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  --breathe-glow: radial-gradient(
+    circle at 50% 45%,
+    rgba(180, 116, 31, 0.3) 0%,
+    rgba(63, 111, 158, 0.16) 55%,
+    transparent 78%
+  );
 }
 
 html,
@@ -128,6 +148,23 @@ body {
   border-radius: var(--radius-full);
 }
 
+/* Slow, calm breathing pulse for the Stuck overlay's grounding moment. */
+@keyframes breathe {
+  0%,
+  100% {
+    transform: scale(0.92);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scale(1.06);
+    opacity: 1;
+  }
+}
+
+.breathe-pulse {
+  animation: breathe 4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -140,6 +177,11 @@ body {
 
   .ios-press:active,
   .ios-sheet {
+    transform: none !important;
+  }
+
+  .breathe-pulse {
+    animation: none !important;
     transform: none !important;
   }
 }

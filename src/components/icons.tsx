@@ -124,3 +124,13 @@ export function IconClose({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconLifebuoy({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="12" cy="12" r="3.5" />
+      <path d="M6.1 6.1l3.5 3.5M17.9 6.1l-3.5 3.5M6.1 17.9l3.5-3.5M17.9 17.9l-3.5-3.5" />
+    </svg>
+  )
+}

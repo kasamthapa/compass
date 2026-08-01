@@ -66,6 +66,7 @@ export default {
         card: 'var(--shadow-card)',
         fab: 'var(--shadow-fab)',
         sheet: 'var(--shadow-sheet)',
+        elevated: 'var(--shadow-elevated)',
       },
       transitionTimingFunction: {
         ios: 'var(--ease-ios)',
