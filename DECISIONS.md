@@ -52,6 +52,39 @@ Nothing outside `src/db/repo/*.ts` should ever call `.delete()` on a Dexie
 table directly (the dev-only `wipeAllData()` in `src/db/seed.ts` is the one
 intentional exception — it hard-clears every table for local dev resets).
 
+## Focus Mode and the Stuck overlay share one timer, not two
+
+`src/components/FocusTimer.tsx` is a single presentation-only countdown
+(start/pause/reset/add-5-min) used by both `FocusMode` (2 or 25 min) and
+`StuckOverlay` (always 2 min). It renders no wrapper layout of its own — the
+caller supplies the centering/growth context (`FullScreenOverlay`'s flex-1
+column for Focus Mode, the `Sheet`'s normal flow for the Stuck overlay) — so
+the same timer works full-screen and inside a bounded sheet without a
+"compact mode" prop. Nothing the timer does is persisted or logged; it is
+deliberately not a time-tracking feature (see CLAUDE.md's ADHD-support
+intent — this is a starting aid, not surveillance).
+
+## Focus Mode is a full-bleed overlay; the Stuck overlay is a Sheet
+
+Two different presentations, on purpose. Focus Mode's whole point is to
+blot out everything else on the page — a new `FullScreenOverlay` component
+(fade only, `bg-bg`, `z-50`) — while the Stuck overlay is described in the
+phase prompt as "minimal," which the existing bounded `Sheet` (bottom sheet
+on mobile, centered modal on desktop, `z-40`) already conveys better than a
+full takeover would. Using `Sheet` for Stuck also means it automatically
+sits *below* Focus Mode in stacking order, which never matters in practice
+(they're mutually exclusive entry points) but is a reasonable default.
+
+## `pickNextAction` is the single source of truth for "what's next"
+
+`src/lib/nextAction.ts` — first incomplete MIT (by `createdAt` order), else
+first incomplete non-MIT task, else `null`. Both Focus Mode and the Stuck
+overlay call this same pure function rather than each re-deriving "the next
+thing" their own way, so the two surfaces never disagree about which task
+is the priority. It's a plain function (not a repo query) because it
+operates on an already-fetched task list — no reason to touch Dexie twice
+for the same day's tasks.
+
 ## Rule enforcement lives in the repo layer, not the UI
 
 `src/db/rules.ts` exports `canActivateHabit()`, `canAddMIT(date)`, and

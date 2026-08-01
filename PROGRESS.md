@@ -588,3 +588,81 @@ score-read query added in 2A.1 (already in place, reused as-is).
   "one win") — cells are inert for now, per the phase prompt. Building
   that is natural follow-up work once there's a reason to (e.g. from
   `/insights`).
+
+## Phase 2B — Focus Mode, "I'm stuck," and first-move fields
+
+The ADHD-support layer: helping start, not just knowing what to do. Today
+screen only — no new routes, no data-layer changes beyond using the
+`firstMove`/`estimateMin` fields the 2A schema bump already added.
+
+### What was built
+
+- **First move + estimate on tasks**: `tasks.create`/`tasks.update` now
+  accept `firstMove`/`estimateMin`. A new shared `AddTaskInline` component
+  (title input + two off-by-default reveal-on-tap fields, "+ first move"
+  and "+ ~min") replaces the plain inline forms in both `TodayFocus`'s
+  add-MIT input and the evening review's tomorrow-focus step, so the two
+  places tasks get created share one implementation. `TaskRow` shows the
+  first move as muted subtext under the title (when set) and the estimate
+  as a small `~Nm` mono chip next to the title.
+- **`pickNextAction`** (`src/lib/nextAction.ts`): pure function — first
+  incomplete MIT by creation order, else first incomplete non-MIT task,
+  else `null`. The single source of truth both Focus Mode and the Stuck
+  overlay use to decide "what's next," so they never disagree.
+- **Focus Mode** (`RightNowCard` + `FocusMode`): an amber-tinted "Right
+  now" card near the top of Today opens a full-screen (`FullScreenOverlay`
+  — new, fade-only, distinct from the bounded `Sheet`) view showing
+  exactly one task: title, first move (if set) in larger calm text, and
+  nothing else. "Start 2 min"/"Start 25 min" launch the shared timer;
+  quiet "Done" marks it complete (700ms amber checkmark moment, then
+  advances to the next action or a calm "That's the focus for now"); a
+  low-key "something else" link reveals a plain-text list of the day's
+  other incomplete tasks to switch to.
+- **`FocusTimer`** (shared, `src/components/FocusTimer.tsx`): big mono
+  countdown, thin amber linear progress bar, start/pause/reset. On
+  completion: "Time's up — keep going or take a break?" with "Add 5 min"
+  / "Done" — no sound, nothing logged or persisted (this is a starting
+  aid, not a productivity-tracking feature, per the phase prompt's
+  explicit instruction not to build time-tracking analytics).
+- **"I'm stuck" overlay** (`StuckOverlay` + a quiet "Stuck?" pill in
+  `TodayHeader`): a `Sheet` that never shows the task list. Shows one tiny
+  thing (the top pick's first move, else its title, else a plain input to
+  type one thing by hand), warm non-judgmental copy, a "Start 2 min"
+  button (same shared `FocusTimer`), and "still stuck — just breathe": a
+  60-second countdown with a calm pulsing circle, no account, no
+  tracking, closeable any time with no penalty.
+- **Tests**: `src/lib/__tests__/nextAction.test.ts` — 6 cases covering
+  MIT-over-other priority, creation-order tie-breaking, done/dropped
+  exclusion, the non-MIT fallback, and the null/empty case.
+
+### Key decisions
+
+- **Focus Mode is a full-bleed `FullScreenOverlay`; the Stuck overlay
+  stays a bounded `Sheet`.** Deliberately different presentations — Focus
+  Mode's entire point is blotting out everything else, while the phase
+  prompt calls the Stuck overlay "minimal," which the existing sheet
+  pattern already conveys. Both share the same `FocusTimer` regardless,
+  since the timer itself doesn't care what's wrapping it (see
+  DECISIONS.md for why `FocusTimer` renders no layout wrapper of its
+  own).
+- **`AddTaskInline` unifies task-creation UI** in the two places tasks
+  get created on Today (the MIT input, the tomorrow-focus step), rather
+  than duplicating the first-move/estimate toggle logic — same reasoning
+  as extracting `Sheet` in 2A: this exact multi-field-reveal pattern
+  showing up twice was worth the extraction.
+- **Nothing about focus-timer usage is persisted.** No session count, no
+  total-focused-minutes, no streak. This is a deliberate product
+  boundary, not an oversight — see the phase prompt's explicit
+  instruction and CLAUDE.md's "no guilt language" / "skipped is neutral"
+  principles, which this extends to "time spent" as well.
+
+### Known issues / follow-ups
+
+- No settings surface yet to disable/adjust Focus Mode's 2/25-minute
+  presets — hardcoded for now, reasonable given there are only two and
+  they match the phase prompt exactly.
+- `StuckOverlay`'s breathing-moment "Close" button returns to the main
+  prompt view rather than closing the whole sheet outright (closing the
+  sheet entirely is still one tap away via backdrop/Escape, consistent
+  with every other dialog in the app). Revisit if that reads as
+  surprising in practice.

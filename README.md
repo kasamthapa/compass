@@ -40,6 +40,17 @@ What's actually built so far:
   - **Guided evening review**: a 4-step, ~2-minute daily check-in (how the
     day went, one win, one lesson, tomorrow's focus) that autosaves as you
     go and resumes if you close it partway through.
+  - **"Right now" focus mode**: a full-screen view that shows exactly one
+    task — its title and an optional tiny "first move" — with a 2 or
+    25-minute timer to start it. No list, no decision fatigue.
+  - **"I'm stuck" overlay**: an always-reachable, gentle escape hatch for
+    frozen days. Shows one tiny next action (never the whole task list),
+    warm non-judgmental copy, a 2-minute timer, or a 60-second breathing
+    moment. No streaks, no stats, no pressure.
+  - **Optional "first move" and time estimate on tasks**: an absurdly
+    small physical starting action (e.g. "open the doc") and a rough
+    `~min` estimate, both off by default behind a quiet "+" affordance —
+    never required fields.
 - **Light and dark themes**, following the system setting by default.
 - **Installable, offline-first PWA** — the app shell is precached, so it
   loads and works with no network connection.
@@ -104,7 +115,7 @@ which is the only layer that touches the database.
 - [x] Design system: theming (light/dark) and iOS-inspired polish
 - [x] Local data layer (Dexie schema, repos, product-rule enforcement)
 - [x] Today screen (MITs, habits, year grain, evening review)
-- [ ] Focus mode & "I'm stuck" support
+- [x] Focus mode & "I'm stuck" support
 - [ ] Inbox (quick capture triage)
 - [ ] Goals cascade (year → month → week)
 - [ ] Week view
