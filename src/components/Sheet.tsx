@@ -51,7 +51,7 @@ export function Sheet({ isOpen, onClose, ariaLabel, children }: SheetProps) {
 
   return (
     <div
-      className={`fixed inset-0 z-40 flex items-end justify-center bg-overlay transition-opacity duration-200 ease-ios md:items-center ${
+      className={`fixed inset-0 z-40 flex items-end justify-center bg-overlay backdrop-blur-sm transition-opacity duration-200 ease-ios md:items-center ${
         entered ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={onClose}
@@ -61,7 +61,7 @@ export function Sheet({ isOpen, onClose, ariaLabel, children }: SheetProps) {
         aria-modal="true"
         aria-label={ariaLabel}
         onClick={(event) => event.stopPropagation()}
-        className={`ios-sheet w-full max-w-md rounded-t-xl bg-surface-elevated p-5 pb-[calc(1.5rem_+_env(safe-area-inset-bottom))] shadow-sheet transition-all duration-200 ease-ios md:rounded-xl md:pb-6 md:shadow-card ${
+        className={`ios-sheet w-full max-w-lg rounded-t-xl bg-surface-elevated p-6 pb-[calc(1.5rem_+_env(safe-area-inset-bottom))] shadow-elevated transition-all duration-200 ease-ios md:rounded-xl md:p-8 ${
           entered
             ? 'translate-y-0 opacity-100 md:scale-100'
             : 'translate-y-full opacity-0 md:translate-y-0 md:scale-95'
