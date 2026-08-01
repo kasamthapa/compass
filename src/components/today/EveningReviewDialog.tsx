@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import * as reviewsRepo from '../../db/repo/reviews'
 import * as tasksRepo from '../../db/repo/tasks'
@@ -7,6 +7,7 @@ import { nowISO } from '../../lib/dates'
 import { resumeStepFor } from '../../lib/reviewResume'
 import { Sheet } from '../Sheet'
 import { IconCheck } from '../icons'
+import { AddTaskInline, type AddTaskInlineValue } from './AddTaskInline'
 
 const SCORES = [1, 2, 3, 4, 5] as const
 const COMPLETION_DISPLAY_MS = 700
@@ -50,7 +51,6 @@ export function EveningReviewDialog({ isOpen, onClose, today, tomorrow }: Evenin
   const tomorrowTasks = useLiveQuery(() => tasksRepo.getForDate(tomorrow), [tomorrow]) ?? []
   const tomorrowMits = tomorrowTasks.filter((task) => task.isMIT)
   const tomorrowOthers = tomorrowTasks.filter((task) => !task.isMIT)
-  const [tomorrowDraft, setTomorrowDraft] = useState('')
 
   async function selectScore(value: 1 | 2 | 3 | 4 | 5) {
     setScore(value)
@@ -75,13 +75,15 @@ export function EveningReviewDialog({ isOpen, onClose, today, tomorrow }: Evenin
     }
   }
 
-  async function handleAddTomorrow(event: FormEvent) {
-    event.preventDefault()
-    const title = tomorrowDraft.trim()
-    if (!title) return
+  async function handleAddTomorrow(value: AddTaskInlineValue) {
     try {
-      await tasksRepo.create({ title, date: tomorrow, isMIT: true })
-      setTomorrowDraft('')
+      await tasksRepo.create({
+        title: value.title,
+        date: tomorrow,
+        isMIT: true,
+        firstMove: value.firstMove,
+        estimateMin: value.estimateMin,
+      })
     } catch (error) {
       if (!(error instanceof RuleViolationError)) {
         console.error('Failed to add tomorrow focus', error)
@@ -194,15 +196,9 @@ export function EveningReviewDialog({ isOpen, onClose, today, tomorrow }: Evenin
                   ))}
               </div>
               {tomorrowMits.length < 3 ? (
-                <form onSubmit={handleAddTomorrow} className="mt-2">
-                  <input
-                    type="text"
-                    value={tomorrowDraft}
-                    onChange={(event) => setTomorrowDraft(event.target.value)}
-                    placeholder="Add a focus for tomorrow"
-                    className="min-h-11 w-full rounded-md bg-bg px-4 py-3 text-body text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent-ring"
-                  />
-                </form>
+                <div className="mt-2">
+                  <AddTaskInline placeholder="Add a focus for tomorrow" onAdd={handleAddTomorrow} />
+                </div>
               ) : (
                 <p className="mt-2 min-h-11 py-2.5 text-subhead text-text-muted">
                   Three is enough for tomorrow.

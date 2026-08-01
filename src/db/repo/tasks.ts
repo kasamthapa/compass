@@ -10,6 +10,8 @@ export interface CreateTaskInput {
   isMIT?: boolean
   weeklyPriorityId?: string
   goalId?: string
+  firstMove?: string
+  estimateMin?: number
 }
 
 export async function create(input: CreateTaskInput): Promise<Task> {
@@ -29,6 +31,8 @@ export async function create(input: CreateTaskInput): Promise<Task> {
     isMIT: input.isMIT ?? false,
     weeklyPriorityId: input.weeklyPriorityId,
     goalId: input.goalId,
+    firstMove: input.firstMove,
+    estimateMin: input.estimateMin,
     createdAt: timestamp,
     updatedAt: timestamp,
   }
@@ -38,7 +42,19 @@ export async function create(input: CreateTaskInput): Promise<Task> {
 
 export async function update(
   id: string,
-  patch: Partial<Pick<Task, 'title' | 'notes' | 'date' | 'isMIT' | 'weeklyPriorityId' | 'goalId'>>,
+  patch: Partial<
+    Pick<
+      Task,
+      | 'title'
+      | 'notes'
+      | 'date'
+      | 'isMIT'
+      | 'weeklyPriorityId'
+      | 'goalId'
+      | 'firstMove'
+      | 'estimateMin'
+    >
+  >,
 ): Promise<void> {
   const existing = await db.tasks.get(id)
   if (!existing) return

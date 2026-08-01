@@ -1,9 +1,10 @@
-import { useState, type FormEvent } from 'react'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import * as tasksRepo from '../../db/repo/tasks'
 import { RuleViolationError } from '../../db/rules'
 import type { Task } from '../../types/models'
 import { IconGoals, IconChevronDown, IconCheck } from '../icons'
+import { AddTaskInline, type AddTaskInlineValue } from './AddTaskInline'
 
 interface TaskRowProps {
   task: Task
@@ -25,10 +26,20 @@ function TaskRow({ task, onToggle }: TaskRowProps) {
       >
         {done && <IconCheck className="h-4 w-4" />}
       </button>
-      <p className={`text-body ${done ? 'text-text-faint line-through' : 'text-text'}`}>
-        {task.title}
-      </p>
-      {task.goalId && <IconGoals className="h-3.5 w-3.5 shrink-0 text-text-faint" />}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <p className={`text-body ${done ? 'text-text-faint line-through' : 'text-text'}`}>
+            {task.title}
+          </p>
+          {task.goalId && <IconGoals className="h-3.5 w-3.5 shrink-0 text-text-faint" />}
+          {task.estimateMin && (
+            <span className="shrink-0 rounded-full bg-bg px-1.5 py-0.5 font-mono text-caption-2 text-text-faint">
+              ~{task.estimateMin}m
+            </span>
+          )}
+        </div>
+        {task.firstMove && <p className="mt-0.5 text-caption text-text-faint">{task.firstMove}</p>}
+      </div>
     </div>
   )
 }
@@ -43,19 +54,20 @@ export function TodayFocus({ today }: TodayFocusProps) {
   const others = tasksToday.filter((task) => !task.isMIT)
 
   const [showOthers, setShowOthers] = useState(false)
-  const [draft, setDraft] = useState('')
 
   async function handleToggle(task: Task) {
     await tasksRepo.setStatus(task.id, task.status === 'done' ? 'todo' : 'done')
   }
 
-  async function handleAdd(event: FormEvent) {
-    event.preventDefault()
-    const title = draft.trim()
-    if (!title) return
+  async function handleAdd(value: AddTaskInlineValue) {
     try {
-      await tasksRepo.create({ title, date: today, isMIT: true })
-      setDraft('')
+      await tasksRepo.create({
+        title: value.title,
+        date: today,
+        isMIT: true,
+        firstMove: value.firstMove,
+        estimateMin: value.estimateMin,
+      })
     } catch (error) {
       if (!(error instanceof RuleViolationError)) {
         console.error('Failed to add focus task', error)
@@ -74,15 +86,10 @@ export function TodayFocus({ today }: TodayFocusProps) {
         </div>
         <div className={mits.length > 0 ? 'border-t border-border-hairline py-2' : 'py-2'}>
           {mits.length < 3 ? (
-            <form onSubmit={handleAdd}>
-              <input
-                type="text"
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                placeholder={mits.length === 0 ? 'What matters most today?' : 'Add another focus'}
-                className="min-h-11 w-full bg-transparent text-body text-text placeholder:text-text-faint focus:outline-none"
-              />
-            </form>
+            <AddTaskInline
+              placeholder={mits.length === 0 ? 'What matters most today?' : 'Add another focus'}
+              onAdd={handleAdd}
+            />
           ) : (
             <p className="min-h-11 py-2.5 text-subhead text-text-muted">Three is enough for today.</p>
           )}
