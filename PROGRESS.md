@@ -666,3 +666,88 @@ screen only — no new routes, no data-layer changes beyond using the
   sheet entirely is still one tap away via backdrop/Escape, consistent
   with every other dialog in the app). Revisit if that reads as
   surprising in practice.
+
+## Phase 2B.1 — Visual polish pass on the Focus/Stuck surfaces
+
+UI-only. No logic, data, timer behavior, or `pickNextAction` changes —
+confirmed by the full test suite passing unmodified (21/21).
+
+### What was built
+
+- **New tokens** (`src/styles/tokens.css`): `--shadow-elevated` (a soft,
+  large omnidirectional shadow plus an inset top-edge highlight, tuned per
+  theme) and `--breathe-glow` (a radial gradient blending a warm amber
+  center into a cool ink-blue edge, per theme) — wired into
+  `tailwind.config.js` as `shadow-elevated`. A `breathe` keyframe (slow
+  4s scale+opacity pulse) and `.breathe-pulse` class, with an explicit
+  `transform: none !important; animation: none !important` override in
+  the existing `prefers-reduced-motion` block — the same pattern already
+  used for `.ios-press`/`.ios-sheet`, extended to cover this new case.
+- **"Stuck?" pill redesigned** (`TodayHeader`): now a warm `bg-accent-wash`
+  pill with a new `IconLifebuoy` icon and `text-accent`, given its own
+  top-right position aligned to the date/greeting block (previously
+  crammed inline with the greeting sentence, which read as "awkwardly
+  floating").
+- **`Sheet` given real elevation**: `shadow-elevated` (replacing the
+  thinner `shadow-sheet`/`shadow-card` split), `backdrop-blur-sm` on the
+  dimmed backdrop, `max-w-lg` (up from `max-w-md`) and `p-6 md:p-8` (up
+  from `p-5`) for more generous, considered spacing and desktop presence.
+  This is shared infrastructure — `CaptureDialog` and
+  `EveningReviewDialog` inherit the same elevation for free, which is a
+  deliberate, desired side effect (one consistent premium sheet
+  everywhere), not scope creep.
+- **`StuckOverlay` hierarchy improved**: a small `IconLifebuoy` badge
+  (`bg-accent-wash` circle) above the headline for warmth; headline
+  promoted to `font-display text-title` (previously plain `text-headline`)
+  so it reads as a considered statement, not a form label; the
+  input/one-thing display bumped from `rounded-md` to `rounded-lg`;
+  "Start 2 min" is now a full pill with `shadow-fab` (the same soft amber
+  glow already used for the capture FAB) so it reads as clearly primary;
+  "Still stuck — just breathe" gained a touch more top margin.
+- **`BreathingMoment` redesigned**: the flat gray disc is now a
+  `breathe-pulse` circle filled with `var(--breathe-glow)` — a soft,
+  slow-pulsing warm/cool radial glow instead of a static disc. Countdown
+  number unchanged in position (below the circle), just restyled
+  slightly. Verified the reduced-motion override is correctly scoped in
+  code (see DECISIONS.md); couldn't toggle the OS-level media feature
+  live in this sandboxed browser to demo it, but it follows the exact
+  proven pattern already shipping elsewhere in this file.
+- **`FocusTimer` rebuilt around a circular SVG progress ring** — replacing
+  the flat linear bar: an amber arc (`stroke-dashoffset` animated) around
+  a faint `--grid-empty` track, with the big mono countdown centered
+  inside. Pause/Reset (and the "time's up" Add-5-min/Done pair) are now
+  full pill buttons, primary one carrying `shadow-fab`.
+- **`FocusMode` buttons** updated to match: `rounded-full` + `shadow-fab`
+  on the primary "Start 2 min", pill shape on "Start 25 min"/"Done" too,
+  for visual consistency with the rest of the new language.
+
+### Key decisions
+
+- **Reused existing tokens where they already fit** rather than adding
+  new ones for the sake of it: the "Stuck?" pill's warm tint is
+  `--accent-wash` (already exactly "a very low-opacity amber tint"), and
+  every new primary CTA's glow is the existing `--shadow-fab` (already
+  designed as a soft amber glow for the capture FAB) — both reused
+  verbatim rather than duplicated under new names.
+- **`Sheet`'s elevation upgrade applies to all its consumers**, not just
+  the Stuck overlay, since it's shared infrastructure and the phase
+  prompt's own complaint ("small/lost on desktop") was about the sheet
+  primitive itself, not something specific to Stuck. No behavior changed
+  for `CaptureDialog`/`EveningReviewDialog`, only presentation.
+- **`FocusMode`'s full-bleed `FullScreenOverlay` shell was left alone.**
+  The "feels small/lost on desktop" complaint doesn't apply to something
+  that already fills the entire viewport — that specific complaint was
+  about the bounded `Sheet` (used by the Stuck overlay). Only FocusMode's
+  *internal* button styling was updated for visual consistency with the
+  new pill/glow language.
+
+### Known issues / follow-ups
+
+- The `frontend-design` skill referenced in this phase's prompt doesn't
+  exist on this machine (no `/mnt` path here) — proceeded using the
+  app's own established design-token conventions and general premium-iOS
+  design judgment instead. Flagged to the user at the start of the turn.
+- Reduced-motion behavior for `.breathe-pulse` is verified by code
+  inspection only (matches the proven `.ios-press`/`.ios-sheet` pattern)
+  — not demoed live, since this sandboxed browser has no control to
+  toggle the OS-level `prefers-reduced-motion` media feature.
