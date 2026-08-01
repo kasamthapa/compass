@@ -91,21 +91,21 @@ export function FocusMode({ isOpen, onClose, today }: FocusModeProps) {
               <button
                 type="button"
                 onClick={() => setTimerMinutes(2)}
-                className="ios-press min-h-11 w-56 rounded-md bg-accent px-6 text-subhead font-semibold text-accent-on"
+                className="ios-press min-h-11 w-56 rounded-full bg-accent px-6 text-subhead font-semibold text-accent-on shadow-fab"
               >
                 Start 2 min
               </button>
               <button
                 type="button"
                 onClick={() => setTimerMinutes(25)}
-                className="ios-press min-h-11 w-56 rounded-md bg-surface px-6 text-subhead font-semibold text-text"
+                className="ios-press min-h-11 w-56 rounded-full bg-surface px-6 text-subhead font-semibold text-text"
               >
                 Start 25 min
               </button>
               <button
                 type="button"
                 onClick={() => void handleDone()}
-                className="ios-press min-h-11 px-6 text-subhead font-medium text-text-muted"
+                className="ios-press min-h-11 rounded-full px-6 text-subhead font-medium text-text-muted"
               >
                 Done
               </button>

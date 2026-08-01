@@ -6,6 +6,9 @@ interface FocusTimerProps {
   onExit: () => void
 }
 
+const RING_RADIUS = 90
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS
+
 function formatClock(totalSeconds: number): string {
   const minutes = Math.floor(totalSeconds / 60)
   const seconds = totalSeconds % 60
@@ -47,20 +50,22 @@ export function FocusTimer({ minutes, onExit }: FocusTimerProps) {
 
   if (phase === 'complete') {
     return (
-      <div className="flex flex-col items-center gap-6 text-center">
-        <p className="text-headline text-text">Time's up — keep going or take a break?</p>
-        <div className="flex gap-3">
+      <div className="flex flex-col items-center gap-7 text-center">
+        <p className="font-display text-title text-text">
+          Time's up — keep going or take a break?
+        </p>
+        <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={handleAddFiveMin}
-            className="ios-press min-h-11 rounded-md bg-surface px-5 text-subhead font-semibold text-text"
+            className="ios-press min-h-11 rounded-full bg-surface px-6 text-subhead font-semibold text-text"
           >
             Add 5 min
           </button>
           <button
             type="button"
             onClick={onExit}
-            className="ios-press min-h-11 rounded-md bg-accent px-5 text-subhead font-semibold text-accent-on"
+            className="ios-press min-h-11 rounded-full bg-accent px-6 text-subhead font-semibold text-accent-on shadow-fab"
           >
             Done
           </button>
@@ -70,28 +75,47 @@ export function FocusTimer({ minutes, onExit }: FocusTimerProps) {
   }
 
   const progress = 1 - remaining / totalSeconds
+  const dashoffset = RING_CIRCUMFERENCE * (1 - progress)
 
   return (
     <div className="flex flex-col items-center gap-8 text-center">
-      <p className="font-mono text-[3.5rem] leading-none text-text">{formatClock(remaining)}</p>
-      <div className="h-1.5 w-full max-w-xs overflow-hidden rounded-full bg-grid-empty">
-        <div
-          className="h-full rounded-full bg-accent transition-[width] duration-1000 ease-linear"
-          style={{ width: `${progress * 100}%` }}
-        />
+      <div className="relative flex h-52 w-52 items-center justify-center">
+        <svg viewBox="0 0 200 200" className="absolute inset-0 -rotate-90">
+          <circle
+            cx="100"
+            cy="100"
+            r={RING_RADIUS}
+            fill="none"
+            stroke="var(--grid-empty)"
+            strokeWidth="8"
+          />
+          <circle
+            cx="100"
+            cy="100"
+            r={RING_RADIUS}
+            fill="none"
+            stroke="var(--accent)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray={RING_CIRCUMFERENCE}
+            strokeDashoffset={dashoffset}
+            className="transition-[stroke-dashoffset] duration-1000 ease-linear"
+          />
+        </svg>
+        <p className="font-mono text-[2.75rem] leading-none text-text">{formatClock(remaining)}</p>
       </div>
       <div className="flex items-center gap-3">
         <button
           type="button"
           onClick={() => setPhase(phase === 'running' ? 'paused' : 'running')}
-          className="ios-press min-h-11 rounded-md bg-accent px-6 text-subhead font-semibold text-accent-on"
+          className="ios-press min-h-11 rounded-full bg-accent px-8 text-subhead font-semibold text-accent-on shadow-fab"
         >
           {phase === 'running' ? 'Pause' : 'Start'}
         </button>
         <button
           type="button"
           onClick={handleReset}
-          className="ios-press min-h-11 rounded-md px-5 text-subhead font-medium text-text-muted"
+          className="ios-press min-h-11 rounded-full bg-surface px-6 text-subhead font-medium text-text-muted"
         >
           Reset
         </button>
