@@ -9,20 +9,29 @@ export interface CreateHabitInput {
   targetPerWeek: number
   goalId?: string
   color?: string
+  /** Defaults to 'active'. Pass 'paused' to bypass the active-habit cap (e.g. an inbox "save as paused" escape valve). */
+  status?: Habit['status']
 }
 
 export async function create(input: CreateHabitInput): Promise<Habit> {
-  const allowed = await canActivateHabit()
-  if (!allowed) {
-    throw new RuleViolationError('MAX_ACTIVE_HABITS', 'You can have at most 5 active habits.')
+  const status = input.status ?? 'active'
+  if (status === 'active') {
+    const allowed = await canActivateHabit()
+    if (!allowed) {
+      throw new RuleViolationError('MAX_ACTIVE_HABITS', 'You can have at most 5 active habits.')
+    }
   }
   const timestamp = nowISO()
   const habit: Habit = {
     id: crypto.randomUUID(),
-    status: 'active',
     createdAt: timestamp,
     updatedAt: timestamp,
-    ...input,
+    name: input.name,
+    cue: input.cue,
+    targetPerWeek: input.targetPerWeek,
+    goalId: input.goalId,
+    color: input.color,
+    status,
   }
   await db.habits.add(habit)
   return habit

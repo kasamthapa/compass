@@ -15,11 +15,30 @@ export async function create(text: string): Promise<CaptureItem> {
   return item
 }
 
-// `processed` is a boolean — not indexed (see DECISIONS.md), so this is a
-// client-side filter over the whole table. Fine at this table's scale (a
-// personal capture inbox).
+function isInMainInbox(item: CaptureItem): boolean {
+  return !item.processed && !item.someday && !item.deletedAt
+}
+
+// `processed`/`someday` are booleans — not indexed (see DECISIONS.md), so
+// these are client-side filters over the whole table. Fine at this table's
+// scale (a personal capture inbox).
 export async function getUnprocessed(): Promise<CaptureItem[]> {
-  return db.captures.filter((item) => !item.processed && !item.deletedAt).toArray()
+  return db.captures.filter(isInMainInbox).toArray()
+}
+
+export async function getUnprocessedCount(): Promise<number> {
+  return db.captures.filter(isInMainInbox).count()
+}
+
+/** Items parked in "Someday / maybe" — still unprocessed, just set aside. */
+export async function getSomeday(): Promise<CaptureItem[]> {
+  return db.captures
+    .filter((item) => !item.processed && Boolean(item.someday) && !item.deletedAt)
+    .toArray()
+}
+
+export async function update(id: string, patch: Partial<Pick<CaptureItem, 'text'>>): Promise<void> {
+  await db.captures.update(id, { ...patch, updatedAt: nowISO() })
 }
 
 export async function markProcessed(
@@ -31,6 +50,10 @@ export async function markProcessed(
     convertedTo,
     updatedAt: nowISO(),
   })
+}
+
+export async function markSomeday(id: string): Promise<void> {
+  await db.captures.update(id, { someday: true, updatedAt: nowISO() })
 }
 
 export async function softDelete(id: string): Promise<void> {

@@ -8,6 +8,8 @@ export interface Base {
 export interface CaptureItem extends Base {
   text: string
   processed: boolean
+  /** Deferred to the "Someday / maybe" section — still unprocessed, just parked. */
+  someday?: boolean
   convertedTo?: { type: 'task' | 'habit' | 'note' | 'someday'; id: string }
 }
 

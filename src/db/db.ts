@@ -54,6 +54,10 @@ export class CompassDB extends Dexie {
     // migration path; Dexie carries all existing data forward untouched
     // since no store is redeclared here.
     this.version(2).stores({})
+
+    // v3 (Phase 3): CaptureItem gained `someday?: boolean`. Also not
+    // indexed (boolean — see DECISIONS.md), so again no store redeclared.
+    this.version(3).stores({})
   }
 }
 
