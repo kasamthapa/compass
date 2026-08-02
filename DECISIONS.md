@@ -118,3 +118,17 @@ violated, so the limits (max 5 active habits, max 3 MITs/day, max 3 weekly
 priorities) hold regardless of which UI eventually calls the repo. UI layers
 built later should catch `RuleViolationError` for user-facing messaging, not
 re-implement the counting logic.
+
+## Goals' 5-active cap is soft — a different pattern from the hard caps above
+
+`rules.isAtGoalSoftCap()` returns a plain `boolean` and never throws, unlike
+every other limit in `rules.ts`. `goalsRepo.create()` has no cap check at
+all — the 5-goal limit is purely advisory, per the Phase 4A spec ("do NOT
+hard-block... still let me save if I choose to"). `GoalForm.tsx` calls
+`isAtGoalSoftCap()` itself (via a live query on `getActive()`) and renders a
+calm nudge ("Focus beats breadth...") when at/over the cap, but the Save
+button stays fully functional either way. Do not "fix" this into a
+`RuleViolationError` — habits/MITs/weekly-priorities are product law that
+must hold no matter which caller invokes the repo; goals are deliberately
+not that, since the cap only needs to matter at the one point of friction
+(creating a new goal), not as a database-level invariant.

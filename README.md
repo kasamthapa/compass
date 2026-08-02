@@ -64,6 +64,22 @@ What's actually built so far:
     instantly — no dialog in the way.
   - A genuinely calm "Inbox zero. Nothing to sort." when there's nothing
     left to process.
+- **Goals** — the year → month cascade:
+  - Active yearly goals as inset-grouped cards: title, an italic "why"
+    identity line, and a live progress % from linked milestones. Tap to
+    expand in place and see milestones grouped by month, each a quiet
+    row that toggles active → done with a subtle strikethrough (never a
+    harsh color).
+  - **Soft 5-goal cap**: at the 5th active goal, a calm nudge ("Focus
+    beats breadth — consider finishing or pausing one first") — never a
+    block. You can always save anyway.
+  - Add a milestone inline within an expanded goal card, same
+    lightweight pattern as the Today/Inbox task forms.
+  - A quiet "⋯" menu per goal for Edit, Mark achieved, or Mark dropped —
+    archived goals collapse into an "Archived (N)" section out of the
+    way.
+  - Optional goal-link chips on the habit create forms (Today and
+    Inbox's habit conversion) — fully optional, never required.
 - **Light and dark themes**, following the system setting by default.
 - **Installable, offline-first PWA** — the app shell is precached, so it
   loads and works with no network connection.
@@ -130,7 +146,7 @@ which is the only layer that touches the database.
 - [x] Today screen (MITs, habits, year grain, evening review)
 - [x] Focus mode & "I'm stuck" support
 - [x] Inbox (quick capture triage)
-- [ ] Goals cascade (year → month → week)
+- [x] Goals cascade (year → month)
 - [ ] Week view
 - [ ] Journal
 - [ ] Insights

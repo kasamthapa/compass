@@ -848,3 +848,83 @@ collects. New `/inbox` screen; no changes to how capture itself works.
   literal reading of the phase prompt (which didn't specify which day)
   — worth revisiting if it doesn't match how planning actually happens
   in practice.
+
+## Phase 4A — Goals cascade
+
+### What was built
+
+- **Goals list** (`/goals`, `GoalsPage.tsx`): active yearly goals as
+  inset-grouped cards (`GoalCard.tsx`). Each shows the title (display
+  font), an italic "why" line, and a mono progress % (from
+  `goalsRepo.progress()`, reactive via `useLiveQuery`). Tapping a card
+  expands it in place to show its milestones grouped under mono month
+  labels (`formatMonthLabel` in `src/lib/dates.ts`, e.g. "AUG"), sorted
+  chronologically by the `YYYY-MM` `month` string. Collapsing re-hides
+  them; no data is lost, it's a pure UI toggle.
+- **Milestone rows**: a quiet circle-checkbox tap toggles `active` ↔
+  `done` (`milestonesRepo.setStatus`); done gets a subtle strikethrough
+  and a filled amber circle with a checkmark — never a harsh color.
+- **Create/Edit goal** (`GoalForm.tsx`, a `Sheet`): title, "why" textarea
+  with a small helper prompt, year (defaults to current year). The
+  5-active-goal cap is a **soft** nudge — `rules.isAtGoalSoftCap()`
+  returns a boolean (never throws), and the form shows "Focus beats
+  breadth — consider finishing or pausing one first" while leaving Save
+  fully enabled. Reused for editing an existing goal via the overflow
+  menu (nudge text only shows when creating, never when editing).
+- **Add milestone**: inline "+ add milestone" affordance within an
+  expanded goal card, following `AddTaskInline`'s lightweight
+  reveal-a-form-then-collapse pattern. Uses a native `<input
+  type="month">` for the month picker since its value format
+  (`YYYY-MM`) already matches `Milestone.month` exactly.
+- **Archived section**: goals with `status: 'achieved' | 'dropped'`
+  (`goalsRepo.getArchived()`, a new `.anyOf(['achieved', 'dropped'])`
+  query) live in a collapsed "Archived (N)" list at the bottom, each row
+  just title + a quiet status label — no actions, kept simple since
+  reactivating an archived goal wasn't in scope.
+- **Overflow menu**: a quiet "⋯" (`IconMore`, new) on each expanded
+  card's footer opens a small absolute-positioned menu — Edit, Mark
+  achieved, Mark dropped — instead of loud inline buttons. A full-screen
+  invisible backdrop closes it on outside click.
+- **Habit → goal link**: the same goal-chip-picker pattern already built
+  for `TaskConvertForm` (a row of toggleable pill buttons, one per
+  active goal) was added to both `TodayHabits`'s `AddHabitForm` and
+  Inbox's `HabitConvertForm`. Fully optional — `goalId` stays
+  `undefined` if no chip is tapped, and the picker doesn't render at all
+  when there are no active goals yet.
+- **Empty state**: "What's the shape of this year?" / "Add a goal when
+  you're ready." when there are zero active goals (archived goals, if
+  any, still show below).
+- **Tests** (`src/db/__tests__/goals.test.ts`): `goals.progress()` for
+  zero milestones, a partial ratio (rounds to nearest %), and exclusion
+  of soft-deleted milestones; `goals.getArchived()` returns only
+  achieved/dropped and excludes active; `isAtGoalSoftCap()` is false
+  under 5, true at 5, and — critically — still allows creating a 6th
+  goal (asserts `getActive()` returns 6, proving the cap never blocks).
+  5 new tests, 30 total, all green.
+
+### Key decisions
+
+- **The soft cap lives in `rules.ts` as a plain boolean function, not a
+  `RuleViolationError`.** Every other cap in the app throws to hard-block
+  the write; goals are explicitly a nudge per the phase spec, so
+  `isAtGoalSoftCap()` never throws — the UI reads it and shows an
+  advisory line, but `goalsRepo.create()` itself has no cap check at all.
+  See DECISIONS.md.
+- **Milestone month values are plain `YYYY-MM` strings, matching
+  `monthKey()`**, so `<input type="month">` can bind to them directly
+  with no format translation, and grouping/sorting is a plain
+  `localeCompare` on the string.
+- **The overflow menu bundles Edit with Mark achieved/Mark dropped**
+  rather than adding a separate visible Edit affordance — the phase
+  prompt only specified the archive actions needed to be quiet/hidden,
+  and a single "⋯" affordance per card stays consistent with that intent
+  without adding a second icon button.
+
+### Known issues / follow-ups
+
+- Archived goals are display-only — no "reactivate" action yet. Natural
+  follow-up once there's a concrete need (e.g. reopening a goal
+  abandoned earlier in the year).
+- The overflow menu is a plain absolute-positioned `<div>`, not a
+  reusable "Menu" component — if a third place in the app needs the same
+  pattern, that's the point to extract it rather than to keep copying.
