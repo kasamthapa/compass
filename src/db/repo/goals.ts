@@ -37,6 +37,14 @@ export async function getActive(): Promise<Goal[]> {
     .toArray()
 }
 
+export async function getArchived(): Promise<Goal[]> {
+  return db.goals
+    .where('status')
+    .anyOf(['achieved', 'dropped'])
+    .filter((goal) => !goal.deletedAt)
+    .toArray()
+}
+
 /** Percentage (0-100) of this goal's milestones that are done. */
 export async function progress(goalId: string): Promise<number> {
   const milestones = await db.milestones

@@ -71,6 +71,12 @@ export function formatHeaderDate(date: string): string {
   return `${WEEKDAYS_SHORT[d.getDay()]} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
 }
 
+/** "YYYY-MM" -> "AUG" — the mono month-group label used on the Goals page. */
+export function formatMonthLabel(month: string): string {
+  const [, monthStr] = month.split('-')
+  return MONTHS_SHORT[Number(monthStr) - 1]
+}
+
 /** e.g. "2h ago" — a quiet relative timestamp for capture rows. */
 export function formatRelativeTime(isoTimestamp: string, now: Date = new Date()): string {
   const diffMs = now.getTime() - new Date(isoTimestamp).getTime()
