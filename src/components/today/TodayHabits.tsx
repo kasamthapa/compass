@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent, type MouseEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import * as habitsRepo from '../../db/repo/habits'
 import type { HabitWithTodayLog } from '../../db/repo/habits'
+import * as goalsRepo from '../../db/repo/goals'
 import { RuleViolationError } from '../../db/rules'
 
 const DAY_LETTERS = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
@@ -130,14 +131,22 @@ function AddHabitForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =
   const [name, setName] = useState('')
   const [cue, setCue] = useState('')
   const [target, setTarget] = useState(5)
+  const [goalId, setGoalId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+
+  const goals = useLiveQuery(() => goalsRepo.getActive(), []) ?? []
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const trimmedName = name.trim()
     if (!trimmedName) return
     try {
-      await habitsRepo.create({ name: trimmedName, cue: cue.trim(), targetPerWeek: target })
+      await habitsRepo.create({
+        name: trimmedName,
+        cue: cue.trim(),
+        targetPerWeek: target,
+        goalId: goalId ?? undefined,
+      })
       onDone()
     } catch (submitError) {
       if (submitError instanceof RuleViolationError) {
@@ -193,6 +202,22 @@ function AddHabitForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =
           </button>
         </div>
       </div>
+      {goals.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {goals.map((goal) => (
+            <button
+              key={goal.id}
+              type="button"
+              onClick={() => setGoalId((current) => (current === goal.id ? null : goal.id))}
+              className={`ios-press min-h-9 rounded-full px-3 text-caption font-medium transition-colors ${
+                goalId === goal.id ? 'bg-accent-wash text-accent' : 'bg-bg text-text-muted'
+              }`}
+            >
+              {goal.title}
+            </button>
+          ))}
+        </div>
+      )}
       {error && <p className="text-subhead text-text-muted">{error}</p>}
     </form>
   )
