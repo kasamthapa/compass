@@ -70,3 +70,17 @@ export function formatHeaderDate(date: string): string {
   const d = parseDateISO(date)
   return `${WEEKDAYS_SHORT[d.getDay()]} · ${d.getDate()} ${MONTHS_SHORT[d.getMonth()]}`
 }
+
+/** e.g. "2h ago" — a quiet relative timestamp for capture rows. */
+export function formatRelativeTime(isoTimestamp: string, now: Date = new Date()): string {
+  const diffMs = now.getTime() - new Date(isoTimestamp).getTime()
+  const diffMin = Math.floor(diffMs / 60_000)
+  if (diffMin < 1) return 'just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}h ago`
+  const diffDay = Math.floor(diffHr / 24)
+  if (diffDay < 7) return `${diffDay}d ago`
+  const diffWeek = Math.floor(diffDay / 7)
+  return `${diffWeek}w ago`
+}

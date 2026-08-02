@@ -134,3 +134,55 @@ export function IconLifebuoy({ className }: IconProps) {
     </svg>
   )
 }
+
+export function IconChecklist({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M4 6.5l1.5 1.5L8 5.5" />
+      <path d="M11 6.5h9" />
+      <path d="M4 12l1.5 1.5L8 11" />
+      <path d="M11 12h9" />
+      <path d="M4 17.5l1.5 1.5L8 16.5" />
+      <path d="M11 17.5h9" />
+    </svg>
+  )
+}
+
+export function IconRepeat({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M4 7.5a5.5 5.5 0 0 1 9.5-3.8L16 6" />
+      <path d="M16 3v3.5h-3.5" />
+      <path d="M20 16.5a5.5 5.5 0 0 1-9.5 3.8L8 18" />
+      <path d="M8 21v-3.5h3.5" />
+    </svg>
+  )
+}
+
+export function IconBookmark({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M6.5 4.5h11a1 1 0 0 1 1 1v14.5l-6.5-4-6.5 4V5.5a1 1 0 0 1 1-1Z" />
+    </svg>
+  )
+}
+
+export function IconEdit({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M4 20l4.2-1 10-10a2 2 0 0 0-2.8-2.8l-10 10L4 20Z" />
+      <path d="M13 5.5L18.5 11" />
+    </svg>
+  )
+}
+
+export function IconTrash({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M4.5 7h15" />
+      <path d="M9 7V4.8a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1V7" />
+      <path d="M6.5 7l1 12.2a1.5 1.5 0 0 0 1.5 1.4h6a1.5 1.5 0 0 0 1.5-1.4L17.5 7" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  )
+}
