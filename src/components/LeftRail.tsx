@@ -1,7 +1,11 @@
 import { NavLink } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { NAV_ITEMS } from './navConfig'
+import * as capturesRepo from '../db/repo/captures'
 
 export function LeftRail() {
+  const unprocessedCount = useLiveQuery(() => capturesRepo.getUnprocessedCount(), []) ?? 0
+
   return (
     <nav
       aria-label="Primary"
@@ -22,6 +26,11 @@ export function LeftRail() {
         >
           <Icon className="h-5 w-5 shrink-0" />
           {label}
+          {to === '/inbox' && unprocessedCount > 0 && (
+            <span className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 font-mono text-[10px] font-semibold leading-none text-accent-on">
+              {unprocessedCount > 9 ? '9+' : unprocessedCount}
+            </span>
+          )}
         </NavLink>
       ))}
     </nav>
