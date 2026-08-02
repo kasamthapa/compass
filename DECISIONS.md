@@ -85,6 +85,29 @@ is the priority. It's a plain function (not a repo query) because it
 operates on an already-fetched task list — no reason to touch Dexie twice
 for the same day's tasks.
 
+## Someday is a flag, not a terminal "processed" state
+
+`CaptureItem.someday?: boolean` is a separate field from `processed`. A
+someday item stays `processed: false` — it's parked, not converted to
+anything, and (unlike a genuinely processed item) could still be picked up
+later and turned into a task/habit/note through the exact same processing
+panel. `getUnprocessed()` excludes it from the main inbox; `getSomeday()`
+is the dedicated query for the "Someday / maybe" section. This is a
+deliberate departure from the model's existing `convertedTo.type:
+'someday'` union member (still present, now effectively unused) — that
+shape would have meant marking someday items `processed: true`, which
+reads as a one-way door and would make "reconsider this later" awkward.
+
+## Habit creation can bypass the active-habit cap for a specific status
+
+`habits.create()` accepts an optional `status` (defaults to `'active'`);
+the 5-active-habit cap check only runs when the resulting status is
+`'active'`. This exists so the inbox's habit-conversion form can offer a
+calm "save as paused" escape valve when the cap is already hit, instead of
+blocking the conversion outright or silently discarding the capture. Every
+other caller is unaffected — passing no `status` behaves exactly as
+before.
+
 ## Rule enforcement lives in the repo layer, not the UI
 
 `src/db/rules.ts` exports `canActivateHabit()`, `canAddMIT(date)`, and

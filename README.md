@@ -18,8 +18,8 @@ functional offline.
 
 _Coming soon — drop images into [`docs/`](docs)._
 
-| Today (dark) | Today (light) |
-| --- | --- |
+| Today (dark)                                       | Today (light)                                        |
+| -------------------------------------------------- | ---------------------------------------------------- |
 | ![Today screen, dark theme](./docs/today-dark.png) | ![Today screen, light theme](./docs/today-light.png) |
 
 ## Features
@@ -51,6 +51,19 @@ What's actually built so far:
     small physical starting action (e.g. "open the doc") and a rough
     `~min` estimate, both off by default behind a quiet "+" affordance —
     never required fields.
+- **Inbox** — the frictionless capture-and-process screen:
+  - A calm list of unprocessed captures, newest first, with a quiet
+    unprocessed-count badge on the Inbox tab (hidden when empty).
+  - **Four ways to turn a thought into something real**: a task (with
+    date quick-chips, an MIT toggle, optional goal link), a habit, a
+    journal note, or "someday" — parked in a collapsible section instead
+    of cluttering the main list. Plus edit and (soft) delete.
+  - **Keyboard-driven triage** on desktop: `j`/`k` to move through the
+    list, `t`/`h`/`e` to jump straight into the task/habit/edit form for
+    the selected item, `n`/`s`/Backspace to note/someday/delete it
+    instantly — no dialog in the way.
+  - A genuinely calm "Inbox zero. Nothing to sort." when there's nothing
+    left to process.
 - **Light and dark themes**, following the system setting by default.
 - **Installable, offline-first PWA** — the app shell is precached, so it
   loads and works with no network connection.
@@ -116,7 +129,7 @@ which is the only layer that touches the database.
 - [x] Local data layer (Dexie schema, repos, product-rule enforcement)
 - [x] Today screen (MITs, habits, year grain, evening review)
 - [x] Focus mode & "I'm stuck" support
-- [ ] Inbox (quick capture triage)
+- [x] Inbox (quick capture triage)
 - [ ] Goals cascade (year → month → week)
 - [ ] Week view
 - [ ] Journal

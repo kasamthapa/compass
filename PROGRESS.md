@@ -751,3 +751,100 @@ confirmed by the full test suite passing unmodified (21/21).
   inspection only (matches the proven `.ios-press`/`.ios-sheet` pattern)
   — not demoed live, since this sandboxed browser has no control to
   toggle the OS-level `prefers-reduced-motion` media feature.
+
+## Phase 3 — Inbox: capture-and-process
+
+The frictionless review layer for everything `CaptureItem` already
+collects. New `/inbox` screen; no changes to how capture itself works.
+
+### What was built
+
+- **Inbox list**: `captures.getUnprocessed()`, newest first, each row a
+  calm text + relative mono timestamp (`formatRelativeTime` — "2h ago",
+  new in `src/lib/dates.ts`). The bottom tab bar and left rail both show a
+  quiet amber count badge on Inbox (`getUnprocessedCount()`), hidden at
+  zero — no red, per the phase prompt.
+- **Processing panel** (`ProcessSheet` + 4 large `ActionTile`s: Task /
+  Habit / Note / Someday, plus Edit/Delete):
+  - **Task** (`TaskConvertForm`): title prefilled from the capture text,
+    date quick-chips (Today/Tomorrow/This week — "this week" resolves to
+    the coming Sunday, since `Task.date` is a single ISO date with no
+    separate "week" concept), an MIT toggle that live-checks that date's
+    MIT count and swaps itself for a calm note at the cap instead of
+    blocking, goal chips (only rendered if any active goals exist), and
+    the same first-move/~min reveal-toggles as `AddTaskInline`.
+  - **Habit** (`HabitConvertForm`): name/cue/target, and at the 5-active
+    cap the Save button itself relabels to "Save as paused" (see
+    DECISIONS.md — `habits.create` now accepts an explicit `status`).
+  - **Note**: appends the capture text (tagged "— from inbox") to today's
+    `JournalEntry`, creating one if none exists yet; immediate action, no
+    intermediate form.
+  - **Someday**: immediate, tags the item and it disappears from the main
+    list into a collapsible "Someday / maybe" section at the bottom.
+  - **Edit**: a plain text field to fix a capture's wording before
+    processing; saving returns to the 4-action chooser rather than
+    closing, so the very next tap can pick a destination.
+  - **Delete**: soft-delete, same pattern as everywhere else in the app.
+  - All four destination actions call `capturesRepo.markProcessed` (or
+    `markSomeday`) — the capture disappears from the live-queried list
+    the instant the write lands, no manual refresh.
+- **Keyboard flow** (desktop): `j`/`k` move a highlighted selection;
+  with an item selected, `t`/`h`/`e` jump straight into the Task/Habit/Edit
+  form (skipping the 4-tile chooser), while `n`/`s`/Backspace fire the
+  Note/Someday/Delete actions immediately without opening any sheet at
+  all — the row just vanishes, which reads as fast triage rather than a
+  missing confirmation. A quiet `j/k · t/h/n/s/e/⌫` hint row sits under
+  the list, shown only on desktop (`md:flex`) since it's meaningless
+  without a keyboard.
+- **Inbox zero state**: "Inbox zero. Nothing to sort." — shown whenever
+  the main list is empty, even if Someday items remain.
+- **Shared helpers** (`src/lib/inboxActions.ts`): `convertCaptureToNote`,
+  `convertCaptureToSomeday`, `deleteCapture` — used by both the sheet's
+  tap-driven buttons and the page's keyboard handler, so the two paths
+  can never disagree about what these actions actually do.
+- **Schema v3**: `CaptureItem.someday?: boolean` (see DECISIONS.md for
+  why this is a separate flag rather than reusing `convertedTo.type:
+  'someday'`). Not indexed — same boolean-index limitation as
+  `processed`/`isMIT`.
+- **Tests** (`src/db/__tests__/inbox.test.ts`): capture→task conversion
+  sets `processed: true` with the correct `convertedTo`; `markSomeday`
+  excludes an item from `getUnprocessed()` while it appears in
+  `getSomeday()` and stays `processed: false`; the 6th-active-habit cap
+  rejects normally but succeeds with `status: 'paused'`; the 4th MIT for
+  a day is rejected. 4 new tests, 25 total, all green.
+
+### Key decisions
+
+- **Someday is a flag, not `processed: true`.** Full rationale in
+  DECISIONS.md — the short version is that "processed" should mean "this
+  thought became something," and someday items haven't; they're parked,
+  reversibly.
+- **`habits.create`'s cap check is conditional on the resulting status**,
+  not removed. Passing an explicit `status: 'paused'` is the only way to
+  bypass it — every existing caller (Today's add-habit form, the seed
+  script) is unaffected since none of them pass `status` and so still
+  default to `'active'` with the cap enforced exactly as before.
+- **Keyboard shortcuts for `n`/`s`/Backspace act immediately; `t`/`h`/`e`
+  open a form.** The dividing line is "does this action need more input
+  from me." Note/Someday/Delete need nothing else, so making them wait
+  for a sheet to animate open would slow down exactly the fast-triage
+  workflow this feature exists for.
+- **`TaskConvertForm`/`HabitConvertForm` are bespoke, not reuses of
+  `AddTaskInline`.** They need more fields (date chips, MIT-cap note,
+  goal chips; paused-cap note) than `AddTaskInline`'s single-line
+  MIT-only case supports. They mirror its first-move/~min reveal pattern
+  for interaction consistency but aren't the same component — forcing a
+  shared component here would mean threading a lot of conditional
+  complexity through what's currently a clean, single-purpose input.
+
+### Known issues / follow-ups
+
+- No UI yet for un-someday-ing an item back into the main inbox list —
+  the repo only exposes `markSomeday`, not the reverse. Natural follow-up
+  once there's a concrete need (e.g. from `/insights` or a future
+  someday-review flow).
+- The "This week" quick-chip's choice of "coming Sunday" as the concrete
+  date is a judgment call documented here and in DECISIONS.md, not a
+  literal reading of the phase prompt (which didn't specify which day)
+  — worth revisiting if it doesn't match how planning actually happens
+  in practice.
