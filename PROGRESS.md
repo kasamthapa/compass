@@ -1027,3 +1027,55 @@ collects. New `/inbox` screen; no changes to how capture itself works.
   numbering — documented inline and in DECISIONS.md so it's never
   mistaken for a calendar-standard week number if this ever needs to
   interoperate with an external calendar.
+
+## Phase 4B follow-up — Week view desktop layout fix
+
+### What was built
+
+UI-only fix: on real desktop widths, `/week`'s 7-column grid was
+squeezed into the app's shared 720px prose-width column (the same one
+Today/Journal/Goals/Inbox use), truncating task titles into
+near-unreadable single-line fragments ("Plan t...", "Book ...") while
+most of the screen sat empty.
+
+- **`AppShell.tsx`** now reads the current route (`useLocation`) and
+  applies `max-w-content-wide` (a new token, `--content-max-width-wide:
+  1400px` in `tokens.css`) only when `pathname === '/week'`; every other
+  route still gets the unchanged `max-w-content` (720px). Verified in
+  the browser that Today/Goals both still measure exactly 720px.
+- **`WeekGrid.tsx`**: task titles switched from single-line `truncate`
+  to `md:line-clamp-2 md:whitespace-normal` — 2-line wrap on desktop,
+  falling back to a line-clamp ellipsis only when a title still
+  overflows 2 lines. Mobile keeps the original unprefixed `truncate`
+  untouched. Day-card padding bumped `md:px-4 md:py-4` (from `px-3
+  py-3`) and header-to-rows spacing `md:mt-3` (from `mt-1`), row height
+  `md:py-2.5` (from `py-2`) — all as `md:`-only additions so the base
+  (mobile) classes, and therefore the mobile layout, are byte-for-byte
+  unchanged. The day-column gap was deliberately left at `gap-3` (not
+  increased) — see Key decisions.
+
+### Key decisions
+
+- **The wider cap (1400px) doesn't fully "kick in" at 1280px** — at
+  that viewport, available width after the 240px rail and page padding
+  is only ~950–1000px, well under the 1400px cap, so the grid just uses
+  all available space rather than being capped. This is expected and
+  fine: the fix's job at 1280 is making the *available* space read
+  well, not manufacturing extra space that isn't there. Verified with
+  real task titles ("Book dentist appointment", "Pick up dry cleaning")
+  reading fully at 1280–1512px, and even long ones ("Draft the
+  quarterly proposal document for review") wrapping to a clean 2-line
+  clamp rather than a single-word fragment.
+- **Column gap stayed at `gap-3` rather than growing on desktop.** An
+  earlier pass bumped it to `md:gap-5`, but at 1280px that alone ate
+  ~48px that would otherwise go to column content — since 7 columns
+  compete for the same fixed width, gap and padding are directly
+  traded against legibility. Keeping the gap at its existing size and
+  only growing padding modestly (`px-3`→`px-4`) was the better trade at
+  the smallest verified desktop width.
+
+### Known issues / follow-ups
+
+None — this was a scoped, UI-only fix. `npm run build` and `npm run
+test` both stayed green throughout (39 tests, unchanged), confirming
+no logic was touched.
