@@ -928,3 +928,102 @@ collects. New `/inbox` screen; no changes to how capture itself works.
 - The overflow menu is a plain absolute-positioned `<div>`, not a
   reusable "Menu" component — if a third place in the app needs the same
   pattern, that's the point to extract it rather than to keep copying.
+
+## Phase 4B — Week view
+
+### What was built
+
+- **Header** (`WeekPage.tsx`): mono week range + a pragmatic week number
+  ("AUG 3–9 · WEEK 32") via two new `src/lib/dates.ts` helpers,
+  `formatWeekRange` and `weekNumber`, plus `<` `>` buttons that step the
+  page's `weekOf` state by ±7 days. Defaults to the current week
+  (`weekOf(todayISO())`) on load.
+- **Weekly priorities** (`WeekPriorities.tsx`): up to 3 rows for the
+  week (`weeklyPrioritiesRepo.getForWeek`), each a tap-to-toggle circle
+  (done → amber check + strikethrough, exactly like `MilestoneRow`'s
+  pattern) plus a quiet "⋯" menu for **Carry to next week** (moves the
+  record to `weekOf + 7d` via `update()`, after checking
+  `canAddWeeklyPriority` on the destination week and showing a calm
+  note if that week's already full) and **Drop** (`setStatus`ed to
+  `'dropped'`, which removes it from view — no separate archive section
+  was asked for here, unlike Goals). Linking reuses the exact
+  goal-chip-picker pattern from `TaskConvertForm`; when set, the row
+  shows a muted mono breadcrumb ("→ Ship a side project"). **Hard cap
+  at 3**: proactively hidden once reached (the "+ add priority"
+  affordance is replaced by "Three is enough for one week."), backed by
+  the pre-existing `canAddWeeklyPriority`/`RuleViolationError` path in
+  `rules.ts` as defense-in-depth — same enforcement shape as the MIT
+  cap, not the Goals soft-nudge pattern.
+- **Week grid** (`WeekGrid.tsx`): `tasksRepo.getForWeek(weekOf)` grouped
+  by date into 7 day cells. A single responsive CSS grid
+  (`grid-cols-1 md:grid-cols-7`) serves both layouts described in the
+  phase prompt — one column of stacked full-width day sections on
+  mobile, 7 side-by-side columns on desktop — rather than two separate
+  components. Each task row shows a small amber dot for `isMIT` and the
+  existing `IconGoals` glyph when linked to a goal or weekly priority.
+  Desktop adds native HTML5 drag-and-drop (`draggable`, `onDragStart`/
+  `onDragOver`/`onDrop`, no new dependency) to reschedule a task between
+  day columns; the same rows are tappable on both layouts to open the
+  edit sheet, since drag is a no-op on touch without extra plumbing.
+- **`TaskEditForm.tsx`** — the first generic multi-field task editor in
+  the codebase (previously only creation forms existed). Fields: title,
+  a Today/Tomorrow chip pair plus a day-of-week picker built from the
+  currently-viewed week's 7 dates (`formatDayHeader`, a new mono "MON
+  3"-style helper), the MIT toggle (excluding the task being edited
+  from that date's MIT count, so re-saving the same MIT doesn't
+  double-count against the cap), an optional first-move reveal, and
+  both goal and weekly-priority chip pickers (independent — a task can
+  link either, both, or neither). Opened by tapping any task row in
+  `WeekGrid`.
+- **Tests**: `src/lib/__tests__/dates.test.ts` (new) covers `weekOf`
+  round-tripping through `addDays(±7)`, `weekNumber` incrementing/
+  decrementing by exactly 1 across a week navigation, and
+  `formatWeekRange` for both a same-month and a cross-month week.
+  `src/db/__tests__/weeklyPriorities.test.ts` (new) covers the 3-cap
+  rejecting a 4th `RuleViolationError`-style, a dropped priority not
+  counting against the cap, and one week's cap not affecting another
+  week's. 9 new tests, 39 total, all green.
+
+### Key decisions
+
+- **Weekly priorities are a hard cap, not a soft nudge** — reusing the
+  existing `canAddWeeklyPriority`/`RuleViolationError` machinery
+  unchanged. This is deliberately the opposite choice from Goals'
+  `isAtGoalSoftCap` (see DECISIONS.md): the phase prompt was explicit
+  that priorities are "a weekly cognitive-load limit, closer to MITs
+  than to goals," so the UI proactively hides the add affordance at 3
+  rather than letting the user push past it.
+- **"Carry to next week" moves the record rather than duplicating it.**
+  A carried priority keeps its id/history and simply gets a new
+  `weekOf` — there's no "carried" status in the `WeeklyPriority` type,
+  and inventing one (or duplicating + dropping the original) would add
+  a second source of truth for something that's really just "this
+  belongs to a different week now."
+- **Priority linking is goal-level only, not milestone-level.** The
+  phase prompt's example breadcrumb ("→ Ship a side project") is a goal
+  title, and no milestone-picker UI exists anywhere to reuse — building
+  one would be new surface area beyond what the example asked for.
+  `WeeklyPriority.milestoneId` remains a valid, unused-by-this-UI field.
+- **One `WeekGrid` component for both breakpoints**, not a separate
+  mobile list and desktop grid. The phone/desktop divide the prompt
+  describes is just a `grid-cols-1` → `grid-cols-7` responsive change;
+  splitting it into two components would duplicate the row rendering
+  and the drag/tap wiring for no benefit.
+- **`TaskEditForm` is the first reusable multi-field task editor.**
+  Everywhere else in the app only creates tasks (`AddTaskInline`,
+  `TaskConvertForm`); editing an existing task never had a home before
+  now. It's intentionally not merged with `TaskConvertForm` — that one
+  is tied to converting a specific capture and always creates; this one
+  always edits an existing id and has no capture/conversion concept.
+
+### Known issues / follow-ups
+
+- Drag-and-drop is native HTML5 DnD with no library — it works well for
+  the single mouse-drag case this phase needs, but has no touch-device
+  equivalent by design (mobile uses tap-to-edit instead, per the
+  prompt). If touch reordering is ever wanted, that's a deliberate new
+  feature, not a bug fix.
+- `weekNumber()` is a pragmatic Monday-count, not ISO-8601 week
+  numbering — documented inline and in DECISIONS.md so it's never
+  mistaken for a calendar-standard week number if this ever needs to
+  interoperate with an external calendar.

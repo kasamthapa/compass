@@ -80,6 +80,25 @@ What's actually built so far:
     way.
   - Optional goal-link chips on the habit create forms (Today and
     Inbox's habit conversion) — fully optional, never required.
+- **Week** — the priorities-and-schedule view at `/week`:
+  - Header with the week's date range and a week number ("AUG 3–9 ·
+    WEEK 32"), `<` `>` controls to navigate weeks, defaulting to the
+    current week on load.
+  - **Up to 3 weekly priorities**, hard-capped like MITs (a calm
+    blocking note, "Three is enough for one week," replaces the add
+    affordance at the cap — no override). Each priority can optionally
+    link to a goal, shown as a quiet mono breadcrumb ("→ Ship a side
+    project"); a tap-to-toggle circle marks one done, and a quiet
+    overflow menu carries a priority to next week or drops it.
+  - **Week grid** of that week's tasks: 7 side-by-side day columns on
+    desktop with native drag-and-drop to reschedule between days;
+    a stacked vertical list of day sections on mobile. Tasks show a
+    small amber dot when they're an MIT and a tiny glyph when linked to
+    a goal or weekly priority.
+  - Tapping any task (either layout) opens a shared edit sheet — title,
+    a Today/Tomorrow quick-chip plus a day-of-week picker for the
+    visible week, the MIT toggle, an optional first-move note, and
+    optional goal/weekly-priority links.
 - **Light and dark themes**, following the system setting by default.
 - **Installable, offline-first PWA** — the app shell is precached, so it
   loads and works with no network connection.
@@ -147,7 +166,7 @@ which is the only layer that touches the database.
 - [x] Focus mode & "I'm stuck" support
 - [x] Inbox (quick capture triage)
 - [x] Goals cascade (year → month)
-- [ ] Week view
+- [x] Week view
 - [ ] Journal
 - [ ] Insights
 - [ ] PWA hardening

@@ -132,3 +132,51 @@ button stays fully functional either way. Do not "fix" this into a
 must hold no matter which caller invokes the repo; goals are deliberately
 not that, since the cap only needs to matter at the one point of friction
 (creating a new goal), not as a database-level invariant.
+
+## `weekNumber()` is a pragmatic counter, not ISO-8601 week numbering
+
+`src/lib/dates.ts`'s `weekNumber(weekOf)` counts Mondays from Jan 1 of that
+year up to and including the given week's Monday. It is NOT ISO-8601 week
+numbering, which has its own (fiddly) rule about which year a boundary week
+belongs to based on where the first Thursday falls. This app has no need to
+interoperate with any external calendar system that expects ISO week
+numbers — the Week view's header just needs a stable, locally-consistent
+"week N" label that increments by exactly 1 per week. If a future phase ever
+needs true ISO-8601 numbers (e.g. syncing with an external calendar), that's
+a deliberate new function, not a fix to this one.
+
+## Week view's mobile/desktop split is one responsive component, not two
+
+`WeekGrid.tsx` renders both the phone-sized "vertical list of day sections"
+and the desktop "7 side-by-side columns" layouts described in the Phase 4B
+prompt from a single `grid-cols-1 md:grid-cols-7` grid, not two separate
+components. The only real behavioral difference between the two is that
+desktop additionally supports drag-and-drop between columns — everything
+else (task rows, the tap-to-edit interaction, empty-day state) is identical
+markup at every breakpoint, so splitting it would just duplicate that logic
+for a layout change CSS already handles.
+
+## Weekly priorities use the hard-cap `RuleViolationError` pattern, not goals' soft nudge
+
+`weeklyPriorities.create()`'s existing `canAddWeeklyPriority` check (from
+Phase 1) is unchanged and still throws. This is a deliberate contrast with
+Goals' `isAtGoalSoftCap` (above): the Phase 4B prompt explicitly called
+weekly priorities "a weekly cognitive-load limit, closer to MITs than to
+goals," so the Week view's add-priority UI proactively hides the
+affordance at 3 (mirroring `TodayFocus`'s MIT-cap treatment) rather than
+letting the user push past it like Goals does. When adding a new capped
+resource, check which of these two shapes the product intent actually
+matches before picking the pattern — the two hard/soft variants are meant
+to coexist, not converge.
+
+## "Carry to next week" moves a WeeklyPriority record; it doesn't duplicate it
+
+Carrying a priority forward (`WeekPriorities.tsx`) updates the existing
+record's `weekOf` to `+7 days` rather than creating a new record in the
+next week and marking the old one some kind of "carried" status.
+`WeeklyPriority.status` only has `'active' | 'done' | 'dropped'` — adding a
+fourth status, or duplicating the row, would create a second source of
+truth for what is really just "this priority now belongs to a different
+week." The one guard: carrying still checks `canAddWeeklyPriority` on the
+destination week first, and shows a calm inline note instead of silently
+pushing that week over its cap.
