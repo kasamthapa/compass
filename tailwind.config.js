@@ -54,6 +54,7 @@ export default {
       },
       maxWidth: {
         content: 'var(--content-max-width)',
+        'content-wide': 'var(--content-max-width-wide)',
       },
       borderRadius: {
         sm: 'var(--radius-sm)',

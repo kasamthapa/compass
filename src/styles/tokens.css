@@ -19,6 +19,10 @@
 
   /* layout */
   --content-max-width: 720px;
+  /* Wider column for /week only — a 7-column grid needs real breathing
+     room that the shared prose-width column (above) can't give it. Every
+     other route keeps --content-max-width untouched. */
+  --content-max-width-wide: 1400px;
   --nav-height: 4.5rem;
   --rail-width: 15rem;
 
