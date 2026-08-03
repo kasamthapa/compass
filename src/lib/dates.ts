@@ -77,6 +77,38 @@ export function formatMonthLabel(month: string): string {
   return MONTHS_SHORT[Number(monthStr) - 1]
 }
 
+/**
+ * A pragmatic "week N of the year" count — the number of Mondays from
+ * Jan 1 of `weekOf`'s year up to and including `weekOf` itself. This is
+ * NOT ISO-8601 week numbering (which has its own year-boundary rules) —
+ * it's a simple, locally-consistent counter for the Week view's header,
+ * not meant to match any external calendar system. See DECISIONS.md.
+ */
+export function weekNumber(weekOfDate: string): number {
+  const monday = parseDateISO(weekOfDate)
+  const jan1 = new Date(monday.getFullYear(), 0, 1)
+  const diffDays = Math.round((monday.getTime() - jan1.getTime()) / 86_400_000)
+  return Math.floor(diffDays / 7) + 1
+}
+
+/** e.g. "AUG 3–9" or "JUL 28–AUG 3" — the mono week-range header format. */
+export function formatWeekRange(weekOfDate: string): string {
+  const start = parseDateISO(weekOfDate)
+  const end = parseDateISO(addDays(weekOfDate, 6))
+  const startMonth = MONTHS_SHORT[start.getMonth()]
+  const endMonth = MONTHS_SHORT[end.getMonth()]
+  if (startMonth === endMonth) {
+    return `${startMonth} ${start.getDate()}–${end.getDate()}`
+  }
+  return `${startMonth} ${start.getDate()}–${endMonth} ${end.getDate()}`
+}
+
+/** e.g. "MON 3" — a compact mono day header for the Week grid's columns. */
+export function formatDayHeader(date: string): string {
+  const d = parseDateISO(date)
+  return `${WEEKDAYS_SHORT[d.getDay()]} ${d.getDate()}`
+}
+
 /** e.g. "2h ago" — a quiet relative timestamp for capture rows. */
 export function formatRelativeTime(isoTimestamp: string, now: Date = new Date()): string {
   const diffMs = now.getTime() - new Date(isoTimestamp).getTime()
