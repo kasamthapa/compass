@@ -1079,3 +1079,96 @@ most of the screen sat empty.
 None — this was a scoped, UI-only fix. `npm run build` and `npm run
 test` both stayed green throughout (39 tests, unchanged), confirming
 no logic was touched.
+
+## Layout audit fixes (4 targeted bugs)
+
+A dedicated audit pass (see the audit findings, not repeated here)
+checked every real page at 375/768/900/1024/1280/1440/1728px, both
+themes at the two extremes. It surfaced one severe bug and three
+moderate ones; this phase fixed exactly those four and nothing else.
+
+### What was built
+
+- **`WeekGrid.tsx` — grid breakpoint raised from `md` to `xl`.** The
+  7-column desktop grid was activating at the same 768px breakpoint as
+  the nav's bottom-tabs→left-rail switch. With the rail eating 240px,
+  each column narrowed to ~47px and task titles collapsed to fragments
+  like "D. t…" across roughly 768–1024px. Changed
+  `grid-cols-1 md:grid-cols-7` to `grid-cols-1 xl:grid-cols-7` (Tailwind's
+  1280px breakpoint) — the existing stacked vertical day-list (already
+  proven readable down to 375px) now simply continues rendering through
+  the whole 768–1279px range instead of switching early. All the other
+  `md:`-scoped spacing/line-clamp treatment on day cards was left as-is,
+  since single-column cards benefit from the roomier padding at any
+  width ≥768px; only the column-count switch itself needed to move.
+  Verified: 1024px now shows the full single-column list with every
+  seeded title reading in full (no wrapping needed, cards are wide
+  enough); 1280px still switches to the verified-working 7-column grid.
+- **`WeekPage.tsx` — mobile FAB clearance.** The root div gained
+  `pb-16 md:pb-0`. `AppShell`'s shared bottom padding
+  (`nav-height + safe-area + 1.5rem`) only clears the bottom tab bar —
+  it doesn't reserve room for the taller capture FAB that floats above
+  the tab bar (`nav-height + safe-area + 1rem` offset, plus the FAB's
+  own `3.5rem` height). That shortfall is normally invisible because
+  most pages' last element ends before the boundary; Week's stacked day
+  cards are the one place content routinely reaches exactly that zone.
+  Rather than change the shared `AppShell` padding (which would touch
+  every page, including ones the audit marked fine), the extra ~3rem of
+  clearance was added locally to `WeekPage` only. Verified by scrolling
+  to the very bottom of the day-list at 375px — the last card now sits
+  fully clear of the FAB.
+- **`InboxRow.tsx` — capture text now line-clamps to 2 lines.**
+  Replaced single-line `truncate` with `line-clamp-2` (unconditional,
+  not breakpoint-gated — unlike Week's rows, Inbox rows were truncating
+  even on desktop with ample width). Row alignment switched from
+  `items-center` to `items-start` with a `mt-0.5` nudge on the relative
+  timestamp so it still sits near the first line rather than
+  vertically centering against a now-taller 2-line block. Verified at
+  375px and 1280px, both themes: realistic long captures ("Ask Sarah if
+  she can cover my shift next Tuesday since I have a doctor's
+  appointment") now read in full over 2 lines instead of cutting to
+  "...since I hav…".
+- **`TodayHabits.tsx` — habit names now line-clamp to 2 lines.** Same
+  treatment as above: `truncate` → `line-clamp-2` on `habit.name`,
+  `items-baseline` → `items-start` on the row so the "X of Y ✓" badge
+  aligns to the top of a potentially 2-line name instead of its
+  baseline. Adjusted the internal rhythm below a taller name: the cue
+  subtext's top margin grew `mt-0.5` → `mt-1`, and the week-strip's top
+  margin grew `mt-2.5` → `mt-3`. Verified at 375px, 1280px, and desktop
+  width, both themes: "Practice guitar for at least fifteen minutes"
+  now reads in full over 2 lines instead of "Practice guitar for at
+  least fift…".
+
+### Key decisions
+
+- **Fixed the FAB-clearance gap locally on `WeekPage`, not in the
+  shared `AppShell`.** The root cause (FAB height not accounted for in
+  the shared bottom-padding calc) is arguably present on every page,
+  but the audit only observed it as a real, visible problem on Week —
+  every other page's content happens to end before that zone. Changing
+  the shared padding would be an unrequested, unscoped change touching
+  pages the audit explicitly marked fine; a local fix on the one page
+  that actually exhibits the bug is the minimal, correctly-scoped
+  change. If a future page grows long enough to hit the same gap, this
+  same one-line pattern (`pb-16 md:pb-0` on the page root) is the one
+  to reach for.
+- **Only the grid-cols breakpoint moved to `xl`, not the day-card's
+  other `md:` styling.** The narrow-column problem was specifically
+  about splitting width 7 ways too early — a single full-width day card
+  at 768–1279px was never illegible, so there was no reason to also
+  delay its nicer padding/line-clamp/spacing treatment to `xl`. Moving
+  only the one utility that caused the regression keeps the change
+  minimal and easy to reason about.
+- **Inbox and Today's habit-name fixes are unconditional 2-line clamps
+  (no `md:` gating)**, unlike Week's task rows which deliberately kept
+  mobile on single-line `truncate`. That distinction was intentional in
+  Week (an explicit prior instruction to leave mobile pixel-identical
+  during a desktop-only pass); no such constraint applied here — both
+  bugs were described as happening "at every width," so the fix applies
+  at every width too.
+
+### Known issues / follow-ups
+
+None. All four fixes are scoped exactly to the audit's findings;
+nothing else was touched. `npm run build` (zero errors) and `npm run
+test` (39 tests, all green, unchanged) confirm no regressions.
