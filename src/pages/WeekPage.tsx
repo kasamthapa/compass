@@ -12,7 +12,7 @@ export function WeekPage() {
   const [editingTask, setEditingTask] = useState<Task | null>(null)
 
   return (
-    <div>
+    <div className="pb-16 md:pb-0">
       <PageHeader title="Week" />
 
       <div className="mt-1 flex items-center justify-between gap-3">
