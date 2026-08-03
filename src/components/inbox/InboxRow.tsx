@@ -17,12 +17,12 @@ export function InboxRow({ item, now, isSelected, onSelect, onOpen }: InboxRowPr
         onSelect()
         onOpen()
       }}
-      className={`ios-press flex min-h-11 w-full items-center gap-3 -mx-4 px-4 py-3 text-left transition-colors ${
+      className={`ios-press flex min-h-11 w-full items-start gap-3 -mx-4 px-4 py-3 text-left transition-colors ${
         isSelected ? 'bg-accent-wash' : ''
       }`}
     >
-      <p className="min-w-0 flex-1 truncate text-body text-text">{item.text}</p>
-      <span className="shrink-0 font-mono text-caption-2 text-text-faint">
+      <p className="min-w-0 flex-1 line-clamp-2 text-body text-text">{item.text}</p>
+      <span className="mt-0.5 shrink-0 font-mono text-caption-2 text-text-faint">
         {formatRelativeTime(item.createdAt, now)}
       </span>
     </button>
