@@ -17,14 +17,18 @@ function WeekTaskRow({ task, onOpen }: { task: Task; onOpen: () => void }) {
         event.dataTransfer.effectAllowed = 'move'
       }}
       onClick={onOpen}
-      className="ios-press flex min-h-11 w-full items-center gap-2 py-2 text-left"
+      className="ios-press flex min-h-11 w-full items-center gap-2 py-2 text-left md:items-start md:py-2.5"
     >
-      {task.isMIT && <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />}
-      <p className={`min-w-0 flex-1 truncate text-subhead ${done ? 'text-text-faint line-through' : 'text-text'}`}>
+      {task.isMIT && (
+        <span aria-hidden="true" className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent md:mt-1.5" />
+      )}
+      <p
+        className={`min-w-0 flex-1 truncate text-subhead md:line-clamp-2 md:whitespace-normal ${done ? 'text-text-faint line-through' : 'text-text'}`}
+      >
         {task.title}
       </p>
       {(task.goalId || task.weeklyPriorityId) && (
-        <IconGoals className="h-3.5 w-3.5 shrink-0 text-text-faint" />
+        <IconGoals className="h-3.5 w-3.5 shrink-0 text-text-faint md:mt-1" />
       )}
     </button>
   )
@@ -60,7 +64,7 @@ export function WeekGrid({ weekOf, onEditTask }: WeekGridProps) {
   return (
     <section className="mt-6">
       <h2 className="font-display text-title text-text">This week's tasks</h2>
-      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-7">
+      <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-7 md:gap-3">
         {days.map((day) => (
           <div
             key={day}
@@ -70,14 +74,14 @@ export function WeekGrid({ weekOf, onEditTask }: WeekGridProps) {
             }}
             onDragLeave={() => setDragOverDate((current) => (current === day ? null : current))}
             onDrop={(event) => void handleDrop(event, day)}
-            className={`rounded-lg bg-surface px-3 py-3 shadow-card transition-colors duration-150 ease-ios ${
+            className={`rounded-lg bg-surface px-3 py-3 shadow-card transition-colors duration-150 ease-ios md:px-4 md:py-4 ${
               dragOverDate === day ? 'ring-2 ring-accent-ring' : ''
             }`}
           >
             <p className="font-mono text-caption-2 uppercase tracking-wide text-text-faint">
               {formatDayHeader(day)}
             </p>
-            <div className="mt-1 divide-y divide-border-hairline">
+            <div className="mt-1 divide-y divide-border-hairline md:mt-3">
               {(tasksByDate.get(day) ?? []).map((task) => (
                 <WeekTaskRow key={task.id} task={task} onOpen={() => onEditTask(task)} />
               ))}
