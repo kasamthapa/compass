@@ -60,8 +60,8 @@ function HabitRow({ habit, today, weekStart }: HabitRowProps) {
 
   return (
     <div className="py-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <p className="min-w-0 truncate text-body text-text">{habit.name}</p>
+      <div className="flex items-start justify-between gap-3">
+        <p className="min-w-0 flex-1 line-clamp-2 text-body text-text">{habit.name}</p>
         <div className="flex shrink-0 items-center gap-1 font-mono text-caption text-text-muted">
           <span>
             {hitRate.done} of {hitRate.target}
@@ -69,9 +69,9 @@ function HabitRow({ habit, today, weekStart }: HabitRowProps) {
           {metTarget && <span className="text-good">✓</span>}
         </div>
       </div>
-      <p className="mt-0.5 truncate text-caption text-text-muted">{habit.cue}</p>
+      <p className="mt-1 truncate text-caption text-text-muted">{habit.cue}</p>
 
-      <div className="mt-2.5 grid grid-cols-7">
+      <div className="mt-3 grid grid-cols-7">
         {(weekLogs ?? []).map((entry, index) => {
           const isToday = entry.date === today
           const fillClass =
