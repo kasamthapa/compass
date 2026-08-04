@@ -20,7 +20,7 @@ export function JournalCalendar({ month, selectedDate, onSelectDate, onNavigateM
   const today = todayISO()
 
   return (
-    <div className="rounded-lg bg-surface px-4 py-4 shadow-card">
+    <div>
       <div className="flex items-center justify-between">
         <button
           type="button"

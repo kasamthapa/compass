@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import * as journalRepo from '../../db/repo/journal'
 import { formatHeaderDate } from '../../lib/dates'
-import { IconCheck } from '../icons'
+import { IconCheck, IconChevronRight } from '../icons'
 
 const SAVE_DEBOUNCE_MS = 800
 const SAVED_INDICATOR_MS = 1500
@@ -18,9 +18,9 @@ function RatingDots({
   onChange: (value: Rating) => void
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <p className="w-14 shrink-0 text-caption font-medium text-text-faint">{label}</p>
-      <div className="flex gap-2">
+    <div className="flex items-center gap-2">
+      <p className="text-caption-2 font-medium text-text-faint">{label}</p>
+      <div className="flex gap-1.5">
         {RATING_VALUES.map((rating) => (
           <button
             key={rating}
@@ -28,7 +28,7 @@ function RatingDots({
             onClick={() => onChange(rating)}
             aria-label={`${label} ${rating} out of 5`}
             aria-pressed={value === rating}
-            className={`ios-press h-6 w-6 rounded-full border transition-colors duration-[250ms] ease-ios ${
+            className={`ios-press h-5 w-5 rounded-full border transition-colors duration-[250ms] ease-ios ${
               value === rating ? 'border-accent bg-accent' : 'border-border-hairline'
             }`}
           />
@@ -40,9 +40,11 @@ function RatingDots({
 
 interface JournalEditorProps {
   date: string
+  today: string
+  onBackToToday: () => void
 }
 
-export function JournalEditor({ date }: JournalEditorProps) {
+export function JournalEditor({ date, today, onBackToToday }: JournalEditorProps) {
   const [text, setText] = useState('')
   const [mood, setMood] = useState<Rating | undefined>(undefined)
   const [energy, setEnergy] = useState<Rating | undefined>(undefined)
@@ -52,6 +54,8 @@ export function JournalEditor({ date }: JournalEditorProps) {
   const textRef = useRef('')
   const saveTimerRef = useRef<number>()
   const savedIndicatorTimerRef = useRef<number>()
+
+  const isToday = date === today
 
   function showSavedIndicator() {
     setShowSaved(true)
@@ -111,11 +115,23 @@ export function JournalEditor({ date }: JournalEditorProps) {
   }
 
   return (
-    <div className="mt-4 max-w-content rounded-lg bg-surface px-4 py-4 shadow-card">
-      <div className="flex items-center justify-between">
-        <p className="font-mono text-caption-2 uppercase tracking-wide text-text-faint">
-          {formatHeaderDate(date)}
-        </p>
+    <div className="mt-4 max-w-content rounded-lg bg-surface px-6 py-6 shadow-card">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="font-mono text-caption uppercase tracking-wide text-text-faint">
+            {formatHeaderDate(date)}
+          </p>
+          {!isToday && (
+            <button
+              type="button"
+              onClick={onBackToToday}
+              className="ios-press mt-1 flex min-h-9 items-center gap-1 text-caption font-medium text-accent"
+            >
+              <IconChevronRight className="h-3 w-3 rotate-180" />
+              Back to today
+            </button>
+          )}
+        </div>
         <span
           className={`flex items-center gap-1 text-caption text-text-faint transition-opacity duration-300 ease-ios ${
             showSaved ? 'opacity-100' : 'opacity-0'
@@ -126,7 +142,7 @@ export function JournalEditor({ date }: JournalEditorProps) {
         </span>
       </div>
 
-      <div className="mt-3 flex flex-col gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2">
         <RatingDots label="Mood" value={mood} onChange={handleMood} />
         <RatingDots label="Energy" value={energy} onChange={handleEnergy} />
       </div>
@@ -134,9 +150,9 @@ export function JournalEditor({ date }: JournalEditorProps) {
       <textarea
         value={text}
         onChange={(event) => handleTextChange(event.target.value)}
-        placeholder="What happened today?"
-        rows={10}
-        className="mt-4 w-full resize-none rounded-md bg-bg px-4 py-3 text-body text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent-ring"
+        placeholder="What's on your mind today?"
+        rows={16}
+        className="mt-5 min-h-[50vh] w-full resize-none rounded-md bg-bg px-5 py-4 text-body text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent-ring md:min-h-[55vh]"
       />
     </div>
   )
