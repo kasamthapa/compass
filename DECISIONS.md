@@ -200,3 +200,46 @@ prose-shaped text caps its own width so a single long sentence doesn't
 stretch edge-to-edge. Short captions/labels (habit cue, task first-move)
 are deliberately left uncapped — they never grow long enough in practice
 for this to matter, and capping them would just be inert noise.
+
+## Journal entry hydration is a one-shot fetch, not a live query
+
+`JournalEditor.tsx` loads a day's entry with a plain `journalRepo.getForDate`
+call inside a `useEffect` keyed on `[date]`, not `useLiveQuery`. A live
+query would re-fire on every write to `journalEntries` — including the
+component's own debounced autosave — which creates two problems at once:
+it can't distinguish "still loading" from "confirmed no entry yet" (both
+render as `undefined` on a freshly-selected date), and without extra
+guarding it would re-hydrate local state mid-typing from a query that just
+reacted to the save the user's own keystrokes triggered. `EveningReviewDialog`
+solved the analogous problem by keying its resume effect on `isOpen` rather
+than on live review data (see its comment); this is the same fix shape
+applied to whichever `date` is currently selected. A one-shot fetch per
+date sidesteps both issues: it hydrates exactly once when the selected day
+changes and is structurally incapable of reacting to the component's own
+writes.
+
+## The debounced-save flush lives in refs, and its correctness is tested at the repo layer
+
+`JournalEditor`'s pending-save timer, latest-typed text, and current date
+are held in refs (`saveTimerRef`, `textRef`, `dateRef`), not component
+state — the flush function and the effect cleanup that calls it both need
+whatever value is *current* at the moment they run, not a value captured
+in a stale render closure. Flushing itself relies on a specific, load-bearing
+React guarantee: when an effect's dependency changes, React runs that
+effect's cleanup *before* running the next effect body, so returning
+`() => void flushPendingSave()` from the `[date]`-keyed hydration effect
+guarantees the outgoing day's last edit is written before the incoming
+day's entry is loaded — and the same cleanup fires on unmount, covering
+navigating away entirely.
+
+This codebase's test stack (Vitest + `fake-indexeddb`, no React Testing
+Library or fake timers) can't drive that timing directly, so "no data loss
+on rapid day-switching" is verified two ways: `journal.test.ts` asserts the
+repo-level guarantee this behavior depends on (`upsertForDate` calls for
+two different dates in quick succession never cross-contaminate their
+text), and the actual UI timing was verified manually in-browser (type,
+switch days before the 800ms debounce fires, read IndexedDB directly to
+confirm both dates hold the right content). If this project ever adds a
+DOM-level test harness, the manual pass should be converted to an
+automated one — until then, don't treat the repo-level test alone as full
+coverage of the flush behavior.

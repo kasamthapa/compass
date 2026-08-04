@@ -1243,3 +1243,108 @@ clearance on Week still leaves the last day-card fully visible, and
 both Inbox's and Today's 2-line clamps are unaffected by the width
 change. `npm run build` (zero errors) and `npm run test` (39 tests,
 unchanged, all green).
+
+## Phase 5A — Journal
+
+### What was built
+
+- **`JournalCalendar.tsx`**: a Monday-first month grid (matching the
+  app's established week-start convention) built from a new
+  `getMonthGridDays(month)` helper in `dates.ts` — always a whole
+  number of complete weeks, including leading/trailing days from
+  adjacent months, same as any standard calendar. Mono date numbers;
+  today gets a subtle `ring-1 ring-accent-ring`; any day with a saved
+  `JournalEntry` (via `journalRepo.getForMonth`) gets a small quiet dot;
+  the selected day gets a soft `bg-accent-wash`. `<` `>` month nav
+  mirrors Week's header style (`formatMonthYear` — "AUG 2026" — plus
+  two `IconChevronRight` buttons, one rotated).
+- **`JournalEditor.tsx`**: the entry surface for whichever day is
+  selected. A markdown-friendly textarea autosaves via
+  `journalRepo.upsertForDate` on an 800ms debounce (a ref-backed
+  timer, not component state, so it survives re-renders cleanly), with
+  a small fading "Saved" tick (`IconCheck` + text, `opacity` transition,
+  always mounted to avoid layout shift) that shows for 1.5s after each
+  successful write. **Flush-on-switch**: the hydration effect keyed on
+  `date` returns a cleanup that immediately flushes any pending
+  debounced save using ref-held values (not React state, which could be
+  stale) — since React runs a changed effect's cleanup before the next
+  date's setup, this guarantees the outgoing day's last edit is written
+  before the incoming day's entry is loaded. The same cleanup also
+  covers navigating away from the page (unmount).
+- **Mood + Energy**: two rows of 5 dots each (`RatingDots`, shared
+  between them), tap-to-set 1–5, written immediately on tap via
+  `upsertForDate` — no debounce, since there's no typing to wait out.
+  Visually a plain filled/unfilled circle (no numeral), deliberately
+  quieter than the Evening Review's numbered 1–5 buttons but built on
+  the same "one filled at a time" selection model.
+- **Prose-width cap on the editor**: `JournalEditor`'s outer card
+  carries `max-w-content` (720px) directly, while `JournalCalendar`
+  stays full width — the same structural-vs-prose split established in
+  the recent layout correction (goal `why`, capture text). `AppShell`
+  was not touched; Journal simply inherits its current wide default and
+  narrows only the one prose surface locally.
+- **Empty state**: an unwritten day shows "What happened today?" as the
+  textarea's placeholder — same calm-invitation microcopy pattern as
+  Goals' and Week's empty states, not a blank apology.
+- **Inbox notes**: no new code needed — `convertCaptureToNote` (Phase
+  3) already appends `"<capture text> — from inbox"` via the same
+  `journalRepo.upsertForDate`, so opening that day in the calendar just
+  renders the saved text as-is.
+- **New `dates.ts` helpers**: `addMonths(month, delta)`,
+  `formatMonthYear(month)` ("AUG 2026"), `getMonthGridDays(month)`.
+- **Tests**: `src/lib/__tests__/dates.test.ts` gained coverage for all
+  three new helpers, including that the grid always starts Monday/ends
+  Sunday, contains every day of the target month, and only ever bleeds
+  into the immediately adjacent months. `src/db/__tests__/journal.test.ts`
+  (new) covers `upsertForDate` creating then merging fields in place,
+  `getForMonth` excluding adjacent months and soft-deleted entries, and
+  — standing in for the UI-level flush-then-hydrate sequence, since
+  this project's test stack has no React Testing Library / fake-timer
+  setup to drive a real debounce — a repo-level assertion that saving
+  two different dates back-to-back never cross-contaminates their text.
+  10 new tests, 49 total, all green.
+
+### Key decisions
+
+- **The debounce timer and "last known text" live in refs, not state.**
+  `saveTimerRef`/`textRef`/`dateRef` are read inside the flush function
+  and the effect cleanup, both of which need the *current* value at the
+  moment they run, not whatever was captured in a stale closure from
+  the render that scheduled them. This is the same category of fix as
+  `TaskEditForm`'s controlled-input patterns elsewhere, just applied to
+  a timer instead of a submit handler.
+- **Hydration is a plain async fetch on `[date]`, not a `useLiveQuery`.**
+  A live query re-fires on every write — including the component's own
+  autosave — which would either need extra guarding against clobbering
+  in-progress typing (the same problem `EveningReviewDialog` solved by
+  keying its resume effect on `isOpen`, not on live data) or risk a
+  race between "loading" (`undefined`) and "confirmed no entry"
+  (also `undefined`) for a brand-new date. A one-shot fetch per date
+  sidesteps both: it hydrates exactly once per date change and is
+  never re-triggered by the component's own saves.
+- **The debounce/data-loss test lives at the repo layer, not as a
+  simulated UI test.** This codebase's test stack (Vitest +
+  fake-indexeddb) has no DOM/timer test harness, so "no data loss on
+  rapid day-switching" is verified two ways: a repo-level test proving
+  `upsertForDate` never lets two dates' writes bleed into each other,
+  and a manual browser pass (typing, switching mid-debounce, reading
+  IndexedDB directly) confirming the actual flush-on-cleanup timing
+  works end-to-end. Both are necessary; neither alone would catch
+  every failure mode.
+- **Mood/energy dots reuse the Evening Review's "one selected at a
+  time" interaction model but not its visual treatment.** The review's
+  numbered circles suit a one-time daily check-in step; the phase spec
+  asked specifically for a quieter, unlabeled dot pair sitting above
+  the editor at all times, so the visual language differs even though
+  the underlying tap-to-select-1-of-5 behavior is identical.
+
+### Known issues / follow-ups
+
+None. Verified at 393px and desktop (1280/1440px), both themes: month
+navigation, day selection, typing → autosave → "Saved" indicator →
+confirmed in IndexedDB, switching days mid-typing before the debounce
+fires → confirmed via IndexedDB that the outgoing day kept its latest
+text and the incoming day started clean, mood/energy taps persisting
+immediately, and a day carrying an inbox-converted note rendering its
+"— from inbox" text faithfully. `npm run build` (zero errors) and
+`npm run test` (49 tests, 10 new, all green).

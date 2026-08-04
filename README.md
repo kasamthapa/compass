@@ -99,6 +99,23 @@ What's actually built so far:
     a Today/Tomorrow quick-chip plus a day-of-week picker for the
     visible week, the MIT toggle, an optional first-move note, and
     optional goal/weekly-priority links.
+- **Journal** — a monthly calendar + daily entry at `/journal`:
+  - A Monday-first month calendar (mono date numbers, a quiet dot on any
+    day with a saved entry, a subtle amber ring on today), with `<` `>`
+    month navigation. Defaults to the current month with today selected.
+  - Tapping a day loads its entry below: a markdown-friendly textarea
+    that autosaves ~800ms after you stop typing, with a small "Saved"
+    tick that fades in and out. Switching days (or leaving the page)
+    mid-typing flushes the pending save immediately first — no edit is
+    ever lost.
+  - **Mood and energy**, two rows of 5 quiet dots above the entry, saved
+    the instant you tap one — no debounce needed since there's no typing
+    to wait out.
+  - The entry editor keeps a comfortable ~720px reading width even
+    though the page itself uses the app's wider default column — the
+    calendar (structural) stays full width, only the prose narrows.
+  - A calm invitation ("What happened today?") on any day with nothing
+    written yet, instead of a blank apology.
 - **Light and dark themes**, following the system setting by default.
 - **Installable, offline-first PWA** — the app shell is precached, so it
   loads and works with no network connection.
@@ -167,7 +184,7 @@ which is the only layer that touches the database.
 - [x] Inbox (quick capture triage)
 - [x] Goals cascade (year → month)
 - [x] Week view
-- [ ] Journal
+- [x] Journal
 - [ ] Insights
 - [ ] PWA hardening
 - [ ] Cloud sync (Supabase)
