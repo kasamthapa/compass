@@ -1172,3 +1172,74 @@ moderate ones; this phase fixed exactly those four and nothing else.
 None. All four fixes are scoped exactly to the audit's findings;
 nothing else was touched. `npm run build` (zero errors) and `npm run
 test` (39 tests, all green, unchanged) confirm no regressions.
+
+## Wide content column made the AppShell default
+
+### What was built
+
+- **`AppShell.tsx`** no longer branches on `location.pathname` — the
+  `useLocation`-based `/week`-only check is gone, and `<main>` always
+  gets `max-w-content-wide` (1400px). Every route (Today, Inbox, Week,
+  Goals, and any future route like Journal/Insights) now shares the
+  same wide column and identical left/right edges automatically,
+  without needing this fix repeated per-page.
+- **Prose text gets a local, narrower cap instead of the whole page
+  narrowing.** Two spots render genuinely freeform sentence-length
+  text: a goal's "why" line (`GoalCard.tsx`) and a capture's text
+  (`InboxRow.tsx`). Both now carry `max-w-content` (720px, the same
+  token that used to be the page-wide default) directly on the text
+  element — the surrounding card/row stays full wide-column width, only
+  the sentence itself stops stretching past a comfortable reading
+  length. Below 720px this class has no effect (content is already
+  narrower), so nothing changes on mobile.
+- **`InboxRow.tsx`** also picked up `justify-between` on the row. This
+  was necessary, not cosmetic: once the capture-text `<p>` has a
+  `max-width`, a plain (non-`justify-between`) flex row leaves the
+  timestamp sitting right next to the now-narrower text with a large
+  dead gap after it, instead of pinned to the row's right edge.
+  `justify-between` restores the anchored-right timestamp regardless of
+  how much slack the capped text leaves.
+- **`tokens.css`** comments updated in place: `--content-max-width`
+  (720px) is now documented as the prose-reading-width token (used
+  locally on text elements), and `--content-max-width-wide` (1400px)
+  as the page-column default every route gets.
+
+### Key decisions
+
+- **Wide is the `AppShell` default, not an opt-in per page.** The
+  previous `/week`-only branch was called out explicitly as something
+  to remove — a future Journal/Insights page (or anything else) should
+  get the wide column for free rather than needing this same
+  route-check duplicated. If a route ever genuinely needs the narrow
+  720px page (none do today), that would be a deliberate, explicit
+  exception again, not the default.
+- **Structural width vs. reading width is a per-element choice, not a
+  per-page one.** Rather than reintroducing any page-level narrowing,
+  individual freeform-text elements (goal why, capture text) get
+  `max-w-content` directly. This keeps every card/row/list at full
+  page width — matching Week's alignment exactly — while still
+  preventing a single long sentence from stretching unreadably wide.
+  Short captions and labels (habit cue, task first-move) were
+  deliberately left uncapped: they're never long enough in practice to
+  reach even 720px, so capping them would be a no-op that adds noise
+  without preventing anything.
+- **Verified the ThemeToggle sits at an identical relative offset from
+  `<main>`'s right edge across Today/Inbox/Week/Goals at 1280px** — the
+  61px absolute-pixel differences observed in one measurement pass
+  were a macOS overlay-scrollbar artifact (scrollbar reserving space on
+  some pages depending on content height, not present on others), not a
+  real alignment bug; the offset relative to `<main>` itself was
+  identical (64px) on every page once measured consistently after a
+  full page load.
+
+### Known issues / follow-ups
+
+None. Verified at 1280/1440/1728px in both themes with realistic long
+goal-why and capture text, and at 375px to confirm mobile is
+unaffected by the wide token. Re-confirmed all four prior audit fixes
+still hold: Week's grid-cols-7 still only activates at `xl` (1024px
+stays single-column, 1280px switches to 7 columns), the mobile FAB
+clearance on Week still leaves the last day-card fully visible, and
+both Inbox's and Today's 2-line clamps are unaffected by the width
+change. `npm run build` (zero errors) and `npm run test` (39 tests,
+unchanged, all green).

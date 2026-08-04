@@ -180,3 +180,23 @@ truth for what is really just "this priority now belongs to a different
 week." The one guard: carrying still checks `canAddWeeklyPriority` on the
 destination week first, and shows a calm inline note instead of silently
 pushing that week over its cap.
+
+## The wide content column is the AppShell default; narrow reading-width is per-element, not per-page
+
+`AppShell.tsx`'s `<main>` always uses `max-w-content-wide` (1400px) — every
+route shares one column width, with no per-route branching. This reverses
+an earlier, narrower fix that gave `/week` alone a wide column while
+Today/Inbox/Goals kept the old 720px page width: that was flagged as an
+inconsistency (misaligned edges and an oddly-positioned `ThemeToggle`
+between pages), and the real fix is a single shared default rather than
+each new route remembering to opt in.
+
+The old 720px value didn't disappear — `--content-max-width` still exists,
+now documented as the comfortable-reading-width token, applied locally to
+individual freeform-text elements (a goal's `why` line, a capture's text)
+rather than to the page. This keeps the distinction explicit: structural
+elements (cards, rows, headers) always use the full wide column; only
+prose-shaped text caps its own width so a single long sentence doesn't
+stretch edge-to-edge. Short captions/labels (habit cue, task first-move)
+are deliberately left uncapped — they never grow long enough in practice
+for this to matter, and capping them would just be inert noise.
