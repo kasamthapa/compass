@@ -114,7 +114,9 @@ export function GoalCard({ goal }: { goal: Goal }) {
       >
         <div className="min-w-0">
           <p className="font-display text-headline text-text">{goal.title}</p>
-          {goal.why && <p className="mt-1 text-subhead italic text-text-muted">{goal.why}</p>}
+          {goal.why && (
+            <p className="mt-1 max-w-content text-subhead italic text-text-muted">{goal.why}</p>
+          )}
         </div>
         <div className="mt-0.5 flex shrink-0 items-center gap-2">
           <span className="font-mono text-body text-text-muted">{progress}%</span>
