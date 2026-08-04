@@ -243,3 +243,27 @@ confirm both dates hold the right content). If this project ever adds a
 DOM-level test harness, the manual pass should be converted to an
 automated one — until then, don't treat the repo-level test alone as full
 coverage of the flush behavior.
+
+## Journal is entry-first; the calendar is a secondary "History" affordance
+
+`JournalPage` lands directly on today's entry — the calendar (formerly the
+inline top-of-page component) now lives behind a "History" button in the
+header, opened as a `Sheet`. This was a deliberate reversal of the initial
+Phase 5A layout (calendar-first, entry below the fold), based on the
+observation that a calendar-first landing page makes browsing history the
+default action and today's blank page a secondary one, which works against
+actually building a daily-journaling habit — the thing worth optimizing for
+is friction-free access to *today*, not month browsing. This is the same
+Today-first shape already used everywhere else in the app: Today, Week, and
+Goals all lead with "what matters right now," with historical/list views
+(Goals' Archived section, Week's date nav) always a step behind the
+primary view, never the landing state. Any future page with a similar
+"current thing vs. browsable history" split should default to the same
+shape rather than re-deriving it.
+
+One consequence worth remembering: Journal's header replaces `ThemeToggle`
+with the History button in that trailing slot, rather than showing both.
+Every other page's header is one title + one trailing control; Journal
+just has a more useful thing to put there. Theme is a global preference
+(not per-page), so it's still one tap away on any other page — nothing is
+actually lost.

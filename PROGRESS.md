@@ -1348,3 +1348,82 @@ text and the incoming day started clean, mood/energy taps persisting
 immediately, and a day carrying an inbox-converted note rendering its
 "— from inbox" text faithfully. `npm run build` (zero errors) and
 `npm run test` (49 tests, 10 new, all green).
+
+## Journal restructure — entry-first, calendar becomes "History"
+
+### What was built
+
+UI-only restructure; every piece of data logic from Phase 5A (`journal.
+upsertForDate`, the debounced-autosave + flush-on-switch guarantee,
+mood/energy persistence, the calendar's month-fetch and entry-dot/today-
+ring detection) is unchanged — only the visual hierarchy moved.
+
+- **Default view is today's entry, not the calendar.** `JournalPage`
+  no longer renders the month grid inline above the editor; on load you
+  land directly on today's date header, mood/energy, and a spacious
+  composer, no scroll required to start writing.
+- **The calendar moved into a "History" sheet.** A quiet pill button
+  (new `IconClock` + "History" label) sits in the header's trailing
+  slot — the same visual slot `ThemeToggle` occupies on every other
+  page. Tapping it opens `JournalCalendar` inside the shared `Sheet`
+  component (the established pattern for every overlay in the app,
+  chosen over a custom expandable panel for consistency). Selecting a
+  day closes the sheet and loads that day into the same editor below;
+  entry dots and the today-ring render exactly as before.
+- **A "Back to today" affordance** appears next to the date header
+  whenever the selected day isn't today, so getting back doesn't
+  require reopening History.
+- **Mood/Energy shrank into one quiet accessory row.** Both ratings now
+  render side-by-side (`flex-wrap` so they still fit at 393px), with
+  smaller dots (`h-5 w-5`, was `h-6 w-6`) and a `caption-2` label — a
+  quick tap-and-done, not a dominant form section competing with the
+  composer for attention.
+- **The composer is now the page's visual hero**: `rows={16}`,
+  `min-h-[50vh]` (`55vh` on desktop), larger padding (`px-5 py-4`, card
+  padding `px-6 py-6`, both up from `px-4`/`py-3`). The prose-width cap
+  (`max-w-content`, 720px) stays on the editor card exactly as before.
+- **Placeholder copy updated** to "What's on your mind today?" — pure
+  `placeholder` attribute text, same as before; it was never saved as
+  content and still isn't, just a copy change.
+- **`JournalCalendar`'s own outer `bg-surface`/`shadow-card` wrapper was
+  dropped** — it now renders as plain content, since it's only ever
+  used inside `Sheet`'s own elevated panel, and stacking two nested
+  "card" surfaces looked redundant.
+
+### Key decisions
+
+- **Entry-first over calendar-first**, per the phase's stated research
+  rationale: what actually keeps someone journaling is friction-free
+  access to *today's* blank page, not browsing history — a calendar
+  landing screen makes the daily habit (the thing that matters) feel
+  like a secondary action behind a browsing UI. This mirrors the
+  Today-first pattern already established for the rest of the app:
+  Today, Week, and Goals all lead with "what do I do/see right now,"
+  with any historical/list browsing (Goals' Archived section, Week's
+  `<` `>` nav) tucked behind a quieter affordance, never the default
+  view.
+- **History replaces `ThemeToggle` in Journal's header slot, rather
+  than sitting alongside it.** Every other page's header is a single
+  title + single trailing control; adding a second control would break
+  that established one-slot convention. Theme is still fully
+  switchable from every other page (it's a global preference, not
+  per-page state), so nothing is actually lost by not repeating the
+  control here — Journal just has a more useful thing to put in that
+  slot.
+- **Sheet over an inline expandable panel** for History. The app has no
+  existing "expand in place" pattern for anything of this size (Goals'
+  disclosure sections are for lightweight status lists, not a full
+  calendar), while `Sheet` is already the single, consistent way every
+  other overlay in the app presents — reaching for a new pattern here
+  would be inventing a second convention for no real benefit.
+
+### Known issues / follow-ups
+
+None. Verified at 393px and desktop (1440px), both themes: the page
+lands directly on today's entry with no scroll needed, typing still
+autosaves (confirmed in IndexedDB), opening History and jumping to a
+past day still triggers the flush — confirmed via IndexedDB that an
+in-progress edit on the outgoing day was saved before the switch —
+mood/energy still persist immediately, and "Back to today" returns
+correctly. `npm run build` (zero errors) and `npm run test` (49 tests,
+unchanged — this was a UI-only change, no repo/lib logic touched).
