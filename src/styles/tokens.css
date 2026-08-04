@@ -18,10 +18,14 @@
   --space-9: 5rem; /* 80px */
 
   /* layout */
+  /* The comfortable reading width for freeform prose (a goal's "why",
+     capture text, etc.) — applied locally to text elements, not to the
+     page column itself. See --content-max-width-wide below and
+     DECISIONS.md. */
   --content-max-width: 720px;
-  /* Wider column for /week only — a 7-column grid needs real breathing
-     room that the shared prose-width column (above) can't give it. Every
-     other route keeps --content-max-width untouched. */
+  /* The page column width — AppShell's default for every route. Structural
+     elements (cards, rows, headers) use the full width; only prose text
+     gets narrowed, via --content-max-width above. */
   --content-max-width-wide: 1400px;
   --nav-height: 4.5rem;
   --rail-width: 15rem;
