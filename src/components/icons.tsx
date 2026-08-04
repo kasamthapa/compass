@@ -176,6 +176,15 @@ export function IconEdit({ className }: IconProps) {
   )
 }
 
+export function IconClock({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 7.5V12l3.2 2" />
+    </svg>
+  )
+}
+
 export function IconMore({ className }: IconProps) {
   return (
     <svg {...base} className={className} aria-hidden="true">
