@@ -109,6 +109,44 @@ export function formatDayHeader(date: string): string {
   return `${WEEKDAYS_SHORT[d.getDay()]} ${d.getDate()}`
 }
 
+/** "YYYY-MM" shifted by `delta` whole months (e.g. addMonths('2026-01', -1) -> '2025-12'). */
+export function addMonths(month: string, delta: number): string {
+  const [year, monthNum] = month.split('-').map(Number)
+  const d = new Date(year, monthNum - 1 + delta, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+}
+
+/** e.g. "AUG 2026" — the mono month/year label for the Journal calendar header. */
+export function formatMonthYear(month: string): string {
+  const [year, monthNum] = month.split('-').map(Number)
+  return `${MONTHS_SHORT[monthNum - 1]} ${year}`
+}
+
+/**
+ * Every date in the Monday-first calendar grid that contains `month`
+ * (YYYY-MM) — starting on the Monday on/before the 1st and ending on the
+ * Sunday on/after the last day, so the grid is always a whole number of
+ * complete weeks. Includes leading/trailing days from adjacent months,
+ * same as any standard calendar grid.
+ */
+export function getMonthGridDays(month: string): string[] {
+  const [year, monthNum] = month.split('-').map(Number)
+  const firstOfMonth = `${month}-01`
+  const lastDayNum = new Date(year, monthNum, 0).getDate()
+  const lastOfMonth = `${month}-${String(lastDayNum).padStart(2, '0')}`
+
+  const gridStart = weekOf(firstOfMonth)
+  const gridEnd = addDays(weekOf(lastOfMonth), 6)
+
+  const days: string[] = []
+  let cursor = gridStart
+  while (cursor <= gridEnd) {
+    days.push(cursor)
+    cursor = addDays(cursor, 1)
+  }
+  return days
+}
+
 /** e.g. "2h ago" — a quiet relative timestamp for capture rows. */
 export function formatRelativeTime(isoTimestamp: string, now: Date = new Date()): string {
   const diffMs = now.getTime() - new Date(isoTimestamp).getTime()
