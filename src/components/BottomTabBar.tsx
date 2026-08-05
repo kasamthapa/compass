@@ -22,15 +22,19 @@ export function BottomTabBar() {
             }`
           }
         >
-          <span className="relative">
-            <Icon className="h-6 w-6" />
-            {to === '/inbox' && unprocessedCount > 0 && (
-              <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[9px] font-semibold leading-none text-accent-on">
-                {unprocessedCount > 9 ? '9+' : unprocessedCount}
+          {({ isActive }) => (
+            <>
+              <span className="relative">
+                <Icon className="h-6 w-6" active={isActive} />
+                {to === '/inbox' && unprocessedCount > 0 && (
+                  <span className="absolute -right-1.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 font-mono text-[9px] font-semibold leading-none text-accent-on">
+                    {unprocessedCount > 9 ? '9+' : unprocessedCount}
+                  </span>
+                )}
               </span>
-            )}
-          </span>
-          {label}
+              {label}
+            </>
+          )}
         </NavLink>
       ))}
     </nav>
