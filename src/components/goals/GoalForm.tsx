@@ -9,9 +9,11 @@ interface GoalFormProps {
   /** null = creating a new goal. */
   goal: Goal | null
   onClose: () => void
+  /** Prefills the year field for a new goal (e.g. "next year" from the yearly review). Ignored when editing an existing goal, and when omitted defaults to the current year as before. */
+  defaultYear?: number
 }
 
-export function GoalForm({ isOpen, goal, onClose }: GoalFormProps) {
+export function GoalForm({ isOpen, goal, onClose, defaultYear }: GoalFormProps) {
   const [title, setTitle] = useState('')
   const [why, setWhy] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
@@ -25,8 +27,8 @@ export function GoalForm({ isOpen, goal, onClose }: GoalFormProps) {
     if (!isOpen) return
     setTitle(goal?.title ?? '')
     setWhy(goal?.why ?? '')
-    setYear(goal?.year ?? new Date().getFullYear())
-  }, [isOpen, goal])
+    setYear(goal?.year ?? defaultYear ?? new Date().getFullYear())
+  }, [isOpen, goal, defaultYear])
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
