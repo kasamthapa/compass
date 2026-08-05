@@ -1554,3 +1554,38 @@ automation environment not delivering synthetic `blur` events at all
 click-driven focus changes confirmed the goal-note autosave works
 correctly; not an app defect. `npm run build` (zero errors) and
 `npm run test` (60 tests, 11 new, all green).
+
+## Investigation — "Close the day" card reportedly not appearing after Phase 5B-i
+
+**Not a bug.** `TodayPage.tsx` was never touched by the Phase 5B-i
+commits — `git show --stat` on both `9f72b54` (engine extraction) and
+`16ddfe4` (weekly review) confirms only `src/components/reviews/*`,
+`EveningReviewDialog.tsx`, `src/components/week/*`, and
+`WeekPage.tsx` changed. The gating logic in `TodayPage.tsx` is byte-
+identical to before the refactor: `isEvening = now.getHours() >= 18`,
+`showEveningCard = isEvening && !dailyReview?.completedAt`.
+
+Checked IndexedDB directly: the `reviews` table was completely empty
+(no stale `completedAt` from earlier testing either — that table had
+already been cleared down to nothing during the Phase 5B-i verification
+pass). So the card's absence was explained by neither a broken refactor
+nor stale test data — it was simply **15:00 local time** when checked,
+before the 18:00 evening threshold. The card is correctly hidden until
+evening; this is the gate working exactly as designed.
+
+**Verified with real rendering, not just a code read**: temporarily
+forced `isEvening = true` in `TodayPage.tsx` (a verification-only edit,
+confirmed reverted via `git diff` showing no changes before committing
+anything), reloaded, and confirmed the "Close the day" card renders.
+Walked the full 4-step flow through a real click sequence — score
+selection, win, lesson, tomorrow's focus, Finish — and confirmed:
+the "Day closed." completion moment renders identically to before the
+refactor; the `Review` row lands correctly (`type: 'daily'`, correct
+`periodKey`, `score` and `completedAt` both set); and today's Year
+Grain cell fills (`background: var(--ink)`, `opacity: 0.82` for a
+score of 4, with the today outline ring intact) — confirming the
+refactored `ReviewDialog`/`EveningReviewDialog` writes through to the
+same places the pre-refactor implementation did. No code changes were
+needed or made; the temporary override was reverted before running
+`npm run build`/`npm run test` (both clean, unchanged) and the test
+review record was cleared from IndexedDB afterward.
