@@ -5,6 +5,7 @@ import {
   formatMonthYear,
   formatWeekRange,
   getMonthGridDays,
+  isWeeklyReviewDue,
   monthKey,
   parseDateISO,
   weekNumber,
@@ -91,5 +92,30 @@ describe('getMonthGridDays', () => {
     for (const day of outsideMonth) {
       expect(['2026-07', '2026-09']).toContain(monthKey(day))
     }
+  })
+})
+
+describe('isWeeklyReviewDue', () => {
+  it('is false on a Sunday before 4pm', () => {
+    // 2026-08-09 is a Sunday
+    expect(isWeeklyReviewDue(new Date(2026, 7, 9, 15, 59))).toBe(false)
+  })
+
+  it('is true on a Sunday from 4pm onward', () => {
+    expect(isWeeklyReviewDue(new Date(2026, 7, 9, 16, 0))).toBe(true)
+    expect(isWeeklyReviewDue(new Date(2026, 7, 9, 23, 59))).toBe(true)
+  })
+
+  it('is true for all of Monday', () => {
+    // 2026-08-10 is a Monday
+    expect(isWeeklyReviewDue(new Date(2026, 7, 10, 0, 0))).toBe(true)
+    expect(isWeeklyReviewDue(new Date(2026, 7, 10, 23, 59))).toBe(true)
+  })
+
+  it('is false on any other day', () => {
+    // 2026-08-11 is a Tuesday
+    expect(isWeeklyReviewDue(new Date(2026, 7, 11, 12, 0))).toBe(false)
+    // 2026-08-8 is a Saturday
+    expect(isWeeklyReviewDue(new Date(2026, 7, 8, 23, 0))).toBe(false)
   })
 })

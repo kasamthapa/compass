@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { resetDb } from './testUtils'
 import * as reviews from '../repo/reviews'
-import { resumeStepFor } from '../../lib/reviewResume'
+import { resumeStepFor, resumeStepForWeekly } from '../../lib/reviewResume'
 
 beforeEach(resetDb)
 
@@ -62,5 +62,50 @@ describe('resumeStepFor', () => {
     expect(
       resumeStepFor({ score: 4, answers: { win: 'Good focus', lesson: 'Slept late' } }),
     ).toBe(4)
+  })
+})
+
+describe('weekly review upsert', () => {
+  it('creates then updates in place, merging fields across calls, independently of a daily review for the same periodKey', async () => {
+    // 'daily' and 'weekly' share the [type+periodKey] index shape but are
+    // different types — a weekly review keyed on a Monday must never be
+    // confused with a daily review that happens to use the same date string.
+    await reviews.upsert('daily', '2026-08-03', { score: 2 })
+    await reviews.upsert('weekly', '2026-08-03', { score: 5 })
+
+    const daily = await reviews.getByPeriod('daily', '2026-08-03')
+    const weekly = await reviews.getByPeriod('weekly', '2026-08-03')
+    expect(daily?.score).toBe(2)
+    expect(weekly?.score).toBe(5)
+
+    await reviews.upsert('weekly', '2026-08-03', {
+      answers: { 'goal:abc': 'Still on track' },
+    })
+    const updated = await reviews.getByPeriod('weekly', '2026-08-03')
+    expect(updated?.score).toBe(5)
+    expect(updated?.answers).toEqual({ 'goal:abc': 'Still on track' })
+  })
+})
+
+describe('resumeStepForWeekly', () => {
+  it('resumes at step 1 when there is no review yet', () => {
+    expect(resumeStepForWeekly(undefined)).toBe(1)
+  })
+
+  it('resumes at step 1 when nothing has been recorded', () => {
+    expect(resumeStepForWeekly({ score: undefined, answers: {} })).toBe(1)
+  })
+
+  it('resumes at step 4 once a goal check-in note exists but no score yet', () => {
+    expect(
+      resumeStepForWeekly({ score: undefined, answers: { 'goal:abc': 'On track' } }),
+    ).toBe(4)
+  })
+
+  it('resumes at step 5 once a score has been set', () => {
+    expect(resumeStepForWeekly({ score: 3, answers: {} })).toBe(5)
+    expect(
+      resumeStepForWeekly({ score: 3, answers: { 'goal:abc': 'On track' } }),
+    ).toBe(5)
   })
 })
