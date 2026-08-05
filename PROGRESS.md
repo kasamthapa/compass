@@ -1703,3 +1703,127 @@ unchanged. Verified both themes at 393px and 1280px. All seeded test
 data (goals, milestones, review records) was removed from IndexedDB
 after verification. `npm run build` (zero errors) and `npm run test`
 (80 tests, 20 new, all green).
+
+## Phase 6A — "Field Log" visual identity overhaul
+
+A full re-skin of shared tokens, typography, the icon set, and the app
+shell/nav/capture dialog — deliberately replacing the original "dark
+background + one bright accent" identity with a paper-and-ink,
+brass-instrument identity grounded in field journals and navigation
+instruments (fitting, since the app is literally named Compass). Page
+content (Today/Inbox/Week/Goals/Journal internals) was intentionally
+left untouched this phase — later phases re-skin those onto this new
+foundation. See DECISIONS.md for the full rationale.
+
+### What was built
+
+- **Design tokens** (`tokens.css`) — the entire palette was replaced
+  for both themes: "Day — paper" (light) and "Night — chart table"
+  (dark). Raw palette tokens are named `--paper`, `--paper-raised`,
+  `--paper-elevated` (a new third tone for sheets, needed since the
+  spec only specified two surface levels but the app has three),
+  `--hairline`, `--ink`, `--ink-soft`, `--ink-faint`, `--brass`,
+  `--brass-on`, `--chart-blue`, `--seal`, `--good`. The existing
+  *operational* tokens components already consumed (`--bg`,
+  `--surface`, `--text`, `--accent`, etc.) were kept and now simply
+  alias the new raw tokens (`--bg: var(--paper)`, `--text: var(--ink)`,
+  `--accent: var(--brass)`, ...) — this let every component that was
+  already written against `bg-bg`/`text-text-muted`/`bg-accent` Tailwind
+  classes pick up the new palette automatically, with zero component
+  edits needed for the palette swap itself.
+- **Typography** — Fraunces (500/600) replaces Space Grotesk for
+  display/headings, Karla (400/500) replaces Instrument Sans for
+  body/UI, Space Mono (400/700) replaces JetBrains Mono for
+  dates/counts/data. All three self-hosted via Fontsource. The existing
+  type scale (`text-large-title`, `text-title`, etc.) was kept as-is —
+  verified in-browser that Fraunces reads balanced at both the large
+  title and card-heading sizes, not oversized or cramped.
+- **Icon set** (`icons.tsx`) — every exported icon was redrawn by hand
+  in one consistent construction: `currentColor` strokes at
+  `strokeWidth: 1.4` (down from 1.75), with exactly one small
+  `var(--brass)`-filled accent detail per icon (a dot, a pennant, a
+  breather hole — never the whole glyph). The six nav icons match the
+  phase spec exactly: a sunrise arc over a horizon for Today, two
+  fanned note-cards for Inbox, seven dots for Week, a flag with a
+  brass pennant for Goals, a fountain-pen nib with a center slit and
+  brass breather hole for Journal, and a 4-dot constellation with a
+  brass final dot for Insights. Every other shell/action icon (theme
+  toggle, capture plus, check, chevrons, close, lifebuoy, checklist,
+  repeat, bookmark, edit, clock, more, trash) was redrawn in the same
+  hand.
+- **Active/filled nav states** — `NavItem`'s icon type gained an
+  optional `active?: boolean` prop; `LeftRail`/`BottomTabBar` now read
+  `isActive` from `NavLink`'s render-prop form and pass it through.
+  Each nav icon renders a filled/emphasized variant of its own glyph
+  when active (e.g. Today's arc gains a translucent fill, Week's dots
+  turn solid, Insights' lines thicken) — layered on top of the
+  existing active-color change, not a replacement for it.
+- **Compass-rose signature** — a small `CompassRoseMark` (thin circle,
+  four cardinal tick lines, one brass-filled kite at north) was added
+  once, beside the "Compass" wordmark in `LeftRail`. Not reused
+  anywhere else in the app.
+- **Shell re-skin** — `AppShell`, `LeftRail`, `BottomTabBar`,
+  `PageHeader`, `ThemeToggle`, `CaptureButton`, `CaptureDialog`, and
+  `Sheet` needed no structural changes at all: they were already
+  written entirely against Tailwind's semantic color/font utility
+  classes, so the token and font-family swaps above re-skinned them
+  automatically. The one direct (non-Tailwind) token reference in the
+  whole codebase — `YearGrain.tsx`'s inline `var(--ink)` for the year
+  grid's score-intensity fill — was updated to `var(--chart-blue)`,
+  since `--ink` now means primary text color, not the old blue accent.
+- **Manifest/meta colors** — `index.html`'s `<meta name="theme-color">`,
+  `themeStore.ts`'s `THEME_COLOR` map, and `vite.config.ts`'s PWA
+  manifest `theme_color`/`background_color` were updated to the new
+  paper hex values. These three are the only remaining literal hex
+  values outside `tokens.css` — unavoidable, since none of them can
+  consume a CSS custom property (a `<meta>` tag and a web manifest need
+  static values before any CSS loads).
+
+### Key decisions
+
+- **Old `--ink` (a blue accent used only by `YearGrain`) collided with
+  the new spec's `--ink` (primary text color).** The spec's palette was
+  followed literally — `--ink` now means text — and the one component
+  that used the old meaning was pointed at the new `--chart-blue` token
+  instead, which is exactly what that blue was conceptually standing in
+  for. This was the only genuine naming conflict found; everything else
+  mapped cleanly.
+- **Icons keep `stroke="currentColor"` rather than hardcoding
+  `var(--ink-soft)`.** Hardcoding a fixed stroke color would break every
+  place an icon currently inherits color contextually — the FAB's icon
+  against a brass-filled circle, the theme toggle's active/inactive
+  pill states, nav active-color changes. `currentColor` preserves all
+  of that for free; only the one brass accent per icon is a hardcoded
+  token reference, since that accent must stay brass regardless of
+  context.
+- **`--paper-elevated` is a new token not named in the phase spec.**
+  The spec gave two surface tones (paper, paper-raised) but the app has
+  three surface levels (page background, cards, sheets/elevated
+  overlays) — same as the original `--bg`/`--surface`/
+  `--surface-elevated` three-tier structure. Adding one more
+  paper-family tone preserves that structure instead of collapsing
+  sheets and cards to the same flat tone.
+- **Page content (Today/Inbox/Week/Goals/Journal internals) was
+  deliberately left untouched**, exactly as scoped. Because every one
+  of those components was already written against Tailwind's semantic
+  utility classes (never raw hex), the palette and type re-skin
+  cascades through them automatically without any file in
+  `src/components/today|inbox|week|goals|journal` needing an edit —
+  confirmed by browser-checking each page for regressions after the
+  shared-token changes landed.
+
+### Known issues / follow-ups
+
+None blocking. Verified in-browser at 393px and 1280px, both themes:
+every nav icon renders as the new hand-drawn glyph (confirmed via
+direct SVG inspection, not just visual impression) with the correct
+active/filled variant when selected; the compass-rose signature renders
+once in the rail; the capture dialog, theme toggle, and FAB all pick up
+the new palette and icons; zero console errors on any of the six pages.
+Grepped the full codebase for raw hex — the only hits are inside
+`tokens.css` itself (as intended) and the three unavoidable manifest/
+meta-tag duplicates documented above. `npm run build` (zero errors) and
+`npm run test` (80 tests, unchanged — this was a visual-only pass, no
+test assertions referenced colors or icon internals). A later phase
+will re-skin Today/Inbox/Week/Goals/Journal page content onto this new
+foundation, per the phase spec.

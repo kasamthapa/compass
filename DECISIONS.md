@@ -395,3 +395,80 @@ through it), `GoalForm` gained one optional prop —
 (`goal?.year ?? defaultYear ?? currentYear`); omitting it reproduces
 the exact prior behavior. One form, one soft-cap nudge, one validation
 path, used from both call sites.
+
+## Phase 6A: the "dark + one bright accent" identity was deliberately replaced
+
+Compass's original palette (a near-black background with a single
+bright amber accent) is a recognizable, generic pattern — it's the
+default look a lot of AI-scaffolded apps converge on, precisely because
+it's easy to generate and hard to get visibly wrong. For an app named
+*Compass* — literally a navigation instrument — that identity had
+nothing to do with the product's own metaphor. Phase 6A replaced it
+with "Field Log": a paper-and-ink palette (warm paper backgrounds, ink
+text, exactly one brass accent used with the same scarcity the old
+amber accent had) paired with a serif display face (Fraunces), a plain
+body face (Karla), and a typewriter/logbook mono (Space Mono) for
+dates and counts. The goal wasn't novelty for its own sake — it's to
+make the app *look like what it's for*: a field journal for tracking a
+life, not a generic productivity-SaaS dashboard. This is recorded here
+because it's the kind of decision a future pass might be tempted to
+partially undo (e.g. "just add a second bright accent color back") —
+don't; the scarcity of brass as the *only* primary accent is the same
+product-law-level constraint the old amber accent had, just renamed.
+
+## Old `--ink` (a blue accent) was repointed to `--chart-blue`, not preserved
+
+Before Phase 6A, `--ink` meant a blue accent color used in exactly one
+place: `YearGrain`'s score-intensity fill. Phase 6A's new palette
+defines `--ink` as the primary *text* color (matching the phase spec
+literally, since "ink" reads naturally as "the color you write with").
+Rather than invent a different name to avoid the collision, the old
+meaning was moved to the new `--chart-blue` token — which is exactly
+what that blue was already conceptually standing in for (a quiet,
+structural, non-accent color, distinct from the primary brass accent)
+— and `YearGrain.tsx`'s one direct `var(--ink)` reference was updated
+accordingly. This was the only genuine naming collision the palette
+rename produced; grepping for other direct `var(--*)` references (as
+opposed to Tailwind utility classes, which flow through the token
+aliases automatically) turned up nothing else affected.
+
+## Icons keep `stroke="currentColor"`, not a hardcoded `--ink-soft`
+
+The phase spec describes icon strokes as "--ink-soft", but hardcoding
+that literal token inside every `<svg>` would have broken every place
+an icon currently relies on inheriting its color from context: the FAB
+icon needs to read against a brass-filled circle (via `text-accent-on`
+on the button), the theme toggle's icons need to dim/brighten with
+their button's active state, and nav icons still receive a color
+change from `NavLink`'s `isActive` class alongside their new filled-
+variant emphasis. Keeping `stroke="currentColor"` preserves all of
+that "for free" — the one exception is each icon's single brass accent
+detail, which *is* hardcoded to `var(--brass)` specifically because
+that accent must stay brass regardless of surrounding context (the
+whole point of "exactly one small brass-filled accent detail" is that
+it reads as a fixed material, not a mood ring).
+
+## Nav icons show "active" as a filled glyph variant layered on the existing color change, not a replacement for it
+
+The phase spec asks for active/selected nav icons to be "shown as a
+filled/emphasized variant of the same glyph rather than just a color
+change" — read as "not *merely* a color change," not as "must not also
+change color." `LeftRail`/`BottomTabBar` still apply their existing
+`isActive`-driven color class to the `NavLink`, and the icon (via a new
+`active` prop threaded through `NavItem`'s type) additionally renders a
+filled version of its own glyph — a translucent fill under Today's arc,
+solid dots for Week, thicker connecting lines for Insights, and so on.
+Both signals together read more clearly than either alone would, and
+this avoided a larger rework of how nav color state already flows
+through the app.
+
+## `--paper-elevated` is a new token, added beyond the phase spec's four-tone palette
+
+The phase spec specifies two paper tones (`--paper`, `--paper-raised`)
+per theme, but the app has always had three surface levels — page
+background, cards, and sheets/elevated overlays (originally `--bg`,
+`--surface`, `--surface-elevated`) — and collapsing the top two would
+have flattened the sheet-vs-card depth cue the design has relied on
+since Phase 1. `--paper-elevated` was added as a third tone in the same
+family to preserve that structure, consumed by the existing
+`--surface-elevated` operational token exactly as before.

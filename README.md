@@ -140,6 +140,28 @@ What's actually built so far:
     calendar (structural) stays full width, only the prose narrows.
   - A calm invitation ("What happened today?") on any day with nothing
     written yet, instead of a blank apology.
+- **"Field Log" visual identity** — a paper-and-ink, brass-instrument look
+  grounded in field journals and navigation instruments, replacing an
+  earlier dark-mode-plus-one-accent look that read as generic
+  (see DECISIONS.md):
+  - **Design tokens**: "Day — paper" (warm paper/ink) and
+    "Night — chart table" (charcoal/cream) themes, with brass as the
+    sole primary accent (today/active/completion only), chart-blue as a
+    quiet secondary accent (links/structure), and a rare seal-red
+    reserved for ceremonial moments.
+  - **Typography**: Fraunces (a field-journal-masthead serif) for
+    display/headings, Karla for body/UI text, and Space Mono for
+    dates/counts/data — a typewriter-register feel for anything numeric.
+  - **A hand-drawn icon set** app-wide: every icon is a thin-stroke
+    original glyph with exactly one small brass accent detail — a
+    sunrise arc for Today, fanned note-cards for Inbox, seven dots for
+    Week, a flag with a brass pennant for Goals, a fountain-pen nib for
+    Journal, a small constellation for Insights — with active nav icons
+    shown as a filled/emphasized variant of the same glyph, not just a
+    color change.
+  - **A compass-rose signature mark** — a thin circle with four cardinal
+    lines and one brass-filled kite at north — appears exactly once, in
+    the desktop rail's wordmark.
 - **Light and dark themes**, following the system setting by default.
 - **Installable, offline-first PWA** — the app shell is precached, so it
   loads and works with no network connection.
@@ -150,6 +172,8 @@ What's actually built so far:
 
 - **React 18** + **TypeScript**, built with **Vite**
 - **Tailwind CSS** for styling, driven entirely by design tokens
+- **Fraunces**, **Karla**, and **Space Mono** (self-hosted via Fontsource)
+  for display, body, and data/mono type respectively
 - **Dexie** (IndexedDB) for local-first storage, with `dexie-react-hooks`
   for reactive queries
 - **Zustand** for UI-only state (theme preference, dialog open/closed)
