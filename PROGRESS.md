@@ -1589,3 +1589,117 @@ same places the pre-refactor implementation did. No code changes were
 needed or made; the temporary override was reverted before running
 `npm run build`/`npm run test` (both clean, unchanged) and the test
 review record was cleared from IndexedDB afterward.
+
+## Phase 5B-ii — Monthly and yearly reviews
+
+Built the monthly and yearly reviews on `/goals`, both reusing the
+`ReviewDialog` engine and `ScoreStep` from Phase 5B-i, so all four
+review types (daily, weekly, monthly, yearly) now share one step-dialog
+engine with a consistent resume-on-reopen guarantee and completion
+moment.
+
+### What was built
+
+- **`milestones.getForMonth(month)`** — a new repo query on the
+  indexed `month` field, filtered `!deletedAt`, used by the monthly
+  review's cross-goal milestone audit (milestones don't otherwise have
+  a "find everything due this month across all goals" query).
+- **`isMonthlyReviewDue`/`isYearlyReviewDue`** in `dates.ts` — pure
+  time checks mirroring `isWeeklyReviewDue`'s shape. Monthly's window
+  is the last 3 days of the current month through the 3rd of the next
+  (so it survives crossing a month boundary without vanishing);
+  yearly's is December 20 through January 10.
+- **`resumeStepForMonthly`/`resumeStepForYearly`** in
+  `reviewResume.ts` — coarser heuristics than the daily review's (see
+  Key decisions below).
+- **`ReviewEntryCard`** — extracted the entry-point card shape
+  (title/subtitle/onOpen/isDue/isCompleted) out of `WeeklyReviewCard`
+  into a shared primitive. `WeeklyReviewCard` is now a 9-line wrapper;
+  `MonthlyReviewCard` and `YearlyReviewCard` are new equally-thin
+  wrappers around the same component.
+- **`MonthlyReviewDialog`** (3 steps): audit this month's milestones
+  across every active goal with done/carry-to-next-month/drop actions
+  (carry moves the record's `month` field forward in place, same
+  pattern as weekly-priority carry — does not duplicate); rate the
+  month (`ScoreStep`); optionally add a milestone for next month per
+  goal. Finishing writes `Review(type: 'monthly', periodKey: YYYY-MM)`.
+- **`YearlyReviewDialog`** (3 steps): reflect on the year via three
+  free-text prompts (biggest win, biggest lesson, stop/start/continue),
+  each autosaving on blur; rate the year (`ScoreStep`); set 1+ goals
+  for next year via a nested `GoalForm` (same soft 5-goal-cap nudge as
+  regular goal creation, never blocks). Finishing writes
+  `Review(type: 'yearly', periodKey: YYYY)`.
+- **`GoalForm` gained an optional `defaultYear` prop** — hydration
+  falls back to `defaultYear ?? currentYear` when creating a new goal,
+  so the yearly review's "add a goal for 2027" affordance pre-fills
+  the correct year without forking the form.
+- **`GoalsPage`** now renders both review cards right under the page
+  header (before the goals list), computing "the reviewed month/year"
+  fresh on every render as the actual current month/year — `/goals`
+  has no navigable period state the way `/week` does, so unlike the
+  weekly review there's no "which period am I reviewing" question to
+  answer.
+
+### Key decisions
+
+- **Milestone carry moves the record, it doesn't duplicate it** —
+  exactly the same shape as the weekly-priority carry from 5B-i.
+  Verified directly in IndexedDB: carrying a milestone changed its
+  `month` field from `2026-08` to `2026-09` in place, same `id`, status
+  preserved and independently settable afterward. See DECISIONS.md.
+- **`resumeStepForMonthly`/`resumeStepForYearly` are coarse, like the
+  weekly review's, and for the same reason.** The monthly review's
+  audit and next-month-milestone steps aren't backed by any `Review`
+  field — a milestone being carried or a new one being added leaves no
+  trace on the `Review` record itself, only on `Milestone` rows. So
+  resume only distinguishes: nothing recorded → step 1; score set →
+  step 3 (skipping straight past the audit step, which is cheap to
+  skim since it just shows whatever's left to review). The yearly
+  review can do slightly better since the reflection step *does* write
+  to `Review.answers` directly: nothing recorded → step 1; any
+  reflection field present → step 2; score set → step 3.
+- **`ReviewEntryCard` extraction was pure refactor, not new behavior.**
+  With a third (soon fourth) review card needing the identical
+  title/subtitle/ring/checkmark shape, copy-pasting `WeeklyReviewCard`
+  a third time would have meant three places to keep in sync for any
+  future visual tweak. `WeeklyReviewCard`'s public interface and
+  rendered output are unchanged — confirmed via before/after browser
+  screenshots.
+- **`defaultYear` on `GoalForm` instead of a forked "next year" form.**
+  The only thing the yearly review's goal-creation step needs that the
+  regular Goals-page form doesn't is a different starting year — adding
+  one optional, backward-compatible prop (falls back to the current
+  year exactly as before when omitted) keeps one form, one set of
+  validation rules, one soft-cap nudge, instead of two forms drifting
+  apart over time.
+- **Both new review types target "the current month/year," not a
+  navigable one.** `/week` has real prior/next navigation and reviews
+  whatever week is on screen; `/goals` has no such state. Rather than
+  bolt on month/year navigation just to support the review (which the
+  phase spec didn't ask for), both reviews simply operate on
+  `new Date()` at render time — recomputed fresh each time `GoalsPage`
+  renders, so it's always correct without any extra state to keep in
+  sync.
+
+### Known issues / follow-ups
+
+None. Verified in-browser with real goals and milestones: opened the
+monthly review, toggled a milestone done, carried another to next
+month (confirmed via direct IndexedDB read that `month` moved from
+`2026-08` to `2026-09` on the same record, not a duplicate), rated the
+month, added a next-month milestone (correctly showed the
+just-carried one too), and finished — card updated to show completed.
+Opened the yearly review, filled and confirmed all three reflection
+fields save independently (verified via `Review.answers` in
+IndexedDB), rated the year, created a new 2027 goal from within the
+nested `GoalForm` step and confirmed it appeared both in the review
+step's own list and in the main Goals list immediately after, and
+finished. Reopening both dialogs after completion correctly resumed at
+the last step. Re-verified `/today` and `/week` render and their
+review cards/dialogs behave identically to before this phase — no
+shared files needed behavior changes, only `WeeklyReviewCard`'s
+internals were touched, and its rendered output was confirmed
+unchanged. Verified both themes at 393px and 1280px. All seeded test
+data (goals, milestones, review records) was removed from IndexedDB
+after verification. `npm run build` (zero errors) and `npm run test`
+(80 tests, 20 new, all green).

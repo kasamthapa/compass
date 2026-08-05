@@ -80,6 +80,21 @@ What's actually built so far:
     way.
   - Optional goal-link chips on the habit create forms (Today and
     Inbox's habit conversion) — fully optional, never required.
+  - **Monthly review**: a quiet 3-step check-in — audit this month's
+    milestones across every active goal (done / carry to next month /
+    drop, the same carry-not-duplicate pattern as weekly priorities),
+    rate the month 1–5, and optionally add a milestone for next month
+    per goal. Always reachable, never scolds if skipped; a quiet ring
+    highlights it from the last 3 days of the month through the 3rd of
+    the next.
+  - **Yearly review**: a quiet 3-step check-in — reflect on the year
+    (biggest win, biggest lesson, stop/start/continue), rate the year
+    1–5, and set 1 or more goals for next year (same form, same soft
+    5-goal cap as regular goal creation). A quiet ring highlights it
+    from December 20 through January 10.
+  - Both reuse the same step-dialog engine as the daily and weekly
+    reviews, so they autosave and resume correctly if closed partway
+    through, ending with the same calm completion moment.
 - **Week** — the priorities-and-schedule view at `/week`:
   - Header with the week's date range and a week number ("AUG 3–9 ·
     WEEK 32"), `<` `>` controls to navigate weeks, defaulting to the
@@ -194,6 +209,7 @@ which is the only layer that touches the database.
 - [x] Goals cascade (year → month)
 - [x] Week view
 - [x] Journal
+- [x] Guided reviews (daily, weekly, monthly, yearly)
 - [ ] Insights
 - [ ] PWA hardening
 - [ ] Cloud sync (Supabase)

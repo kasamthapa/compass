@@ -338,3 +338,60 @@ checkmark once completed). This was an explicit requirement ("never
 scolds if skipped — stays available") rather than an oversight — don't
 "fix" `WeeklyReviewCard` to match `EveningReviewCard`'s hide-when-done
 behavior, they're intentionally different for different products.
+
+## Milestone carry moves the record forward, it doesn't duplicate it
+
+The monthly review's "carry to next month" action for a milestone calls
+`milestones.update(id, { month: nextMonth })` on the existing row — it
+does not create a new milestone and mark the old one dropped/carried.
+This is the same shape as the weekly-priority carry from Phase 5B-i,
+and for the same reason: a milestone is one ongoing thing being moved
+in time, not a new thing that happens to relate to an old one. Carrying
+twice in a row (e.g. missing two months) just keeps sliding the same
+row forward — there's never a trail of dead "carried" rows to filter
+out elsewhere. Verified directly against IndexedDB, not just the UI:
+the `id` and `title` stay identical across the carry, only `month`
+changes, and `status` is preserved and still independently settable
+afterward.
+
+## `ReviewEntryCard` is a generic extraction of `WeeklyReviewCard`'s shape
+
+Once a third review card (monthly, then a fourth for yearly) needed
+the exact same title/subtitle/due-ring/completed-checkmark shape as
+`WeeklyReviewCard`, that shape was pulled out into a standalone
+`ReviewEntryCard` (`title`, `subtitle`, `onOpen`, `isDue`,
+`isCompleted`) rather than copy-pasted again. `WeeklyReviewCard`,
+`MonthlyReviewCard`, and `YearlyReviewCard` are now all thin wrappers
+supplying their own copy and due/completion signals. This was a pure
+refactor — `WeeklyReviewCard`'s public interface and rendered output
+are unchanged, confirmed via browser screenshots taken before and
+after.
+
+## `resumeStepForMonthly`/`resumeStepForYearly` are coarse for the same reason `resumeStepForWeekly` is
+
+The monthly review's audit-milestones and next-month-milestones steps
+mutate `Milestone` rows, not the `Review` record, so — exactly like the
+weekly review's inbox/priority steps — there's no field on `Review` to
+resume against for those steps. `resumeStepForMonthly` only
+distinguishes: nothing recorded → step 1; score set → step 3 (skipping
+past the audit step entirely, which is cheap to re-skim since it just
+reflects whatever's currently left to review). The yearly review does
+slightly better because its reflection step writes directly into
+`Review.answers`: nothing recorded → step 1; any reflection field
+present → step 2; score set → step 3. Same underlying principle as the
+weekly heuristic in the entry above — resume only as precisely as the
+data genuinely allows, and don't add a step-tracking field purely to
+make resume exact when it would duplicate information the app already
+has elsewhere.
+
+## `GoalForm` takes an optional `defaultYear` instead of being forked for the yearly review
+
+The yearly review's "set next year's goals" step needs the exact same
+form as the regular Goals-page "+ New goal" affordance, with one
+difference: it should default to next year, not the current year.
+Rather than fork the component (or thread review-specific state
+through it), `GoalForm` gained one optional prop —
+`defaultYear?: number` — used only in the create-mode hydration
+(`goal?.year ?? defaultYear ?? currentYear`); omitting it reproduces
+the exact prior behavior. One form, one soft-cap nudge, one validation
+path, used from both call sites.
