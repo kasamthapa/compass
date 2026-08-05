@@ -1,6 +1,11 @@
 /* Compass design tokens — the only place raw color/type/spacing/motion values
    live. Components and Tailwind config must consume these, never hardcode
-   values. Colors are semantic and swap per theme via [data-theme] on <html>. */
+   values. Colors are semantic and swap per theme via [data-theme] on <html>.
+
+   "Field Log" identity (Phase 6A): grounded in field journals, expedition
+   logs, and navigation instruments — a paper-and-ink, brass-instrument
+   palette rather than the dark-mode-plus-one-bright-accent look. See
+   DECISIONS.md for the reasoning. */
 
 :root {
   /* motion */
@@ -37,77 +42,106 @@
   --radius-xl: 1.5rem; /* 24px — sheet top corners */
   --radius-full: 999px;
 
-  /* type */
-  --font-display: 'Space Grotesk', sans-serif;
-  --font-body: 'Instrument Sans', sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
+  /* type — Fraunces for display (a field journal's masthead serif), Karla
+     for body/UI (a plain, legible field hand), Space Mono for data/dates/
+     counts (a typewriter/logbook register). */
+  --font-display: 'Fraunces', serif;
+  --font-body: 'Karla', sans-serif;
+  --font-mono: 'Space Mono', monospace;
 }
 
-/* ---- Dark theme (also the fallback before JS/attribute applies) ---- */
+/* ---- Dark theme: "Night — chart table" (also the fallback before JS/
+   attribute applies) ---- */
 :root,
 :root[data-theme='dark'] {
-  --bg: #14171d;
-  --surface: #1c2029;
-  --surface-elevated: #232833;
-  --border-hairline: rgba(255, 255, 255, 0.08);
-  --text: #eef1f5;
-  --text-muted: #9aa4b2;
-  --text-faint: #6b7480;
-  --accent: #e8a33d;
-  --accent-on: #14171d;
-  --accent-wash: rgba(232, 163, 61, 0.14);
-  --accent-ring: rgba(232, 163, 61, 0.4);
-  --good: #57ab7c;
-  --skip-fill: rgba(255, 255, 255, 0.14);
-  --ink: #6f9bd1;
-  --grid-empty: rgba(255, 255, 255, 0.1);
-  --overlay: rgba(0, 0, 0, 0.55);
-  --tabbar-bg: rgba(28, 32, 41, 0.72);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.24), 0 8px 24px rgba(0, 0, 0, 0.28);
-  --shadow-fab: 0 8px 20px rgba(232, 163, 61, 0.32), 0 2px 6px rgba(0, 0, 0, 0.3);
-  --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.4);
+  /* raw palette */
+  --paper: #1b1b17;
+  --paper-raised: #242320;
+  --paper-elevated: #2a2924;
+  --hairline: #3a382f;
+  --ink: #e8e2d0;
+  --ink-soft: #9c9683;
+  --ink-faint: #7a7666;
+  --brass: #d4a853;
+  --brass-on: #1b1b17;
+  --chart-blue: #7b9ab5;
+  --seal: #c1614f;
+  --good: #7fa372;
+
+  /* operational tokens — what components actually consume */
+  --bg: var(--paper);
+  --surface: var(--paper-raised);
+  --surface-elevated: var(--paper-elevated);
+  --border-hairline: var(--hairline);
+  --text: var(--ink);
+  --text-muted: var(--ink-soft);
+  --text-faint: var(--ink-faint);
+  --accent: var(--brass);
+  --accent-on: var(--brass-on);
+  --accent-wash: rgba(212, 168, 83, 0.16);
+  --accent-ring: rgba(212, 168, 83, 0.42);
+  --skip-fill: rgba(232, 226, 208, 0.14);
+  --grid-empty: rgba(232, 226, 208, 0.1);
+  --overlay: rgba(10, 9, 7, 0.6);
+  --tabbar-bg: rgba(36, 35, 32, 0.72);
+  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.28), 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-fab: 0 8px 20px rgba(212, 168, 83, 0.34), 0 2px 6px rgba(0, 0, 0, 0.3);
+  --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.42);
   --shadow-elevated:
-    0 24px 60px rgba(0, 0, 0, 0.45),
-    0 4px 16px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 24px 60px rgba(0, 0, 0, 0.48),
+    0 4px 16px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   --breathe-glow: radial-gradient(
     circle at 50% 45%,
-    rgba(232, 163, 61, 0.38) 0%,
-    rgba(111, 155, 209, 0.2) 55%,
+    rgba(212, 168, 83, 0.4) 0%,
+    rgba(123, 154, 181, 0.22) 55%,
     transparent 78%
   );
 }
 
-/* ---- Light theme ---- */
+/* ---- Light theme: "Day — paper" ---- */
 :root[data-theme='light'] {
-  --bg: #f4f4f7;
-  --surface: #ffffff;
-  --surface-elevated: #ffffff;
-  --border-hairline: rgba(0, 0, 0, 0.07);
-  --text: #1c1c1e;
-  --text-muted: #6e6e73;
-  --text-faint: #8e8e93;
-  --accent: #b4741f;
-  --accent-on: #ffffff;
-  --accent-wash: rgba(180, 116, 31, 0.1);
-  --accent-ring: rgba(180, 116, 31, 0.35);
-  --good: #2f8659;
-  --skip-fill: rgba(0, 0, 0, 0.1);
-  --ink: #3f6f9e;
-  --grid-empty: rgba(0, 0, 0, 0.08);
-  --overlay: rgba(0, 0, 0, 0.35);
-  --tabbar-bg: rgba(255, 255, 255, 0.72);
-  --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 20px rgba(0, 0, 0, 0.06);
-  --shadow-fab: 0 8px 20px rgba(180, 116, 31, 0.26), 0 2px 6px rgba(0, 0, 0, 0.12);
-  --shadow-sheet: 0 -8px 30px rgba(0, 0, 0, 0.12);
+  /* raw palette */
+  --paper: #e7e1d2;
+  --paper-raised: #f2eee3;
+  --paper-elevated: #f8f5ee;
+  --hairline: #c7bca0;
+  --ink: #2b2a24;
+  --ink-soft: #6b6656;
+  --ink-faint: #8a8574;
+  --brass: #a8823c;
+  --brass-on: #f8f5ee;
+  --chart-blue: #3b5166;
+  --seal: #8c3b2e;
+  --good: #5c7a56;
+
+  /* operational tokens — what components actually consume */
+  --bg: var(--paper);
+  --surface: var(--paper-raised);
+  --surface-elevated: var(--paper-elevated);
+  --border-hairline: var(--hairline);
+  --text: var(--ink);
+  --text-muted: var(--ink-soft);
+  --text-faint: var(--ink-faint);
+  --accent: var(--brass);
+  --accent-on: var(--brass-on);
+  --accent-wash: rgba(168, 130, 60, 0.12);
+  --accent-ring: rgba(168, 130, 60, 0.38);
+  --skip-fill: rgba(43, 42, 36, 0.1);
+  --grid-empty: rgba(43, 42, 36, 0.08);
+  --overlay: rgba(43, 42, 36, 0.35);
+  --tabbar-bg: rgba(242, 238, 227, 0.72);
+  --shadow-card: 0 1px 2px rgba(43, 42, 36, 0.05), 0 8px 20px rgba(43, 42, 36, 0.08);
+  --shadow-fab: 0 8px 20px rgba(168, 130, 60, 0.28), 0 2px 6px rgba(43, 42, 36, 0.14);
+  --shadow-sheet: 0 -8px 30px rgba(43, 42, 36, 0.14);
   --shadow-elevated:
-    0 24px 60px rgba(0, 0, 0, 0.16),
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+    0 24px 60px rgba(43, 42, 36, 0.18),
+    0 4px 16px rgba(43, 42, 36, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.7);
   --breathe-glow: radial-gradient(
     circle at 50% 45%,
-    rgba(180, 116, 31, 0.3) 0%,
-    rgba(63, 111, 158, 0.16) 55%,
+    rgba(168, 130, 60, 0.32) 0%,
+    rgba(59, 81, 102, 0.18) 55%,
     transparent 78%
   );
 }

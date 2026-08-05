@@ -17,15 +17,16 @@ export default {
         'accent-ring': 'var(--accent-ring)',
         good: 'var(--good)',
         skip: 'var(--skip-fill)',
-        ink: 'var(--ink)',
+        'chart-blue': 'var(--chart-blue)',
+        seal: 'var(--seal)',
         'grid-empty': 'var(--grid-empty)',
         overlay: 'var(--overlay)',
         tabbar: 'var(--tabbar-bg)',
       },
       fontFamily: {
-        display: ['Space Grotesk', 'sans-serif'],
-        body: ['Instrument Sans', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        display: ['Fraunces', 'serif'],
+        body: ['Karla', 'sans-serif'],
+        mono: ['Space Mono', 'monospace'],
       },
       fontSize: {
         'large-title': [

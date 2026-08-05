@@ -4,9 +4,13 @@ export type ThemePreference = 'system' | 'light' | 'dark'
 type ResolvedTheme = 'light' | 'dark'
 
 const STORAGE_KEY = 'compass-theme'
+// These mirror tokens.css's --paper values per theme. A literal duplicate
+// is unavoidable here — the <meta name="theme-color"> tag needs a static
+// hex the OS chrome can read before any CSS/JS runs, so it can't consume
+// a CSS custom property.
 const THEME_COLOR: Record<ResolvedTheme, string> = {
-  light: '#f4f4f7',
-  dark: '#14171d',
+  light: '#e7e1d2',
+  dark: '#1b1b17',
 }
 
 function getSystemTheme(): ResolvedTheme {

@@ -13,8 +13,8 @@ export default defineConfig({
         name: 'Compass',
         short_name: 'Compass',
         description: 'A local-first habit tracker, planner, and journal.',
-        theme_color: '#0E1116',
-        background_color: '#0E1116',
+        theme_color: '#1b1b17',
+        background_color: '#1b1b17',
         display: 'standalone',
         start_url: '/',
         icons: [
