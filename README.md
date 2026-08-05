@@ -99,6 +99,15 @@ What's actually built so far:
     a Today/Tomorrow quick-chip plus a day-of-week picker for the
     visible week, the MIT toggle, an optional first-move note, and
     optional goal/weekly-priority links.
+  - **Weekly review**: a 5-step guided check-in for the viewed week —
+    clear the inbox (the same Task/Habit/Note/Someday actions as
+    Inbox itself), act on this week's priorities (done/carry/drop),
+    a short reflective check-in per active goal, rate the week 1–5,
+    and set up to 3 priorities for next week. Always reachable, never
+    hides or scolds if skipped; a quiet ring highlights it from Sunday
+    4pm through end of Monday. Built on the same step-dialog engine as
+    the daily review, so it autosaves, resumes correctly if closed
+    partway through, and ends with the same calm completion moment.
 - **Journal** — a monthly calendar + daily entry at `/journal`:
   - A Monday-first month calendar (mono date numbers, a quiet dot on any
     day with a saved entry, a subtle amber ring on today), with `<` `>`

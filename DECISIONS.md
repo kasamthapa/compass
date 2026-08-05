@@ -267,3 +267,74 @@ Every other page's header is one title + one trailing control; Journal
 just has a more useful thing to put there. Theme is a global preference
 (not per-page), so it's still one tap away on any other page — nothing is
 actually lost.
+
+## The review engine extracts chrome only — step content and autosave stay per-review
+
+`ReviewDialog.tsx` (`src/components/reviews/`) owns exactly four things:
+the `Sheet` wrapper, the "Step N of M" + title header, Back/Next/Finish
+navigation, and the completion moment. It does not own step content,
+per-step state, autosave, or resume logic — those stay in each review's
+own component (`EveningReviewDialog.tsx`, `WeeklyReviewDialog.tsx`),
+which build a `steps: ReviewStep[]` array (`{ render, canAdvance? }`)
+fresh on every render and pass it down along with a `resumeStep` computed
+however that review's data supports. This split exists because the daily
+and weekly reviews' steps are too heterogeneous to generalize further
+without either an over-abstracted step-type system or losing the ability
+for each step to read/write whatever local state and repo calls it needs.
+Generalizing the chrome (identical in both reviews) while leaving content
+per-review is the smallest extraction that actually removes duplication —
+resist the urge to push step content into the engine too; that's a
+different, riskier refactor than what Phase 5B-i asked for.
+
+## Weekly review resume is coarser than daily review resume, on purpose
+
+`resumeStepForWeekly()` only distinguishes three states (nothing recorded →
+step 1, a goal check-in note exists → step 4, a score exists → step 5),
+unlike the daily review's `resumeStepFor()`, which maps every one of its 4
+steps to a specific `Review` field. The weekly review's inbox, this-week-
+priorities, and next-week-priorities steps are action steps against other
+tables (`captures`, `weeklyPriorities`) with no trace left on the `Review`
+record itself — a processed capture or a carried priority doesn't tell you
+anything about whether the *review* reached that step. Rather than invent
+a field just to track step position (which would need its own migration
+and would be redundant with data the app already has elsewhere), the
+resume heuristic uses only the two fields that genuinely exist on
+`Review` for this type (`answers`, `score`) and accepts that steps 1/2/5
+always restart at their natural state when resumed — acceptable because
+those steps show an instant empty/"already clear" state when there's
+nothing left to do, so restarting there costs a tap, not real re-work.
+
+## The weekly review reuses `WeekPriorities` wholesale for both priority steps
+
+Steps 2 ("this week's priorities") and 5 ("next week's priorities") of
+`WeeklyReviewDialog` are literally `<WeekPriorities weekOf={...} />` —
+the same component `/week` itself renders — not a bespoke read-only
+summary. `WeekPriorities` gained two optional props (`heading`,
+`emptyPrompt`, both defaulting to their original hardcoded strings) so
+the identical component serves three call sites (Week's page, "this
+week," "next week") with zero duplicated add/done/carry/drop/cap logic.
+If `WeekPriorities` ever needs a genuinely different priorities UI inside
+a review step, that's the point to fork it — not before.
+
+## `ProcessSheet` nests inside `ReviewDialog`'s `Sheet` rather than being reimplemented
+
+The weekly review's inbox step opens the existing `ProcessSheet` (Task/
+Habit/Note/Someday) on top of the review dialog itself — two `Sheet`
+instances stacked at the same z-index, the later-mounted one painting
+over the first with its own backdrop. This isn't a new pattern: the app
+already nests `TaskConvertForm`/`HabitConvertForm` inside `ProcessSheet`
+inside `InboxPage`'s flow; a review step opening `ProcessSheet` is the
+same "sheet-from-a-sheet" shape one level deeper, not a special case
+that needed its own solution.
+
+## The weekly review card is always visible; the daily review card is not
+
+`EveningReviewCard` (Today) only renders in the evening and before the
+day's review is completed — a Phase 2A choice appropriate for a
+once-per-day close-out ritual. `WeeklyReviewCard` (Week) always renders,
+regardless of the due window or completion status; only its visual
+weight changes (an amber ring + wash when due, plain otherwise, a small
+checkmark once completed). This was an explicit requirement ("never
+scolds if skipped — stays available") rather than an oversight — don't
+"fix" `WeeklyReviewCard` to match `EveningReviewCard`'s hide-when-done
+behavior, they're intentionally different for different products.

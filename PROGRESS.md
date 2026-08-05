@@ -1427,3 +1427,130 @@ in-progress edit on the outgoing day was saved before the switch —
 mood/energy still persist immediately, and "Back to today" returns
 correctly. `npm run build` (zero errors) and `npm run test` (49 tests,
 unchanged — this was a UI-only change, no repo/lib logic touched).
+
+## Phase 5B-i — Review engine + weekly review
+
+### What was built
+
+- **`ReviewDialog.tsx`** (new, `src/components/reviews/`): the shared
+  step-dialog chrome extracted from the Phase 2A daily review — the
+  `Sheet` wrapper, "Step N of M" + title header, Back/Next/Finish
+  navigation (Next disabled per-step via an optional `canAdvance` flag),
+  and the calm amber completion moment. Callers own everything else: an
+  ordered `steps: ReviewStep[]` array (each just `{ render, canAdvance? }`),
+  a `resumeStep` (read once, the instant the dialog opens — same
+  guarantee the daily review already had), and an `onFinish` callback
+  that writes `completedAt`.
+- **`ScoreStep.tsx`** (new, same folder): the 1–5 tap-to-rate row,
+  extracted out of the daily review so both reviews render an identical
+  rating control from one implementation.
+- **`EveningReviewDialog.tsx`** (refactored, not rebuilt): now composes
+  `ReviewDialog` + `ScoreStep` with its existing score/win/lesson/
+  tomorrow-focus state, handlers, and autosave-on-blur/on-select logic
+  completely unchanged. Same 4 steps, same resume behavior, same
+  completion copy ("Day closed.") — verified via the full existing test
+  suite (unchanged, all green) plus a fresh manual pass.
+- **Weekly review** (`WeeklyReviewCard.tsx` + `WeeklyReviewDialog.tsx`,
+  `src/components/week/`): a 5-step guided review for whichever week is
+  currently viewed on `/week`.
+  1. **Clear your inbox** — lists `captures.getUnprocessed()`; tapping
+     one opens the existing `ProcessSheet` (Task/Habit/Note/Someday)
+     *nested* inside the review's Sheet — reused verbatim, not rebuilt.
+     Empty state: "Already clear. Nice."
+  2. **This week's priorities** — literally `<WeekPriorities
+     weekOf={reviewedWeek} />`, the exact same component Week's page
+     uses, done/carry/drop and all.
+  3. **Check your goals** — one short free-text reflection per active
+     goal ("Still on track? Any next action?"), saved into the
+     `Review.answers` bag under `goal:<goalId>` keys on blur — no new
+     schema, no task creation, deliberately lightweight per the spec.
+  4. **Rate your week** — `ScoreStep`, same gating as the daily review
+     (Next disabled until scored).
+  5. **Next week's priorities** — `<WeekPriorities weekOf={nextWeek}
+     heading="Next week's priorities" emptyPrompt="What matters most
+     next week?" />` — the same component again, just re-parameterized,
+     still respecting the hard 3-cap.
+  Finishing writes `Review('weekly', reviewedWeekMonday, { completedAt })`
+  and shows "Week reviewed."
+- **`WeekPriorities.tsx`** gained two optional props, `heading` and
+  `emptyPrompt` (both default to their existing hardcoded text), so the
+  exact same component serves Week's page, the "this week" review step,
+  and the "next week" review step with zero duplicated priority-row/cap/
+  carry logic.
+- **`isWeeklyReviewDue(now)`** (new, `dates.ts`): Sunday from 4pm through
+  all of Monday — a pure time check, same shape as the daily review's
+  `isEvening` check, not tied to which week is being viewed.
+- **`resumeStepForWeekly(review)`** (new, `reviewResume.ts`): a coarser
+  heuristic than the daily review's, because 3 of the 5 steps (inbox,
+  this-week priorities, next-week priorities) have no dedicated field on
+  `Review` to infer progress from — see Key decisions below.
+- **`WeeklyReviewCard.tsx`**: always rendered on `/week` (unlike the
+  daily review's card, which hides outside the evening and once
+  completed) — amber ring + wash when due, otherwise quiet; a small
+  checkmark if already completed. Never disappears, never scolds.
+- **Tests**: `reviews.test.ts` gained a weekly-type upsert test (proving
+  'daily' and 'weekly' reviews never collide even when given the same
+  periodKey string) and full `resumeStepForWeekly` coverage.
+  `weeklyPriorities.test.ts` gained two "carry" tests: moving a priority
+  to next week removes it from the old week and lands it in the new one
+  (same id, same title — not a duplicate), and carrying frees a slot in
+  the original week for a new priority. `dates.test.ts` gained
+  `isWeeklyReviewDue` coverage for the Sunday boundary, all of Monday,
+  and every other day. 11 new tests, 60 total, all green.
+
+### Key decisions
+
+- **`resumeStepForWeekly` is a coarser heuristic than the daily
+  review's, by necessity.** The daily review can infer progress exactly
+  because every step maps to a specific `Review` field (score, win,
+  lesson). Three of the weekly review's five steps are action steps
+  (inbox processing, this/next week's priorities) with no equivalent
+  field — a capture being processed or a priority being carried leaves
+  no trace on the `Review` record itself. So resume only distinguishes
+  three states: nothing recorded yet → step 1 (cheap to skim back
+  through, since the inbox/priority steps show an instant empty/already-
+  clear state if there's nothing left to do); a goal check-in note
+  exists → step 4; a score exists → step 5. This is honest about what
+  the data can support rather than pretending to a precision it doesn't
+  have — documented inline and in DECISIONS.md so it isn't "fixed" into
+  something more precise than the underlying signals allow.
+- **Steps 2 and 5 reuse `WeekPriorities` itself, not a bespoke read-only
+  view.** The phase spec asked to "reuse existing logic from Week's
+  priority row" — reusing the whole component (not just extracting
+  `PriorityRow`) means the review steps get every existing behavior
+  (add, done, carry, drop, the hard cap, the goal-chip picker) for free,
+  and any future change to how priorities work only has to happen once.
+  The two new `heading`/`emptyPrompt` props are the only change needed
+  to make one component serve three different call sites correctly.
+- **`ProcessSheet` is nested inside `ReviewDialog`'s `Sheet` rather than
+  reimplemented.** Both are the same `Sheet` component stacked at the
+  same z-index; the later-mounted one paints on top and its own overlay
+  dims everything below, which reads correctly as "a sheet opened from
+  within a sheet" — the standard pattern the design already uses
+  elsewhere (e.g. `TaskConvertForm` inside `ProcessSheet` inside
+  `InboxPage`), just one level deeper here.
+- **The weekly review's entry point never hides, unlike the daily
+  review's.** `EveningReviewCard` only renders in the evening and before
+  completion — a deliberate choice from Phase 2A for a review that's
+  meant to close out one specific day. The weekly review's phase spec
+  explicitly called for "never scolds if skipped... stays available," so
+  `WeeklyReviewCard` always renders regardless of due-window or
+  completion status; only its visual weight (ring + wash vs. plain)
+  changes.
+
+### Known issues / follow-ups
+
+None. Verified in-browser with real unprocessed captures, real weekly
+priorities (including a goal-linked one), and a real active goal: all
+5 steps walked end-to-end — a capture converted to a task from inside
+the review (confirmed `processed: true` + the new task in IndexedDB), a
+priority marked done, a goal check-in note saved (confirmed via
+`Review.answers`), a score selected, a next-week priority added and
+confirmed to land on the correct week (not the reviewed week) — finish
+showed "Week reviewed." and reopening resumed at the right step. One
+false alarm during manual testing turned out to be this browser
+automation environment not delivering synthetic `blur` events at all
+(reproduced with a plain native `<input>`, no React involved) — real
+click-driven focus changes confirmed the goal-note autosave works
+correctly; not an app defect. `npm run build` (zero errors) and
+`npm run test` (60 tests, 11 new, all green).
