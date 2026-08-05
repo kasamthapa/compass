@@ -4,7 +4,7 @@ import { IconToday, IconInbox, IconWeek, IconGoals, IconJournal, IconInsights } 
 export interface NavItem {
   to: string
   label: string
-  icon: ComponentType<{ className?: string }>
+  icon: ComponentType<{ className?: string; active?: boolean }>
 }
 
 export const NAV_ITEMS: NavItem[] = [

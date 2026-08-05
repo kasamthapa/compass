@@ -62,7 +62,7 @@ function buildYearColumns(today: string): WeekColumn[] {
   return columns
 }
 
-/** Score 1 -> faint ink tint, score 5 -> fully saturated ink. */
+/** Score 1 -> faint chart-blue tint, score 5 -> fully saturated chart-blue. */
 function intensityForScore(score: 1 | 2 | 3 | 4 | 5 | undefined): number {
   const value = score ?? 3
   return 0.28 + (value - 1) * 0.18
@@ -137,7 +137,7 @@ export function YearGrain({ today, scoresByDate }: YearGrainProps) {
                       style={{
                         height: CELL,
                         width: CELL,
-                        backgroundColor: isCompleted ? 'var(--ink)' : undefined,
+                        backgroundColor: isCompleted ? 'var(--chart-blue)' : undefined,
                         opacity: isCompleted ? intensityForScore(score) : undefined,
                       }}
                     />
