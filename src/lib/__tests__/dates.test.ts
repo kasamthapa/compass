@@ -5,7 +5,9 @@ import {
   formatMonthYear,
   formatWeekRange,
   getMonthGridDays,
+  isMonthlyReviewDue,
   isWeeklyReviewDue,
+  isYearlyReviewDue,
   monthKey,
   parseDateISO,
   weekNumber,
@@ -117,5 +119,59 @@ describe('isWeeklyReviewDue', () => {
     expect(isWeeklyReviewDue(new Date(2026, 7, 11, 12, 0))).toBe(false)
     // 2026-08-8 is a Saturday
     expect(isWeeklyReviewDue(new Date(2026, 7, 8, 23, 0))).toBe(false)
+  })
+})
+
+describe('isMonthlyReviewDue', () => {
+  it('is true for the first 3 days of the month', () => {
+    expect(isMonthlyReviewDue(new Date(2026, 8, 1))).toBe(true) // Sep 1
+    expect(isMonthlyReviewDue(new Date(2026, 8, 2))).toBe(true)
+    expect(isMonthlyReviewDue(new Date(2026, 8, 3))).toBe(true)
+    expect(isMonthlyReviewDue(new Date(2026, 8, 4))).toBe(false)
+  })
+
+  it('is true for the last 3 days of a 31-day month', () => {
+    // August 2026 has 31 days
+    expect(isMonthlyReviewDue(new Date(2026, 7, 28))).toBe(false)
+    expect(isMonthlyReviewDue(new Date(2026, 7, 29))).toBe(true)
+    expect(isMonthlyReviewDue(new Date(2026, 7, 30))).toBe(true)
+    expect(isMonthlyReviewDue(new Date(2026, 7, 31))).toBe(true)
+  })
+
+  it('is true for the last 3 days of a 30-day month', () => {
+    // September 2026 has 30 days
+    expect(isMonthlyReviewDue(new Date(2026, 8, 27))).toBe(false)
+    expect(isMonthlyReviewDue(new Date(2026, 8, 28))).toBe(true)
+    expect(isMonthlyReviewDue(new Date(2026, 8, 29))).toBe(true)
+    expect(isMonthlyReviewDue(new Date(2026, 8, 30))).toBe(true)
+  })
+
+  it('is true for the last 3 days of February in a non-leap year', () => {
+    // February 2026 has 28 days
+    expect(isMonthlyReviewDue(new Date(2026, 1, 25))).toBe(false)
+    expect(isMonthlyReviewDue(new Date(2026, 1, 26))).toBe(true)
+    expect(isMonthlyReviewDue(new Date(2026, 1, 28))).toBe(true)
+  })
+
+  it('is false in the middle of the month', () => {
+    expect(isMonthlyReviewDue(new Date(2026, 7, 15))).toBe(false)
+  })
+})
+
+describe('isYearlyReviewDue', () => {
+  it('is true from December 20 onward', () => {
+    expect(isYearlyReviewDue(new Date(2026, 11, 19))).toBe(false)
+    expect(isYearlyReviewDue(new Date(2026, 11, 20))).toBe(true)
+    expect(isYearlyReviewDue(new Date(2026, 11, 31))).toBe(true)
+  })
+
+  it('is true through January 10', () => {
+    expect(isYearlyReviewDue(new Date(2027, 0, 1))).toBe(true)
+    expect(isYearlyReviewDue(new Date(2027, 0, 10))).toBe(true)
+    expect(isYearlyReviewDue(new Date(2027, 0, 11))).toBe(false)
+  })
+
+  it('is false in the middle of the year', () => {
+    expect(isYearlyReviewDue(new Date(2026, 6, 15))).toBe(false)
   })
 })

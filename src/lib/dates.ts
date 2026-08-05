@@ -160,6 +160,32 @@ export function isWeeklyReviewDue(now: Date = new Date()): boolean {
   return false
 }
 
+/**
+ * Whether the monthly review is "due" right now: the last 3 days of the
+ * current month through the 3rd of the next month — a window, not a
+ * single day, so "due" doesn't vanish just because you missed one exact
+ * date. A pure time check, same shape as `isWeeklyReviewDue`.
+ */
+export function isMonthlyReviewDue(now: Date = new Date()): boolean {
+  const day = now.getDate()
+  if (day <= 3) return true
+  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+  return day > daysInMonth - 3
+}
+
+/**
+ * Whether the yearly review is "due" right now: December 20 through
+ * January 10. Same pure-time-check shape as the weekly/monthly due
+ * windows.
+ */
+export function isYearlyReviewDue(now: Date = new Date()): boolean {
+  const month = now.getMonth() // 0 = January .. 11 = December
+  const day = now.getDate()
+  if (month === 11 && day >= 20) return true
+  if (month === 0 && day <= 10) return true
+  return false
+}
+
 /** e.g. "2h ago" — a quiet relative timestamp for capture rows. */
 export function formatRelativeTime(isoTimestamp: string, now: Date = new Date()): string {
   const diffMs = now.getTime() - new Date(isoTimestamp).getTime()

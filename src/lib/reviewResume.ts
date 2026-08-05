@@ -36,3 +36,39 @@ export function resumeStepForWeekly(
   if (hasGoalNote) return 4
   return 1
 }
+
+/**
+ * Which step of the 3-step monthly review to resume at. Steps 1 (audit
+ * this month's milestones) and 3 (next month's milestones) are action
+ * steps against the `milestones` table with no trace on the `Review`
+ * record — same reasoning as the weekly review's coarser heuristic (see
+ * DECISIONS.md). Only `score` is trackable, so: no review yet → step 1;
+ * a score exists → step 3 (the last step); otherwise → step 1.
+ */
+export function resumeStepForMonthly(
+  review: Pick<Review, 'score' | 'answers'> | undefined,
+): 1 | 2 | 3 {
+  if (!review) return 1
+  if (review.score !== undefined) return 3
+  return 1
+}
+
+/** Answers-bag keys for the yearly review's reflection step. */
+export const YEAR_REFLECT_ANSWER_KEYS = ['biggestWin', 'biggestLesson', 'stopStartContinue'] as const
+
+/**
+ * Which step of the 3-step yearly review to resume at. Mirrors the
+ * weekly review's shape: no review yet → step 1; any reflection answer
+ * present → step 2 (rate the year); a score exists → step 3 (set next
+ * year's goals, the last step — this one has no trackable field either,
+ * same reasoning as the weekly/monthly action steps).
+ */
+export function resumeStepForYearly(
+  review: Pick<Review, 'score' | 'answers'> | undefined,
+): 1 | 2 | 3 {
+  if (!review) return 1
+  if (review.score !== undefined) return 3
+  const hasReflection = YEAR_REFLECT_ANSWER_KEYS.some((key) => Boolean(review.answers[key]))
+  if (hasReflection) return 2
+  return 1
+}

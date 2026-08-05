@@ -39,3 +39,12 @@ export async function getForGoal(goalId: string): Promise<Milestone[]> {
     .filter((milestone) => !milestone.deletedAt)
     .toArray()
 }
+
+/** Every milestone (across all goals) whose `month` matches, for the monthly review's audit step. */
+export async function getForMonth(month: string): Promise<Milestone[]> {
+  return db.milestones
+    .where('month')
+    .equals(month)
+    .filter((milestone) => !milestone.deletedAt)
+    .toArray()
+}

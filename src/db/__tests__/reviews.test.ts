@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { resetDb } from './testUtils'
 import * as reviews from '../repo/reviews'
-import { resumeStepFor, resumeStepForWeekly } from '../../lib/reviewResume'
+import {
+  resumeStepFor,
+  resumeStepForMonthly,
+  resumeStepForWeekly,
+  resumeStepForYearly,
+} from '../../lib/reviewResume'
 
 beforeEach(resetDb)
 
@@ -107,5 +112,59 @@ describe('resumeStepForWeekly', () => {
     expect(
       resumeStepForWeekly({ score: 3, answers: { 'goal:abc': 'On track' } }),
     ).toBe(5)
+  })
+})
+
+describe('monthly and yearly reviews do not collide with each other or with weekly/daily', () => {
+  it('keeps all four review types independent for the same periodKey string', async () => {
+    await reviews.upsert('daily', '2026-08', { score: 1 })
+    await reviews.upsert('weekly', '2026-08', { score: 2 })
+    await reviews.upsert('monthly', '2026-08', { score: 3 })
+    await reviews.upsert('yearly', '2026-08', { score: 4 })
+
+    expect((await reviews.getByPeriod('daily', '2026-08'))?.score).toBe(1)
+    expect((await reviews.getByPeriod('weekly', '2026-08'))?.score).toBe(2)
+    expect((await reviews.getByPeriod('monthly', '2026-08'))?.score).toBe(3)
+    expect((await reviews.getByPeriod('yearly', '2026-08'))?.score).toBe(4)
+  })
+})
+
+describe('resumeStepForMonthly', () => {
+  it('resumes at step 1 when there is no review yet', () => {
+    expect(resumeStepForMonthly(undefined)).toBe(1)
+  })
+
+  it('resumes at step 1 when no score has been set', () => {
+    expect(resumeStepForMonthly({ score: undefined, answers: {} })).toBe(1)
+  })
+
+  it('resumes at step 3 once a score has been set', () => {
+    expect(resumeStepForMonthly({ score: 4, answers: {} })).toBe(3)
+  })
+})
+
+describe('resumeStepForYearly', () => {
+  it('resumes at step 1 when there is no review yet', () => {
+    expect(resumeStepForYearly(undefined)).toBe(1)
+  })
+
+  it('resumes at step 1 when nothing has been recorded', () => {
+    expect(resumeStepForYearly({ score: undefined, answers: {} })).toBe(1)
+  })
+
+  it('resumes at step 2 once a reflection answer exists but no score yet', () => {
+    expect(
+      resumeStepForYearly({ score: undefined, answers: { biggestWin: 'Shipped it' } }),
+    ).toBe(2)
+    expect(
+      resumeStepForYearly({ score: undefined, answers: { stopStartContinue: 'Start earlier' } }),
+    ).toBe(2)
+  })
+
+  it('resumes at step 3 once a score has been set', () => {
+    expect(resumeStepForYearly({ score: 5, answers: {} })).toBe(3)
+    expect(
+      resumeStepForYearly({ score: 5, answers: { biggestLesson: 'Slow down' } }),
+    ).toBe(3)
   })
 })
