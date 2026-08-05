@@ -1,15 +1,31 @@
 import { useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { PageHeader } from '../components/PageHeader'
 import { WeekPriorities } from '../components/week/WeekPriorities'
 import { WeekGrid } from '../components/week/WeekGrid'
 import { TaskEditForm } from '../components/week/TaskEditForm'
+import { WeeklyReviewCard } from '../components/week/WeeklyReviewCard'
+import { WeeklyReviewDialog } from '../components/week/WeeklyReviewDialog'
 import { IconChevronRight } from '../components/icons'
-import { addDays, formatWeekRange, todayISO, weekNumber, weekOf as weekOfMonday } from '../lib/dates'
+import * as reviewsRepo from '../db/repo/reviews'
+import {
+  addDays,
+  formatWeekRange,
+  isWeeklyReviewDue,
+  todayISO,
+  weekNumber,
+  weekOf as weekOfMonday,
+} from '../lib/dates'
 import type { Task } from '../types/models'
 
 export function WeekPage() {
   const [weekOf, setWeekOf] = useState(() => weekOfMonday(todayISO()))
   const [editingTask, setEditingTask] = useState<Task | null>(null)
+  const [reviewOpen, setReviewOpen] = useState(false)
+
+  const weeklyReview = useLiveQuery(() => reviewsRepo.getByPeriod('weekly', weekOf), [weekOf])
+  const isCurrentWeek = weekOf === weekOfMonday(todayISO())
+  const isDue = isCurrentWeek && isWeeklyReviewDue()
 
   return (
     <div className="pb-16 md:pb-0">
@@ -37,6 +53,12 @@ export function WeekPage() {
         </button>
       </div>
 
+      <WeeklyReviewCard
+        onOpen={() => setReviewOpen(true)}
+        isDue={isDue}
+        isCompleted={Boolean(weeklyReview?.completedAt)}
+      />
+
       <WeekPriorities weekOf={weekOf} />
       <WeekGrid weekOf={weekOf} onEditTask={setEditingTask} />
 
@@ -46,6 +68,8 @@ export function WeekPage() {
         weekOf={weekOf}
         onClose={() => setEditingTask(null)}
       />
+
+      <WeeklyReviewDialog isOpen={reviewOpen} onClose={() => setReviewOpen(false)} weekOf={weekOf} />
     </div>
   )
 }
