@@ -154,7 +154,19 @@ function AddPriorityInline({
   )
 }
 
-export function WeekPriorities({ weekOf }: { weekOf: string }) {
+interface WeekPrioritiesProps {
+  weekOf: string
+  /** Defaults to "This week's priorities" — overridden when this component is reused inside the weekly review's "next week" step. */
+  heading?: string
+  /** Defaults to "What matters most this week?" — overridden alongside `heading` for the same reason. */
+  emptyPrompt?: string
+}
+
+export function WeekPriorities({
+  weekOf,
+  heading = "This week's priorities",
+  emptyPrompt = 'What matters most this week?',
+}: WeekPrioritiesProps) {
   const allPriorities = useLiveQuery(() => weeklyPrioritiesRepo.getForWeek(weekOf), [weekOf]) ?? []
   const priorities = allPriorities.filter((priority) => priority.status !== 'dropped')
   const goals = useLiveQuery(() => goalsRepo.getActive(), []) ?? []
@@ -189,10 +201,10 @@ export function WeekPriorities({ weekOf }: { weekOf: string }) {
 
   return (
     <section className="mt-4">
-      <h2 className="font-display text-title text-text">This week's priorities</h2>
+      <h2 className="font-display text-title text-text">{heading}</h2>
       <div className="mt-3 rounded-lg bg-surface px-4 shadow-card">
         {priorities.length === 0 && !showAddForm && (
-          <p className="py-4 text-subhead text-text-muted">What matters most this week?</p>
+          <p className="py-4 text-subhead text-text-muted">{emptyPrompt}</p>
         )}
         <div className="divide-y divide-border-hairline">
           {priorities.map((priority) => (

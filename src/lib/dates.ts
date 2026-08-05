@@ -147,6 +147,19 @@ export function getMonthGridDays(month: string): string[] {
   return days
 }
 
+/**
+ * Whether the weekly review is "due" right now: Sunday from 4pm through
+ * the end of Monday. A pure time check, deliberately not tied to which
+ * week is being viewed — same shape as the daily review's `isEvening`
+ * check on Today. See DECISIONS.md.
+ */
+export function isWeeklyReviewDue(now: Date = new Date()): boolean {
+  const day = now.getDay() // 0 = Sunday .. 6 = Saturday
+  if (day === 0) return now.getHours() >= 16
+  if (day === 1) return true
+  return false
+}
+
 /** e.g. "2h ago" — a quiet relative timestamp for capture rows. */
 export function formatRelativeTime(isoTimestamp: string, now: Date = new Date()): string {
   const diffMs = now.getTime() - new Date(isoTimestamp).getTime()
