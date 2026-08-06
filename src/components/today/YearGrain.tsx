@@ -62,10 +62,16 @@ function buildYearColumns(today: string): WeekColumn[] {
   return columns
 }
 
-/** Score 1 -> faint chart-blue tint, score 5 -> fully saturated chart-blue. */
+/** Score 1 -> faint chart-blue tint, score 5 -> fully saturated chart-blue.
+ *
+ * Phase 6B: floor raised from 0.28 to 0.5 — at 0.28, a score-1 cell measured
+ * only 1.52:1 against paper and 1.32:1 against an empty cell in the new
+ * light theme (nearly invisible). 0.5 clears roughly 2x separation from an
+ * empty cell at every score while score-5 still renders at full saturation.
+ * See DECISIONS.md for the measured ratios. */
 function intensityForScore(score: 1 | 2 | 3 | 4 | 5 | undefined): number {
   const value = score ?? 3
-  return 0.28 + (value - 1) * 0.18
+  return 0.5 + (value - 1) * 0.125
 }
 
 export function YearGrain({ today, scoresByDate }: YearGrainProps) {
