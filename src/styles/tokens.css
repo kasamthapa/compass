@@ -61,7 +61,10 @@
   --hairline: #3a382f;
   --ink: #e8e2d0;
   --ink-soft: #9c9683;
-  --ink-faint: #7a7666;
+  /* Retuned in Phase 6A-ii: #7a7666 measured 3.45–3.79:1 against the two
+     dark surfaces (fails WCAG AA). This value clears 4.5:1 against both.
+     See DECISIONS.md for the measured ratios. */
+  --ink-faint: #948f7b;
   --brass: #d4a853;
   --brass-on: #1b1b17;
   --chart-blue: #7b9ab5;
@@ -107,8 +110,15 @@
   --paper-elevated: #f8f5ee;
   --hairline: #c7bca0;
   --ink: #2b2a24;
-  --ink-soft: #6b6656;
-  --ink-faint: #8a8574;
+  /* Retuned in Phase 6A-ii: #6b6656 measured 4.40:1 against --paper
+     (fails WCAG AA by a hair). This value clears 4.5:1 against both
+     surfaces. See DECISIONS.md for the measured ratios. */
+  --ink-soft: #5b5749;
+  /* Retuned in Phase 6A-ii: #8a8574 measured 2.83–3.18:1 against the two
+     light surfaces (fails badly). This value clears 4.5:1 against both —
+     necessarily close to --ink-soft now, since --paper's high luminance
+     leaves little headroom for a third, lighter AA-passing tier. */
+  --ink-faint: #68634d;
   --brass: #a8823c;
   --brass-on: #f8f5ee;
   --chart-blue: #3b5166;
