@@ -210,7 +210,7 @@ function AddHabitForm({ onDone, onCancel }: { onDone: () => void; onCancel: () =
               type="button"
               onClick={() => setGoalId((current) => (current === goal.id ? null : goal.id))}
               className={`ios-press min-h-9 rounded-full px-3 text-caption font-medium transition-colors ${
-                goalId === goal.id ? 'bg-accent-wash text-accent' : 'bg-bg text-text-muted'
+                goalId === goal.id ? 'bg-accent-wash text-accent-text' : 'bg-bg text-text-muted'
               }`}
             >
               {goal.title}
@@ -235,7 +235,7 @@ export function TodayHabits({ today, weekStart }: TodayHabitsProps) {
   return (
     <section className="mt-8">
       <h2 className="font-display text-title text-text">Today's habits</h2>
-      <div className="mt-3 rounded-lg bg-surface px-4 shadow-card">
+      <div className="mt-4 rounded-lg bg-surface px-4 shadow-card">
         {habits.length === 0 && !showAddForm && (
           <p className="py-4 text-subhead text-text-muted">
             No habits yet — add one when you're ready.
@@ -253,7 +253,7 @@ export function TodayHabits({ today, weekStart }: TodayHabitsProps) {
             <button
               type="button"
               onClick={() => setShowAddForm(true)}
-              className="ios-press flex min-h-11 w-full items-center py-2.5 text-left text-subhead font-medium text-accent"
+              className="ios-press flex min-h-11 w-full items-center py-2.5 text-left text-subhead font-medium text-accent-text"
             >
               + Add habit
             </button>

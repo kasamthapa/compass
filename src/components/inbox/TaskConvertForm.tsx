@@ -149,7 +149,7 @@ export function TaskConvertForm({ capture, onDone, onCancel }: TaskConvertFormPr
                 type="button"
                 onClick={() => setGoalId((current) => (current === goal.id ? null : goal.id))}
                 className={`ios-press min-h-9 rounded-full px-3 text-caption font-medium transition-colors ${
-                  goalId === goal.id ? 'bg-accent-wash text-accent' : 'bg-bg text-text-muted'
+                  goalId === goal.id ? 'bg-accent-wash text-accent-text' : 'bg-bg text-text-muted'
                 }`}
               >
                 {goal.title}

@@ -22,7 +22,7 @@ export function TodayHeader({ today, greeting, scoresByDate, onStuck }: TodayHea
         <button
           type="button"
           onClick={onStuck}
-          className="ios-press flex shrink-0 items-center gap-1.5 rounded-full bg-accent-wash py-2 pl-2.5 pr-3.5 text-caption font-medium text-accent"
+          className="ios-press flex shrink-0 items-center gap-1.5 rounded-full bg-accent-wash py-2 pl-2.5 pr-3.5 text-caption font-medium text-accent-text"
         >
           <IconLifebuoy className="h-4 w-4" />
           Stuck?
