@@ -67,6 +67,10 @@
   --ink-faint: #948f7b;
   --brass: #d4a853;
   --brass-on: #1b1b17;
+  /* Phase 6B: dark theme's brass already reads clearly as text (7.83:1
+     against --paper), so --accent-text is just an alias of --accent
+     here — the split only matters in light theme. See DECISIONS.md. */
+  --brass-text: var(--brass);
   --chart-blue: #7b9ab5;
   --seal: #c1614f;
   --good: #7fa372;
@@ -81,9 +85,13 @@
   --text-faint: var(--ink-faint);
   --accent: var(--brass);
   --accent-on: var(--brass-on);
+  --accent-text: var(--brass-text);
   --accent-wash: rgba(212, 168, 83, 0.16);
   --accent-ring: rgba(212, 168, 83, 0.42);
-  --skip-fill: rgba(232, 226, 208, 0.14);
+  /* Phase 6B: raised from 0.14 — at the old opacity, "skipped" habit
+     squares measured only 1.12:1 against "empty" squares (effectively
+     indistinguishable). See DECISIONS.md. */
+  --skip-fill: rgba(232, 226, 208, 0.45);
   --grid-empty: rgba(232, 226, 208, 0.1);
   --overlay: rgba(10, 9, 7, 0.6);
   --tabbar-bg: rgba(36, 35, 32, 0.72);
@@ -120,7 +128,21 @@
      leaves little headroom for a third, lighter AA-passing tier. */
   --ink-faint: #68634d;
   --brass: #a8823c;
-  --brass-on: #f8f5ee;
+  /* Phase 6B: was #f8f5ee (near-white). Measured only 3.26:1 against
+     --brass as a button-fill text color — fails AA. Brass sits at a
+     mid-range luminance that a near-white "on" color can't clear 4.5:1
+     against; a near-black does (4.80:1). Dark theme's --accent-on was
+     already correct and is unchanged. See DECISIONS.md. */
+  --brass-on: #1e1c17;
+  /* Phase 6B: --brass itself measured only 2.45–3.06:1 as literal TEXT
+     against paper/wash in light theme — it never reaches 4.5:1 there
+     no matter the background, because brass and paper's luminance
+     ranges don't leave room for both a legible button-fill color and a
+     legible text color at the same hex. This darker variant is for the
+     specific case of brass rendering as text (chip labels, "Right now"
+     heading); --brass/--accent itself is untouched and still used for
+     fills, borders, and icon accents. See DECISIONS.md. */
+  --brass-text: #654e24;
   --chart-blue: #3b5166;
   --seal: #8c3b2e;
   --good: #5c7a56;
@@ -135,9 +157,13 @@
   --text-faint: var(--ink-faint);
   --accent: var(--brass);
   --accent-on: var(--brass-on);
+  --accent-text: var(--brass-text);
   --accent-wash: rgba(168, 130, 60, 0.12);
   --accent-ring: rgba(168, 130, 60, 0.38);
-  --skip-fill: rgba(43, 42, 36, 0.1);
+  /* Phase 6B: raised from 0.1 — at the old opacity, "skipped" habit
+     squares measured only 1.04:1 against "empty" squares (effectively
+     indistinguishable). See DECISIONS.md. */
+  --skip-fill: rgba(43, 42, 36, 0.4);
   --grid-empty: rgba(43, 42, 36, 0.08);
   --overlay: rgba(43, 42, 36, 0.35);
   --tabbar-bg: rgba(242, 238, 227, 0.72);

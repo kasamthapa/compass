@@ -13,6 +13,7 @@ export default {
         'text-faint': 'var(--text-faint)',
         accent: 'var(--accent)',
         'accent-on': 'var(--accent-on)',
+        'accent-text': 'var(--accent-text)',
         'accent-wash': 'var(--accent-wash)',
         'accent-ring': 'var(--accent-ring)',
         good: 'var(--good)',
