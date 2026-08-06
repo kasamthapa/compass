@@ -78,7 +78,7 @@ export function TodayFocus({ today }: TodayFocusProps) {
   return (
     <section className="mt-8">
       <h2 className="font-display text-title text-text">Today's focus</h2>
-      <div className="mt-3 rounded-lg bg-surface px-4 shadow-card">
+      <div className="mt-4 rounded-lg bg-surface px-4 shadow-card">
         <div className="divide-y divide-border-hairline">
           {mits.map((task) => (
             <TaskRow key={task.id} task={task} onToggle={handleToggle} />
