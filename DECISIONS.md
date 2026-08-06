@@ -543,3 +543,70 @@ when a mark is checked only in isolation (as it was during Phase 6A)
 rather than at its real size next to real text (as it was here) — the
 6A-ii brief's insistence on checking "at its real size and position"
 caught what an isolated mockup review didn't.
+
+## Phase 6B: brass cannot serve as both a fill color and a text color at AA
+
+Measured that `--brass`/`--accent` (light theme, `#a8823c`) tops out at
+2.45–3.06:1 as literal TEXT against any paper-family background
+(plain paper, paper-raised, or the accent-wash tint) — it never
+reaches 4.5:1 there, regardless of wash opacity, because brass and
+paper's luminance ranges don't leave room for a single hex to work as
+both a legible button-fill (needs to contrast against dark text) and a
+legible text color (needs to contrast against light paper) at once —
+the lower bound for the first use and the upper bound for the second
+don't overlap (0.227 vs 0.151 luminance, confirmed by direct
+calculation). Rather than compromise one use case for the other, added
+a second, dedicated token — `--accent-text` — used only where brass
+renders as literal text (chip-selected labels, "Right now"'s heading,
+the Stuck pill). `--brass`/`--accent` itself is unchanged and still
+used for fills, borders, and icon accents, where it already works
+correctly. This mirrors the `--accent-on` split that already existed
+(brass fill vs. its "on" text) — `--accent-text` is the analogous split
+for brass-as-foreground.
+
+Applied within this phase's Today/Inbox scope only
+(`RightNowCard`, `TodayHeader`'s Stuck pill, the goal-chip-selected
+state in `TodayHabits`/`TaskConvertForm`/`HabitConvertForm`). The
+identical `bg-accent-wash text-accent` pattern exists in
+`WeekPriorities.tsx`, `TaskEditForm.tsx`, `GoalCard.tsx`,
+`JournalCalendar.tsx`, `JournalEditor.tsx`, `GoalsPage.tsx`,
+`YearlyReviewDialog.tsx`, and `MonthlyReviewDialog.tsx` and needs the
+same `text-accent` → `text-accent-text` swap — left for whichever phase
+retunes those pages, per CLAUDE.md's scope discipline (fix what the
+current phase touches; flag the rest rather than silently expanding
+scope). See PROGRESS.md's "Known issues" for the tracked list.
+
+## Phase 6B: --accent-on (light) was wrong since Phase 6A, not just imprecise
+
+`--accent-on`'s light-theme value (`#f8f5ee`, a near-white) measured
+only 3.26:1 against `--brass` as a button's text color — every
+`bg-accent text-accent-on` button in the app (Save, Add, Finish, Start
+2 min, "+ Add habit", …) has been failing AA since Phase 6A shipped.
+Fixed by switching to a near-black (`#1e1c17`): brass sits at a
+mid-range luminance where a dark "on" color clears 4.5:1 (4.80:1) but
+a light one doesn't, for the same reason `--accent-text` exists (see
+above) — brass just isn't light enough for light text to read against
+it, nor dark enough for dark text to read against it at the *old*
+near-white choice. Dark theme's `--accent-on` was already a near-black
+against a brighter brass (7.83:1) and needed no change. This is the
+same class of fix as 6A-ii's `--ink-soft`/`--ink-faint` correction: a
+shared token that silently failed AA since its introduction, caught
+only once something audited the actual rendered pairing instead of
+assuming the token was correct because it "looked fine."
+
+## Phase 6B: habit-square and Year-Grain contrast are tuned for perception, not maximum contrast
+
+Unlike the text-contrast fixes above (which target a fixed AA
+threshold), the habit-square skip/empty fill and the Year Grain's
+score-1 floor were tuned by iterating toward "clearly told apart at a
+glance" rather than a specific ratio — because both are already
+constrained by CLAUDE.md's product law that "skipped" must read as
+neutral, not punitive, which caps how visually loud that state is
+allowed to become. Pushed skip-fill's opacity up until the three habit
+states (done/skipped/empty) are unambiguous at true 22px render size
+in both themes (1.92–2.90:1 pairwise, up from ~1.1:1), and raised the
+Year Grain's intensity floor from 0.28 to 0.5 so a single low-scoring
+day is still visibly "a day with a review" rather than blending into
+the empty grid. Neither change chases a formal non-text-contrast ratio
+beyond what a calm, non-alarming palette allows — see PROGRESS.md for
+the exact before/after numbers.

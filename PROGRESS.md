@@ -1974,3 +1974,154 @@ habit week-strip and `/week` task columns remain legible against the
 new palette. `npm run build` (zero errors) and `npm run test` (80
 tests, all green — this was a tokens/type/icon-only pass, no test
 assertions touch colors or icon internals).
+
+## Phase 6B — Retuning /today and /inbox onto Field Log
+
+### Self-critique (written before making changes)
+
+Went through every Today/Inbox component asking "does this feel
+deliberately retuned for Fraunces/Karla/Space Mono and the ink/paper/
+brass palette, or is it just wearing the new tokens on old bones?"
+
+- **Habit week-strip squares — a real pass/fail bug.** Measured the
+  three states' actual rendered colors: "skipped" (`--skip-fill`) and
+  "empty" (`--grid-empty`) blend to `#d4cfc1` and `#d8d2c4` in light
+  theme — a contrast ratio of **1.04:1** between them, i.e.
+  indistinguishable at a glance. This is the app's single most-tapped
+  control and it currently can't reliably tell skip from empty apart.
+  Inherited from the old dark palette's opacity values, never
+  recalibrated. **Fixed** — see below.
+- **Year Grain — the same class of bug the phase brief predicted.**
+  The intensity formula (`0.28 + (score-1)*0.18`) was tuned for the old
+  dark palette. Measured against the new light paper: a score-1 cell
+  blends to a contrast of only **1.52:1** against paper and **1.32:1**
+  against an empty cell — a whole year of low-scoring days would look
+  indistinguishable from days with no review at all. **Fixed.**
+- **Brass as literal text color — fails AA in light theme, and this
+  is bigger than habit squares.** Checked every `text-accent` usage
+  reachable from Today/Inbox (chip-selected labels, "Right now"
+  heading, the Stuck pill) against its actual rendered background.
+  Brass (`#a8823c`) tops out at **2.45–3.06:1** against paper/wash in
+  light theme — it never reaches 4.5:1 as a text color on this palette,
+  no matter how the wash opacity is tuned (even 0% wash, i.e. plain
+  paper, only gets to 2.72:1). This is a real, shipped-since-6A defect,
+  not a Today/Inbox-specific one — the identical `bg-accent-wash
+  text-accent` pattern also appears in Week/Goals/Journal, which are
+  out of this phase's scope. **Fixed within Today/Inbox** by adding a
+  dedicated `--accent-text` token (a darker, AA-safe brass used only
+  where brass renders as literal text); **flagged below** as known debt
+  for whichever phase retunes Week/Goals/Journal next, so the same
+  fix should be applied there too rather than rediscovered.
+- **Brass button-fill text also fails AA in light theme.** Every
+  `bg-accent text-accent-on` button ("Save", "Add", "Finish", "Start 2
+  min", etc.) measured at only **3.26:1** in light theme — the near-
+  white `--accent-on` doesn't have enough contrast against brass's
+  mid-range luminance. This is a shared token (`--accent-on`), used
+  identically everywhere, so the fix necessarily applies app-wide —
+  same precedent as 6A-ii's `--ink-soft`/`--ink-faint` fix. **Fixed.**
+- **Spacing — a smaller, real issue, not urgent.** `TodayFocus`/
+  `TodayHabits`' heading-to-card gap (`mt-3`) was inherited from the
+  Space Grotesk tuning; Fraunces titles read slightly heavier/taller at
+  the same size, and the gap felt a touch tight in-browser. **Fixed**
+  with a modest bump (`mt-3` → `mt-4`), not a wholesale rework — most
+  of the page's rhythm (section-to-section `mt-8`, card internal
+  padding) already reads fine and didn't need touching.
+- **What was already fine:** `RightNowCard`, `FocusMode`,
+  `StuckOverlay`, `FocusTimer`, `BreathingMoment`, the evening review's
+  `ScoreStep`/step chrome, `InboxRow`, and `ProcessSheet`'s tile icons
+  all consume Tailwind semantic classes exclusively (no raw hex, no
+  leftover generic icons — `ProcessSheet`'s four tiles already use the
+  6A hand-drawn `IconChecklist`/`IconRepeat`/`IconJournal`/
+  `IconBookmark`) and read as a coherent part of the same material
+  world once the token fixes above landed. No structural changes
+  needed to any of these.
+
+### What changed
+
+- **`--skip-fill`** — opacity raised in both themes (light: 0.1 → 0.4,
+  dark: 0.14 → 0.45) so "skipped" reads as a clearly present, muted
+  block instead of nearly vanishing into "empty."
+- **Year Grain intensity formula** — floor raised from 0.28 to 0.5
+  (`0.5 + (score-1)*0.125`), so even a score-1 day reads as visibly
+  filled against the new paper background; score-5 still renders at
+  full `--chart-blue` saturation.
+- **`--accent-on`** (light theme only) — corrected from a near-white
+  (`#f8f5ee`) to a near-black (`#1e1c17`) so brass-filled buttons pass
+  AA. Dark theme's `--accent-on` was already correct (near-black on
+  bright brass, 7.83:1) and is unchanged.
+- **New `--accent-text` token** — a darker, AA-safe brass
+  (`#654e24` light, same as `--accent` in dark since it already
+  passes) for the specific case of brass rendering as literal text:
+  `RightNowCard`'s heading, the Stuck pill's label, and the
+  goal-chip-selected label in `TaskConvertForm`/`HabitConvertForm`/
+  `TodayHabits`' add-habit form. `--accent` itself is untouched and
+  still used for fills, borders, and icon accents.
+- **Spacing** — `TodayFocus`/`TodayHabits` heading-to-card gap
+  loosened (`mt-3` → `mt-4`).
+
+### Known issues / follow-ups
+
+**The `--accent-text` fix needs to be applied to Week/Goals/Journal
+too.** The identical `bg-accent-wash text-accent` chip pattern (and
+plain `text-accent` labels like "+ New goal") exists in
+`WeekPriorities.tsx`, `TaskEditForm.tsx`, `GoalCard.tsx`,
+`JournalCalendar.tsx`, `JournalEditor.tsx`, `GoalsPage.tsx`,
+`YearlyReviewDialog.tsx`, and `MonthlyReviewDialog.tsx` — all outside
+this phase's Today/Inbox scope, all with the same AA failure in light
+theme. Recorded here so it's fixed deliberately in whichever phase
+retunes those pages next, rather than rediscovered from scratch.
+
+### Contrast measurements (WCAG AA, 4.5:1 threshold unless noted)
+
+| Pairing | Theme | Before | After |
+|---|---|---|---|
+| `--accent-on` text on `--accent` fill (buttons: Save/Add/Finish/Start) | light | 3.26:1 (fail) | **4.80:1** |
+| `--accent-on` text on `--accent` fill | dark | 7.83:1 (already passed, unchanged) | 7.83:1 |
+| `--accent-text` on accent-wash-over-paper (chip-selected labels, "Right now", Stuck pill) | light | 2.45:1 (fail) | **5.10:1** |
+| `--accent-text` on accent-wash-over-paper | dark | 5.80:1 (already passed, unchanged) | 5.80:1 |
+| "skipped" vs "empty" habit square | light | 1.04:1 (indistinguishable) | **1.92:1** |
+| "skipped" vs "empty" habit square | dark | 1.12:1 (indistinguishable) | **2.90:1** |
+| Year Grain score-1 cell vs paper | light | 1.52:1 | **2.22:1** |
+| Year Grain score-1 cell vs empty cell | light | 1.32:1 | **1.93:1** |
+
+The habit-square and Year-Grain numbers are non-text UI-component
+contrast (WCAG 1.4.11's 3:1 guideline for meaningful graphical states),
+not text contrast — full separation was weighed against the product's
+explicit "skipped is neutral, not punitive" design law (see CLAUDE.md):
+pushing "skipped" to a much higher contrast would make it read as a
+harsh warning color rather than a calm, neutral state. The chosen
+values are a deliberate middle point — a large, clearly-perceptible
+jump from "nearly invisible" to "clearly told apart," without making
+the neutral state visually loud.
+
+### Verification
+
+Seeded real data via the `/dev` route (habits with a full week of
+done/skipped/empty logs, tasks, an inbox capture) plus five manually
+seeded daily `Review` rows (scores 1–5) to exercise the Year Grain's
+full range. Confirmed in-browser, both themes, 393px and 1280px:
+
+- Habit squares: done/skipped/empty are now clearly three distinct
+  visual states at true render size (confirmed via screenshot in both
+  themes, not just computed contrast math).
+- Year Grain: `intensityForScore`'s computed opacities verified via
+  `getComputedStyle` match the new formula exactly (0.5/0.625/0.75/
+  0.875/1.0 for scores 1–5).
+- `RightNowCard`'s heading and the Stuck pill's label render in the new
+  `#654e24` (light) / unchanged brass (dark) — confirmed via
+  `getComputedStyle`, not just visual impression.
+- The brass "Save"/date-chip-selected button text renders in the new
+  `#1e1c17` (light) / unchanged `#1b1b17` (dark) — confirmed via
+  `getComputedStyle`.
+- `ProcessSheet`'s four tiles render with the correct 6A hand-drawn
+  icons (`IconChecklist`/`IconRepeat`/`IconJournal`/`IconBookmark`).
+- The max-3-MIT and max-5-habit calm blocking copy ("Three is enough
+  for today."/"Five is plenty for now.") is unchanged in source —
+  confirmed via `grep`, not just assumed.
+- All seeded test data (habits, tasks, captures, the 5 manual daily
+  reviews) removed from IndexedDB via the `/dev` route's wipe action
+  after verification.
+
+`npm run build` (zero errors) and `npm run test` (80 tests, all green
+— this was a visual/token-tuning pass; no test assertions reference
+colors or spacing).
