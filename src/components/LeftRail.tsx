@@ -10,16 +10,23 @@ import * as capturesRepo from '../db/repo/captures'
  * DECISIONS.md.
  */
 function CompassRoseMark() {
+  // 6A-ii adjustment: at its real ~20px render size next to the wordmark,
+  // this read as a tiny, muted afterthought rather than a considered
+  // signature — the one place the brief explicitly asked for boldness.
+  // Sized up (h-5 -> h-6), stroke weight raised (1.1 -> 1.4), and the
+  // color corrected from --ink-faint to the --ink-soft the brief actually
+  // specified (a genuine miss in the original Phase 6A pass — --ink-faint
+  // is barely visible at this scale).
   return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0 text-text-faint" aria-hidden="true">
-      <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.1" />
+    <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0 text-text-muted" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" strokeWidth="1.4" />
       <path
-        d="M12 4.2v3M12 16.8v3M4.2 12h3M16.8 12h3"
+        d="M12 3.7v3.3M12 17v3.3M3.7 12h3.3M17 12h3.3"
         stroke="currentColor"
-        strokeWidth="1.1"
+        strokeWidth="1.4"
         strokeLinecap="round"
       />
-      <path d="M12 4.2l1.7 4.3-1.7 1.4-1.7-1.4Z" fill="var(--brass)" stroke="none" />
+      <path d="M12 3.7l2 4.7-2 1.5-2-1.5Z" fill="var(--brass)" stroke="none" />
     </svg>
   )
 }
@@ -41,7 +48,7 @@ export function LeftRail() {
           key={to}
           to={to}
           className={({ isActive }) =>
-            `ios-press flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-subhead font-medium transition-colors ${
+            `ios-press flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-subhead font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent-ring ${
               isActive
                 ? 'bg-accent-wash text-accent'
                 : 'text-text-muted hover:bg-bg hover:text-text'
