@@ -15,7 +15,11 @@ const base = {
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
-  strokeWidth: 1.4,
+  // Bumped from 1.4 in the 6A-ii optical-balance pass: at true 16-24px
+  // render size, 1.4 read slightly thin and made sparser glyphs (Goals'
+  // pole, Week's dot row) look lighter than denser ones (Inbox, Journal).
+  // Still inside the 1.2-1.6 range from the original brief.
+  strokeWidth: 1.5,
   strokeLinecap: 'round' as const,
   strokeLinejoin: 'round' as const,
 }
@@ -62,24 +66,32 @@ export function IconInbox({ className, active }: NavIconProps) {
 
 /** Seven small dots in a row, echoing the habit week-strip language. */
 export function IconWeek({ className, active }: NavIconProps) {
-  const xs = [2.5, 5.7, 8.8, 15.2, 18.3, 21.5]
+  // Symmetric spread around the box's center (12), evenly stepped —
+  // recomputed in the 6A-ii optical-balance pass; the previous positions
+  // weren't quite even, and the dots' radius was bumped from 1.3 to 1.4
+  // so this sparser glyph reads at a similar visual weight to denser ones.
+  const xs = [2.6, 5.73, 8.87, 15.13, 18.27, 21.4]
   return (
     <svg {...base} className={className} aria-hidden="true">
       {xs.map((x) => (
-        <circle key={x} cx={x} cy="12" r="1.3" fill={active ? 'currentColor' : 'none'} />
+        <circle key={x} cx={x} cy="12" r="1.4" fill={active ? 'currentColor' : 'none'} />
       ))}
-      <circle cx="12" cy="12" r="1.55" fill="var(--brass)" stroke="none" />
+      <circle cx="12" cy="12" r="1.6" fill="var(--brass)" stroke="none" />
     </svg>
   )
 }
 
 /** A flag on a vertical pole with a triangular brass pennant. */
 export function IconGoals({ className, active }: NavIconProps) {
+  // Pole recentered from x=6 to x=9 in the 6A-ii optical-balance pass —
+  // the original sat with all its mass pinned to the upper-left of the
+  // box; this brings the glyph's visual center closer to the box's
+  // actual center.
   return (
     <svg {...base} className={className} aria-hidden="true">
-      <path d="M6 21V4" />
-      <path d="M6 5.2l10 3.4L6 12Z" fill="var(--brass)" stroke="none" />
-      {active && <circle cx="6" cy="21" r="1.3" fill="currentColor" stroke="none" />}
+      <path d="M9 21V4" />
+      <path d="M9 5.2l10 3.4L9 12Z" fill="var(--brass)" stroke="none" />
+      {active && <circle cx="9" cy="21" r="1.3" fill="currentColor" stroke="none" />}
     </svg>
   )
 }
