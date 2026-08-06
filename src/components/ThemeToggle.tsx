@@ -26,7 +26,7 @@ export function ThemeToggle() {
             onClick={() => setPreference(value)}
             aria-label={label}
             aria-pressed={active}
-            className={`ios-press flex h-8 w-8 items-center justify-center rounded-full transition-colors ${
+            className={`ios-press flex h-8 w-8 items-center justify-center rounded-full outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent-ring ${
               active ? 'bg-bg text-text-muted' : 'text-text-faint'
             }`}
           >

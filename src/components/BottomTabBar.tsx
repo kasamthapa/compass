@@ -17,7 +17,7 @@ export function BottomTabBar() {
           key={to}
           to={to}
           className={({ isActive }) =>
-            `ios-press flex min-h-11 flex-1 flex-col items-center justify-center gap-1 pt-2 text-caption-2 font-medium transition-colors ${
+            `ios-press flex min-h-11 flex-1 flex-col items-center justify-center gap-1 pt-2 text-caption-2 font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent-ring focus-visible:ring-inset ${
               isActive ? 'text-accent' : 'text-text-muted'
             }`
           }

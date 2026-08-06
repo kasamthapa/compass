@@ -29,7 +29,7 @@ export function CaptureButton() {
       type="button"
       onClick={open}
       aria-label="Capture a thought"
-      className="ios-press fixed bottom-[calc(var(--nav-height)_+_env(safe-area-inset-bottom)_+_1rem)] right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-on shadow-fab md:bottom-8 md:right-8"
+      className="ios-press fixed bottom-[calc(var(--nav-height)_+_env(safe-area-inset-bottom)_+_1rem)] right-5 z-30 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-accent-on shadow-fab outline-none transition-shadow focus-visible:ring-2 focus-visible:ring-accent-ring focus-visible:ring-offset-2 focus-visible:ring-offset-bg md:bottom-8 md:right-8"
     >
       <IconPlus className="h-6 w-6" />
     </button>
