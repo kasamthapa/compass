@@ -1827,3 +1827,150 @@ meta-tag duplicates documented above. `npm run build` (zero errors) and
 test assertions referenced colors or icon internals). A later phase
 will re-skin Today/Inbox/Week/Goals/Journal page content onto this new
 foundation, per the phase spec.
+
+## Phase 6A-ii — Field Log critique-and-polish pass
+
+Self-critique + polish on the Phase 6A identity, still scoped to shared
+tokens/shell/capture-dialog — no page content, no new features.
+
+### Self-critique (written before making changes)
+
+Went through the shell element-by-element asking "does this read as a
+deliberate choice for Compass, or the generic default I'd produce for
+any app?"
+
+- **Type scale — genuinely generic, and one real bug.** The type scale
+  (sizes, line-heights, tracking) was carried over unchanged from the
+  Space Grotesk tuning done in the iOS-polish phases. Worse: the
+  large-title style declares `fontWeight: 700`, but only Fraunces
+  500/600 are self-hosted — the browser was silently fake-bolding
+  (synthesizing) 600 into 700 the whole time, which looks slightly
+  fuzzy/off on real displays. The negative letter-spacing tuned for a
+  tight geometric sans (-0.02em/-0.01em) works against a serif's
+  natural, more open rhythm at display sizes. This is the clearest
+  "shipped without checking" finding in the whole pass. **Fixed.**
+- **Contrast — the single most important finding.** `--ink-soft` and
+  `--ink-faint` were ported from the old palette's "muted secondary/
+  tertiary" formula without recomputing against the new, much lighter
+  paper tones. Measured: light-theme `--ink-soft` on `--paper` was
+  4.40:1 (fails AA), `--ink-faint` was 2.83–3.18:1 (fails badly);
+  dark-theme `--ink-faint` was 3.45–3.79:1 (fails). These tokens are
+  used for real body/label text throughout the app (breadcrumbs, "When"/
+  "Goal" field labels, empty-state copy, strikethrough completed items),
+  not just decoration. This is a usability defect the visual-only Phase
+  6A pass didn't catch because it never measured. **Fixed — see
+  DECISIONS.md for exact before/after ratios.**
+- **Icon set — mostly solid, optically uneven at true size.** The
+  six nav glyphs are genuinely specific to Compass (sunrise arc, fanned
+  cards, pennant flag, pen nib, constellation) — not generic Tabler-style
+  defaults. But at true 16–24px render size, a uniform `strokeWidth:1.4`
+  applied to every glyph regardless of shape density made sparser icons
+  (Goals' single pole, Week's thin dot row) read visibly lighter than
+  denser ones (Inbox's stacked cards, Journal's nib). Goals' pole was
+  also mathematically but not optically centered — its mass sat in the
+  upper-left of the box. **Fixed** — see Part 3 changes below.
+- **Compass rose — the one place to be bold, initially under-committed.**
+  Checked in its real position next to the wordmark rather than in
+  isolation: at the size it shipped at, it read as a small decoration
+  bolted on next to the text rather than a genuine signature mark.
+  Since the brief explicitly asks for boldness in exactly this one
+  place, it was worth a second pass rather than leaving it timid.
+  **Adjusted** — see Part 6 below.
+- **Focus states — a real gap, not a style choice.** None of the shell's
+  interactive elements (rail links, tab bar links, theme toggle buttons,
+  capture FAB) had any deliberate `:focus-visible` treatment — they were
+  relying on whatever the browser's default outline happens to render,
+  which is inconsistent across browsers and doesn't match the brass
+  identity at all. This is a "we'll get to it" gap, not a considered
+  omission. **Fixed** — added an on-brand brass focus ring.
+- **What was already fine:** the token architecture itself (raw
+  palette tokens aliased through to the existing operational names),
+  the icon *concepts* (all six read as specific to a field-log/compass
+  app, not swappable defaults), and the overall restraint of the
+  palette (brass used only for the one accent per icon, never for body
+  text) all held up under scrutiny without changes.
+
+### What changed
+
+- **Contrast fixes (`tokens.css`)** — `--ink-soft` and `--ink-faint`
+  retuned in both themes to clear AA (4.5:1) against both surface
+  tokens, with a small safety margin. See DECISIONS.md for the exact
+  measured ratios before and after. `--ink` (primary text) needed no
+  change — it already cleared 11:1+ in both themes.
+- **Type scale retuning (`tailwind.config.js`)** — `large-title`'s
+  `fontWeight` corrected from the non-existent 700 to 600 (the heaviest
+  weight actually loaded), removing the silent fake-bold. Letter-spacing
+  loosened toward neutral at both display sizes (`large-title`
+  -0.02em → 0em, `title` -0.01em → 0em) since Fraunces reads more
+  elegant with open tracking than a tight geometric sans does.
+  Line-height opened slightly at all three Fraunces-rendered sizes
+  (`large-title` 1.15 → 1.2, `title` 1.25 → 1.3, `headline` 1.4 → 1.42)
+  to give Fraunces' taller x-height and more expressive
+  ascenders/descenders room to breathe. Karla's body sizes got a small
+  matching bump (`subhead` 1.45 → 1.5, `caption` 1.4 → 1.45,
+  `caption-2` 1.3 → 1.35) since Karla's x-height runs slightly taller
+  than Instrument Sans' at the same point size.
+- **Icon optical-balance pass (`icons.tsx`)** — base `strokeWidth`
+  raised from 1.4 to 1.5 (still within the 1.2–1.6 range from the
+  original brief) for a slightly more confident, consistent line at
+  true render size. `IconWeek`'s seven dots recomputed to a symmetric
+  spread with a touch more radius. `IconGoals`' pole recentered from
+  x=6 to x=9 with the pennant redrawn off it, so the glyph's visual
+  mass sits closer to the box's optical center instead of pinned to
+  the upper-left corner.
+- **Focus-visible treatment** — `LeftRail` nav links, `BottomTabBar`
+  nav links, `ThemeToggle` buttons, and `CaptureButton` all gained a
+  consistent `focus-visible:ring-2 focus-visible:ring-accent-ring`
+  treatment (brass-tinted, matching the identity) in place of relying
+  on browser defaults.
+- **Compass rose adjustment** — checked in its real position beside the
+  wordmark (not in isolation) and it read exactly as the self-critique
+  predicted: a tiny, muted afterthought. Two real issues, not just
+  taste: (1) it was sized at `h-5 w-5` (20px) next to `text-title`
+  Fraunces text, disappearing next to the bolder serif; (2) it used
+  `text-text-faint` (`--ink-faint`) instead of the `--ink-soft` the
+  original brief actually specified — a genuine implementation miss in
+  Phase 6A, not a deliberate choice. Fixed: sized up to `h-6 w-6`,
+  stroke weight 1.1 → 1.4, corrected to `text-text-muted`
+  (`--ink-soft`). Re-checked at 3x scale next to the real wordmark
+  size — now reads as a considered signature, not a smudge.
+
+### Contrast measurements (WCAG AA, 4.5:1 threshold)
+
+Measured with the WCAG relative-luminance formula, `--ink`/`--ink-soft`/
+`--ink-faint` against both surface tokens, in both themes:
+
+| Token | Theme | vs `--paper` | vs `--paper-raised` | Before → After |
+|---|---|---|---|---|
+| `--ink` | light | 11.03:1 | 12.41:1 | unchanged (already passed) |
+| `--ink` | dark | 13.34:1 | 12.14:1 | unchanged (already passed) |
+| `--ink-soft` | light | 4.40:1 → **5.54:1** | 4.95:1 → **6.24:1** | `#6b6656` → `#5b5749` |
+| `--ink-soft` | dark | 5.84:1 | 5.32:1 | unchanged (already passed) |
+| `--ink-faint` | light | 2.83:1 → **4.63:1** | 3.18:1 → **5.20:1** | `#8a8574` → `#68634d` |
+| `--ink-faint` | dark | 3.79:1 → **5.04:1** | 3.45:1 → **4.59:1** | `#7a7666` → `#948f7b` |
+
+Every tier now clears 4.5:1 against both surfaces in both themes, with
+a small safety margin. The unavoidable cost: light-theme `--ink-soft`
+and `--ink-faint` are now much closer together in lightness than
+before (`#5b5749` vs `#68634d`) — `--paper`'s high luminance (0.755)
+leaves very little headroom for a third, lighter AA-passing tier. This
+is a real trade-off, not an oversight: three genuinely distinct,
+AA-compliant text tiers on a paper this light isn't achievable, and
+per the phase brief, correctness won the trade against preserving a
+wider visual gap.
+
+### Known issues / follow-ups
+
+None blocking. Verified in-browser, both themes, 393px and 1280px:
+every nav icon renders with the rebalanced stroke weight and the
+recentered Goals glyph; the compass rose reads clearly at its real
+size next to the wordmark; focus-visible rings appear correctly on
+rail links, tab bar links, theme toggle buttons, and the capture FAB
+when tabbing; the daily MIT cap's "Three is enough for today." and the
+weekly priority cap's "Three is enough for one week." copy are
+unchanged in source and now render in the AA-compliant
+`--ink-soft`; the "Stuck?" pill opens its calm overlay correctly; the
+habit week-strip and `/week` task columns remain legible against the
+new palette. `npm run build` (zero errors) and `npm run test` (80
+tests, all green — this was a tokens/type/icon-only pass, no test
+assertions touch colors or icon internals).

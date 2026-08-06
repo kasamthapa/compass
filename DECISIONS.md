@@ -472,3 +472,74 @@ have flattened the sheet-vs-card depth cue the design has relied on
 since Phase 1. `--paper-elevated` was added as a third tone in the same
 family to preserve that structure, consumed by the existing
 `--surface-elevated` operational token exactly as before.
+
+## Phase 6A-ii ran a self-critique before touching any code
+
+Per the phase instructions, the shell was reviewed element-by-element
+("does this read as deliberate, or as the generic default?") and the
+findings were written to PROGRESS.md *before* any fix was made. This is
+recorded as a process decision worth keeping for future identity/polish
+passes: critique-then-fix, with the critique preserved in writing, kept
+the pass honest — it surfaced a real bug (large-title's fake-bold), a
+real accessibility failure (contrast), and a real implementation miss
+(the compass rose using the wrong token) that a "just make it look
+better" pass would likely have glossed over.
+
+## Contrast correctness wins over preserving a specific color, unconditionally
+
+`--ink-soft` and `--ink-faint` were retuned in both themes purely to
+clear WCAG AA 4.5:1 against both surface tokens — see PROGRESS.md for
+the full measured table. The light-theme fix in particular narrows the
+visual gap between `--ink-soft` (`#5b5749`) and `--ink-faint`
+(`#68634d`) far more than is ideal from a pure hierarchy standpoint,
+because `--paper`'s luminance (0.755) leaves very little room for a
+third, lighter, still-AA-passing tier. The phase brief was explicit
+that this trade must go one way — fix the token, don't weaken the bar
+to protect the original color — so that's what happened. If a future
+phase wants more separation between the "soft" and "faint" tiers, the
+lever to pull is darkening `--paper` itself (more contrast headroom
+for everything built on it), not loosening the AA requirement.
+
+## Type scale must be retuned per typeface, not carried across a font swap
+
+Phase 6A swapped Space Grotesk → Fraunces for display type but kept the
+exact size/weight/tracking/leading values tuned for the old typeface.
+This briefly shipped a real defect: `large-title` declared
+`fontWeight: 700`, but only Fraunces 500/600 are self-hosted via
+Fontsource, so the browser was silently synthesizing (faking) bold from
+600 the entire time Phase 6A was live. Fraunces' optical sizing also
+differs structurally from a geometric sans: it has a taller x-height
+and more expressive ascenders/descenders, and — being a serif — reads
+more elegant with open letter-spacing than a tight sans does. Fixed in
+6A-ii: `large-title`'s weight corrected to 600 (the heaviest weight
+actually loaded); `large-title`/`title` letter-spacing loosened from
+negative (-0.02em/-0.01em) to neutral (0em); line-height opened
+slightly across `large-title`/`title`/`headline` (the three sizes
+`font-display` actually renders). Karla's body sizes (`subhead`/
+`caption`/`caption-2`) got a smaller matching line-height bump for the
+same reason — different typeface, different optical needs, don't
+assume the old scale still fits.
+
+## Icon stroke-width is a set-wide constant, tuned by looking at the whole set together
+
+`icons.tsx`'s `strokeWidth` lives once, on the shared `base` object, not
+per-icon — bumped from 1.4 to 1.5 in the 6A-ii optical-balance pass
+after comparing all six nav glyphs side by side at true 16-24px render
+size. Two icons (`IconGoals`, `IconWeek`) needed shape-level adjustments
+on top of that (a recentered pole, a symmetric/slightly larger dot
+spread) because their sparser glyph density made them read lighter than
+denser icons like `IconInbox`/`IconJournal` even at the same stroke
+weight — a reminder that "same stroke width" and "same visual weight"
+aren't the same thing once glyph density varies this much across a set.
+
+## The compass rose used the wrong token — corrected, not just resized
+
+Phase 6A's `CompassRoseMark` used `text-text-faint` (`--ink-faint`)
+even though the original phase brief specified a "thin `--ink-soft`
+circle." This was a plain implementation slip, not a redesign — fixed
+in 6A-ii alongside the size bump (`h-5`→`h-6`, stroke `1.1`→`1.4`).
+Worth flagging because it's the kind of small drift that's easy to miss
+when a mark is checked only in isolation (as it was during Phase 6A)
+rather than at its real size next to real text (as it was here) — the
+6A-ii brief's insistence on checking "at its real size and position"
+caught what an isolated mockup review didn't.
