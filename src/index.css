@@ -1,5 +1,9 @@
 @import '@fontsource/fraunces/500.css';
 @import '@fontsource/fraunces/600.css';
+/* Phase 6C: genuine italic face for the goal "why" statement — the app's
+   most important prose moment deserves a real italic, not the browser's
+   synthetic (faked) slant on the upright Fraunces face. */
+@import '@fontsource/fraunces/500-italic.css';
 @import '@fontsource/karla/400.css';
 @import '@fontsource/karla/500.css';
 @import '@fontsource/space-mono/400.css';
