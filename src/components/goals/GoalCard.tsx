@@ -115,7 +115,12 @@ export function GoalCard({ goal }: { goal: Goal }) {
         <div className="min-w-0">
           <p className="font-display text-headline text-text">{goal.title}</p>
           {goal.why && (
-            <p className="mt-1 max-w-content text-subhead italic text-text-muted">{goal.why}</p>
+            // The app's most important prose moment — set in genuine Fraunces
+            // italic (not Karla's synthetic slant) at body size, so a
+            // personal "why" reads like a field-journal entry, not a caption.
+            <p className="mt-1.5 max-w-content font-display text-body italic text-text-muted">
+              {goal.why}
+            </p>
           )}
         </div>
         <div className="mt-0.5 flex shrink-0 items-center gap-2">
@@ -149,7 +154,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
             <button
               type="button"
               onClick={() => setShowAddMilestone(true)}
-              className="ios-press flex min-h-11 items-center text-subhead font-medium text-accent"
+              className="ios-press flex min-h-11 items-center text-subhead font-medium text-accent-text"
             >
               + add milestone
             </button>

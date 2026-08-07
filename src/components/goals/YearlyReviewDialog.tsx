@@ -91,7 +91,7 @@ function NextYearGoalsStep({ nextYear }: { nextYear: number }) {
       <button
         type="button"
         onClick={() => setFormOpen(true)}
-        className="ios-press mt-3 flex min-h-11 items-center text-subhead font-medium text-accent"
+        className="ios-press mt-3 flex min-h-11 items-center text-subhead font-medium text-accent-text"
       >
         + add a goal for {nextYear}
       </button>

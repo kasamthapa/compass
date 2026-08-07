@@ -58,7 +58,7 @@ export function GoalsPage() {
       <button
         type="button"
         onClick={() => setFormOpen(true)}
-        className="ios-press mt-3 flex min-h-11 w-full items-center justify-center rounded-lg bg-surface px-4 text-subhead font-medium text-accent shadow-card"
+        className="ios-press mt-3 flex min-h-11 w-full items-center justify-center rounded-lg bg-surface px-4 text-subhead font-medium text-accent-text shadow-card"
       >
         + New goal
       </button>

@@ -185,7 +185,7 @@ function GoalMilestoneAdder({ goalId, goalTitle, month }: { goalId: string; goal
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="ios-press mt-1.5 flex min-h-9 items-center text-caption font-medium text-accent"
+          className="ios-press mt-1.5 flex min-h-9 items-center text-caption font-medium text-accent-text"
         >
           + add milestone
         </button>
