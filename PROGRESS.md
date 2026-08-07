@@ -2125,3 +2125,128 @@ full range. Confirmed in-browser, both themes, 393px and 1280px:
 `npm run build` (zero errors) and `npm run test` (80 tests, all green
 — this was a visual/token-tuning pass; no test assertions reference
 colors or spacing).
+
+## Phase 6C — Retuning /week and /goals onto Field Log
+
+### Self-critique (written before making changes)
+
+Went through every Week/Goals component with the same question as 6B:
+"deliberate for Fraunces/Karla/Space Mono and ink/paper/brass, or
+inherited?" — plus the mandatory contrast audit 6B flagged as likely
+debt here.
+
+- **Brass-as-text — confirmed, exactly as 6B predicted.** Found six
+  more instances of the same `bg-accent-wash text-accent` /
+  plain-`text-accent` pattern 6B fixed in Today/Inbox:
+  `WeekPriorities.tsx` (goal-chip-selected label, "+ add priority"),
+  `TaskEditForm.tsx` (goal-chip and priority-chip selected labels),
+  `GoalCard.tsx` ("+ add milestone"), `GoalsPage.tsx` ("+ New goal"),
+  `MonthlyReviewDialog.tsx` ("+ add milestone" inside the next-month
+  step), `YearlyReviewDialog.tsx` ("+ add a goal for {year}"). All
+  measured the same failing range 6B found (2.45–3.06:1 in light
+  theme) since they're the identical token pairing. **Fixed** — all
+  swapped to `--accent-text`, the token 6B created for exactly this.
+  Priority/goal breadcrumbs ("→ Ship a side project") were NOT part of
+  this bug — they already use `text-text-faint`, not brass, so no fix
+  needed there.
+- **The "why" statement — genuinely under-treated for the app's most
+  important prose moment.** `GoalCard`'s why line was plain
+  `text-subhead italic text-text-muted` — Karla's synthetic (browser-
+  faked) italic, not a real italic face, at the same weight/size as
+  any other secondary caption in the app. For a line that's meant to
+  read like a personal, handwritten commitment in a field journal,
+  faking the slant on a UI sans is exactly the "generic default"
+  failure mode this critique process exists to catch. **Fixed** — set
+  in genuine Fraunces italic (newly self-hosted, was not loaded
+  before) at body size, still within the established comfortable
+  reading width.
+- **`EmptyState`'s title was never actually set in the display face.**
+  `text-headline text-text` with no `font-display` class — every other
+  headline-sized heading in the app (`GoalCard`'s title, review-card
+  titles) renders in Fraunces; `EmptyState` quietly didn't. This
+  matters here specifically because Goals' empty state
+  ("What's the shape of this year?") is framed as an invitational
+  question, and the brief explicitly asks that this read as an
+  invitation in the new voice, not a leftover placeholder. Since
+  `EmptyState` is shared, this fix also retroactively improves every
+  other empty state in the app (Inbox, Journal) for free — a
+  side-effect, not scope creep, since `EmptyState` itself was never
+  deliberately retuned in 6A/6A-ii/6B. **Fixed.**
+- **Spacing — the same class of gap 6B found on Today.** `WeekPage`'s
+  header row sat only `mt-1` below `PageHeader` (12px total including
+  `PageHeader`'s own padding) — noticeably tighter than the equivalent
+  gap 6B established elsewhere. `WeekGrid` and `WeekPriorities` both
+  still used the pre-6B `mt-3` heading-to-card gap that 6B deliberately
+  loosened to `mt-4` on Today for Fraunces' heavier titles — inherited,
+  not re-examined. **Fixed**, matching 6B's precedent exactly rather
+  than inventing a new value.
+- **What was already fine:** the drag-and-drop highlight
+  (`ring-2 ring-accent-ring`) is token-driven and picks up the new
+  palette automatically; the weekly-priority/milestone hard-cap copy
+  ("Three is enough for one week.", the 5-goal soft-cap nudge) and the
+  carry/drop menu actions are unchanged in tone and already legible
+  (`text-text`/`text-text-muted`, both AA-clean since 6A-ii);
+  `ScoreStep`, the review-dialog step chrome, and
+  `MonthlyReviewCard`/`YearlyReviewCard` all consume the same shared
+  components already verified in 6A-ii/6B — no separate fix needed,
+  confirmed by inspection and in-browser re-check below. Milestone
+  month-grouping labels and progress percentages were already correct
+  (`font-mono`, `text-text-faint`/`text-text-muted`, no brass).
+
+### What changed
+
+- **`--accent-text` applied everywhere brass rendered as literal text
+  on Week/Goals**: `WeekPriorities.tsx` (goal-chip-selected label,
+  "+ add priority"), `TaskEditForm.tsx` (goal-chip and priority-chip
+  selected labels), `GoalCard.tsx` ("+ add milestone"),
+  `GoalsPage.tsx` ("+ New goal"), `MonthlyReviewDialog.tsx`
+  ("+ add milestone" in the next-month step), `YearlyReviewDialog.tsx`
+  ("+ add a goal for {year}"). No token values changed — `--accent-text`
+  already existed from 6B; this phase just finished applying it.
+- **`GoalCard`'s "why" line** — now `font-display italic text-body
+  text-text-muted` (was `text-subhead italic`, Karla's synthetic
+  slant). Fraunces 500-italic self-hosted via Fontsource for this.
+- **`EmptyState`'s title** — added the `font-display` class it was
+  missing, so every empty state in the app (not just Goals') now
+  renders its heading in Fraunces, matching every other headline-sized
+  heading.
+- **Spacing** — `WeekPage`'s header row `mt-1` → `mt-3`;
+  `WeekPriorities`/`WeekGrid` heading-to-card gap `mt-3` → `mt-4`,
+  matching 6B's precedent on Today exactly.
+
+### Contrast measurements (WCAG AA, 4.5:1 threshold)
+
+Measured live via `getComputedStyle` in the browser, both themes,
+after applying the fixes:
+
+| Pairing | Theme | Computed colors | Ratio |
+|---|---|---|---|
+| Goal-chip-selected text vs wash bg (`WeekPriorities`) | light | text `rgb(101,78,36)` (`#654e24`) on `rgba(168,130,60,0.12)` over paper | 5.10:1 |
+| Goal-chip-selected text vs wash bg | dark | text `rgb(212,168,83)` (`#d4a853`, = `--accent`) on `rgba(212,168,83,0.16)` over paper | 5.80:1 |
+| "+ add milestone" / "+ New goal" text vs surface (`GoalCard`, `GoalsPage`) | light | `rgb(101,78,36)` on `#f2eee3` | 6.79:1 |
+| "+ add milestone" / "+ New goal" text vs surface | dark | `rgb(212,168,83)` on `#242320` | 7.13:1 |
+| Brass button-fill text (`Save`/`Add`) | light | `rgb(30,28,23)` (`#1e1c17`) on `rgb(168,130,60)` | 4.80:1 (verified again this phase, unchanged from 6B) |
+
+Every pairing touched this phase clears 4.5:1 with margin in both
+themes — these are the same two tokens 6B created/fixed
+(`--accent-text`, `--accent-on`), just newly applied to Week/Goals'
+instances of the identical patterns.
+
+### Known issues / follow-ups (carried forward)
+
+The same `bg-accent-wash text-accent` pattern also appears in
+`LeftRail.tsx`'s and `BottomTabBar.tsx`'s active-nav-label styling —
+shell code, out of this phase's Week/Goals page scope (and out of
+6B's), so left untouched here too. Worth a dedicated shell-polish pass
+to apply `--accent-text` there as well, rather than rediscovering it a
+third time.
+
+Verified in-browser, both themes, 1280px and 393px: created a real
+goal with a "why" (renders in genuine Fraunces italic), expanded it
+and added the milestone affordance, added a weekly priority linked to
+that goal (breadcrumb "→ Run a marathon" renders correctly, chip
+selected-state legible in both themes), confirmed the Week header/
+grid/priorities spacing feels intentional rather than cramped. All
+seeded test data removed from IndexedDB afterward. `npm run build`
+(zero errors) and `npm run test` (80 tests, all green — visual/token
+pass only, no test assertions reference colors, fonts, or spacing).

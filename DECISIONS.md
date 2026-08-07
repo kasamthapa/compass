@@ -610,3 +610,43 @@ day is still visibly "a day with a review" rather than blending into
 the empty grid. Neither change chases a formal non-text-contrast ratio
 beyond what a calm, non-alarming palette allows — see PROGRESS.md for
 the exact before/after numbers.
+
+## Phase 6C applied 6B's contrast fixes rather than rediscovering them
+
+6B explicitly flagged the `bg-accent-wash text-accent` pattern as
+known debt on Week/Goals. 6C's mandatory first step was a literal
+audit of every such instance on those two pages — found six
+(`WeekPriorities`, `TaskEditForm` ×2, `GoalCard`, `GoalsPage`,
+`MonthlyReviewDialog`, `YearlyReviewDialog`) — and fixed all of them by
+applying the `--accent-text` token 6B already created, rather than
+re-deriving a new fix. No new token values were needed; the debt was
+purely "instances not yet migrated," not "the token doesn't work
+here." Confirms the token itself generalizes correctly across pages.
+
+## The goal "why" statement gets a genuine italic face, not a synthetic one
+
+`GoalCard`'s why line was `italic` applied to upright Fraunces —
+before this phase, the browser was faking the slant (synthetic
+oblique) since no italic Fraunces weight was loaded. Fixed by
+self-hosting `@fontsource/fraunces/500-italic.css` and switching the
+line to `font-display italic text-body` (up from `text-subhead`, no
+`font-display`). This is the same class of fix as 6A-ii's large-title
+fake-bold catch: a font-style declared in Tailwind classes but not
+backed by an actual loaded face. The "why" line was singled out
+because the phase brief explicitly called it "the most important prose
+moment in the app" — worth the one extra font file for a real italic
+rather than reusing the pattern silently elsewhere.
+
+## `EmptyState` is shared, so its retune benefits every page for free
+
+`EmptyState.tsx`'s title lacked `font-display`, which was never caught
+because no phase before 6C did a line-by-line typography audit against
+it specifically — 6A/6A-ii focused on shell/tokens, 6B focused on
+Today/Inbox structural components, and `EmptyState` fell in the gap
+between "shared infra" and "page content." Fixing it here (discovered
+while auditing Goals' empty state per the phase brief) retroactively
+corrects Inbox's and Journal's empty-state headings too, without those
+phases needing to be revisited — a case where fixing a shared
+component in a later phase is strictly better than either scope-creeping
+into those pages' phases or leaving the inconsistency for a fourth
+phase to rediscover.
