@@ -159,7 +159,7 @@ export function TaskEditForm({ isOpen, task, weekOf, onClose }: TaskEditFormProp
                   type="button"
                   onClick={() => setGoalId((current) => (current === goal.id ? null : goal.id))}
                   className={`ios-press min-h-9 rounded-full px-3 text-caption font-medium transition-colors ${
-                    goalId === goal.id ? 'bg-accent-wash text-accent' : 'bg-bg text-text-muted'
+                    goalId === goal.id ? 'bg-accent-wash text-accent-text' : 'bg-bg text-text-muted'
                   }`}
                 >
                   {goal.title}
@@ -179,7 +179,7 @@ export function TaskEditForm({ isOpen, task, weekOf, onClose }: TaskEditFormProp
                   type="button"
                   onClick={() => setPriorityId((current) => (current === priority.id ? null : priority.id))}
                   className={`ios-press min-h-9 rounded-full px-3 text-caption font-medium transition-colors ${
-                    priorityId === priority.id ? 'bg-accent-wash text-accent' : 'bg-bg text-text-muted'
+                    priorityId === priority.id ? 'bg-accent-wash text-accent-text' : 'bg-bg text-text-muted'
                   }`}
                 >
                   {priority.title}
