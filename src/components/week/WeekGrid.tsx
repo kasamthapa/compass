@@ -64,7 +64,7 @@ export function WeekGrid({ weekOf, onEditTask }: WeekGridProps) {
   return (
     <section className="mt-6">
       <h2 className="font-display text-title text-text">This week's tasks</h2>
-      <div className="mt-3 grid grid-cols-1 gap-3 xl:grid-cols-7">
+      <div className="mt-4 grid grid-cols-1 gap-3 xl:grid-cols-7">
         {days.map((day) => (
           <div
             key={day}

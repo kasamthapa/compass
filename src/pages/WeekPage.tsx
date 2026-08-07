@@ -31,7 +31,7 @@ export function WeekPage() {
     <div className="pb-16 md:pb-0">
       <PageHeader title="Week" />
 
-      <div className="mt-1 flex items-center justify-between gap-3">
+      <div className="mt-3 flex items-center justify-between gap-3">
         <button
           type="button"
           onClick={() => setWeekOf((current) => addDays(current, -7))}
