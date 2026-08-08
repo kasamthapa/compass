@@ -138,8 +138,31 @@ What's actually built so far:
   - The entry editor keeps a comfortable ~720px reading width even
     though the page itself uses the app's wider default column — the
     calendar (structural) stays full width, only the prose narrows.
-  - A calm invitation ("What happened today?") on any day with nothing
-    written yet, instead of a blank apology.
+  - A calm invitation ("What's on your mind today?") on any day with
+    nothing written yet, instead of a blank apology.
+- **Insights** — the quiet-patterns view at `/insights`:
+  - **Year Grain, full size**: the same GitHub-style contribution grid
+    from Today's compact preview, here as its full permanent home —
+    every daily review score across the year, month and weekday labels,
+    horizontally scrollable on mobile.
+  - **Habit consistency**: a 12-week hit-rate bar strip per active or
+    paused habit, plus a plain-language trend word ("picking up" /
+    "steady" / "quieter lately"). Weeks that hit the habit's target
+    render in a muted green, never brass — brass stays reserved for
+    today/active/completion moments elsewhere in the app. No streak
+    counts anywhere, by design (see DECISIONS.md).
+  - **Week scores**: a simple trend line of weekly-review scores over
+    the last 12 weeks.
+  - **Mood & energy**: two small sparklines over the last ~60 days of
+    journal entries.
+  - **A quiet observation**, shown only when there's enough history to
+    say something real: a locally-computed, plain-language pattern
+    between habit completion and how a week got rated ("Your week tends
+    to score a bit higher when you keep up with more of your habits —
+    just a pattern, not a rule"). With a fresh dataset, this reads as a
+    calm "patterns will show up here" note instead.
+  - Every section has its own calm, specific empty state — this page is
+    designed to look sparse on day one, not broken.
 - **"Field Log" visual identity** — a paper-and-ink, brass-instrument look
   grounded in field journals and navigation instruments, replacing an
   earlier dark-mode-plus-one-accent look that read as generic
@@ -234,7 +257,9 @@ which is the only layer that touches the database.
 - [x] Week view
 - [x] Journal
 - [x] Guided reviews (daily, weekly, monthly, yearly)
-- [ ] Insights
+- [x] Insights
+- [x] "Field Log" visual identity (tokens, type, hand-drawn icons, applied
+      app-wide)
 - [ ] PWA hardening
 - [ ] Cloud sync (Supabase)
 

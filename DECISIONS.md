@@ -650,3 +650,71 @@ phases needing to be revisited — a case where fixing a shared
 component in a later phase is strictly better than either scope-creeping
 into those pages' phases or leaving the inconsistency for a fourth
 phase to rediscover.
+
+## Habit consistency shows a trend, never a streak count — non-negotiable
+
+Insights' habit consistency section (`HabitConsistency.tsx`,
+`lib/insights.ts`) deliberately never computes or displays a raw
+"N days/weeks in a row" number anywhere. This is stated as product law
+in CLAUDE.md, rooted in the original habit-science research behind the
+flexible-streak design (Phase 1): a countable streak creates exactly
+the all-or-nothing pressure the app's "skipped is neutral, X-of-7
+targets" model exists to avoid. Insights only ever surfaces a 12-week
+hit-rate bar strip (visual, not a number) and a plain-language trend
+word (`trendLabel`: "picking up" / "steady" / "quieter lately") —
+comparing two 4-week averages, never counting consecutive successes.
+
+## Habit bars only plot weeks the habit actually existed for
+
+`HabitConsistency`'s per-habit chart starts at the Monday of the week
+the habit was created, not a fixed 12-week window padded with fake
+zeros for weeks before it existed. A habit created 3 weeks ago shows 3
+bars, not 12 bars where 9 read as "0% — failed," which would be a
+flatly false signal (the habit wasn't being tracked yet, it didn't
+fail). The same reasoning applies to `habitTrend`'s null return for
+fewer than 8 weeks of data — silence is more honest than a trend word
+computed from too little history.
+
+## The quiet observation's thresholds: 4 paired weeks, 0.4-point gap
+
+`computeObservation` (`lib/insights.ts`) requires at least 4 weeks that
+have both a completed weekly-review score and habit-completion data
+before attempting any comparison, and only speaks up if the median-
+split score gap is at least 0.4 (on the 1-5 scale). Both numbers are
+deliberately conservative, chosen for the same reason 6A-ii/6B/6C never
+weakened a contrast threshold to preserve a color: a smaller sample or
+a smaller gap would be reporting noise as if it were signal, which
+actively undermines trust in the one place on this page that makes a
+claim rather than just visualizing raw data. The function is honest in
+both directions — if someone's real data shows *lower* scores in
+higher-habit-completion weeks, it says that plainly rather than only
+ever confirming the flattering direction.
+
+## `--accent-text` needed a real Field Log identity fix, not just a Journal/Week/Goals patch
+
+6D's contrast audit reconfirmed the same `bg-accent-wash text-accent`
+failure pattern in `JournalEditor.tsx` and `JournalCalendar.tsx` that
+6B/6C already fixed everywhere else they touched — expected, since it's
+the same shared token pairing. No new token math was needed; `--accent-
+text` (introduced in 6B) already covers Journal's case identically.
+Documented here mainly to close the loop: as of 6D, every "brass
+rendering as literal text" instance found across Today, Inbox, Week,
+Goals, and Journal has been fixed with the same token. The one
+remaining known instance is `LeftRail`/`BottomTabBar`'s active-nav-
+label styling (shell code, still out of every page-scoped phase so
+far) — see PROGRESS.md's Known Issues.
+
+## Insights was built directly against the finished design system, not retrofitted
+
+Unlike Today/Inbox/Week/Goals/Journal (which were built pre-Field-Log
+and needed a retune-and-audit pass), Insights is new UI built after
+6A-6D's token/type/icon/contrast work was already in place. It
+deliberately skips the "self-critique first" step the other 6-series
+phases used, per the phase instructions — there's nothing to critique
+when nothing was inherited. Every color reference in the new
+`insights/*` components and `InsightsPage.tsx` is a token
+(`var(--chart-blue)`, `var(--good)`, `var(--ink-soft)`, `var(--hairline)`)
+or a Tailwind utility backed by one — confirmed with the same "grep for
+raw hex" discipline established in Phase 6A, and contrast-checked via
+`getComputedStyle` in-browser before considering the phase done, not
+after a bug was found.

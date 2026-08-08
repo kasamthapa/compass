@@ -2250,3 +2250,104 @@ grid/priorities spacing feels intentional rather than cramped. All
 seeded test data removed from IndexedDB afterward. `npm run build`
 (zero errors) and `npm run test` (80 tests, all green — visual/token
 pass only, no test assertions reference colors, fonts, or spacing).
+
+## Phase 6D — Retuning /journal, building /insights fresh
+
+### Self-critique (Journal, written before making changes)
+
+- **Brass-as-text — same bug, two more instances.** `JournalEditor`'s
+  "Back to today" link (`text-accent` directly on `bg-surface`) and
+  `JournalCalendar`'s selected-date number (`font-semibold text-accent`
+  on `bg-accent-wash`) are the identical failing pairing 6B/6C already
+  found and fixed everywhere else — measured at the same 2.45–3.06:1 in
+  light theme (fails AA), since they're the same underlying tokens.
+  **Fixed** — both swapped to `--accent-text`.
+- **The composer genuinely already reads as the hero of the page** —
+  this is the one area that didn't need much. `max-w-content` caps it
+  at a comfortable reading width, `text-body` (Karla, 17px/1.5 line-
+  height) is the same size already used for the goal "why" statement
+  and other prose, and the placeholder "What's on your mind today?" is
+  calm and specific rather than generic ("Start writing…"). No
+  retuning needed there beyond confirming Karla holds up at this size
+  in-browser (below).
+- **Mood/Energy dots and the entry-dot/today's-ring are fine as-is** —
+  same reasoning as 6B's habit-square precedent: the selected mood/
+  energy dot is a solid brass fill against an otherwise-empty outlined
+  circle (large fill-vs-no-fill difference, not a subtle color
+  distinction), and the calendar's entry-dot/today's-ring are both
+  token-driven (`bg-accent` / `ring-accent-ring`) and already legible.
+  No changes made to either.
+- **The `EmptyState` font-display fix does NOT actually apply to
+  Journal** — checked rather than assumed, per the phase's explicit
+  instruction. `JournalPage.tsx` never renders the shared `EmptyState`
+  component at all; its "nothing written yet" case is handled inline
+  by the composer's placeholder text, not a separate empty-state view.
+  6C's fix benefits Inbox/Goals (which do use `EmptyState`) but has no
+  effect here — worth stating plainly rather than silently assuming
+  it "must be fine now."
+- **Spacing** — `JournalEditor`'s composer already sits at `mt-4` below
+  the page header (matching the 6B/6C precedent directly, not
+  inherited pre-6B `mt-3`), and internal spacing (`mt-4` mood/energy
+  row, `mt-5` to the textarea) reads comfortably in-browser. No changes
+  needed.
+
+### Contrast measurements (Journal)
+
+| Pairing | Theme | Ratio | Verdict |
+|---|---|---|---|
+| `--accent` text vs `--accent-wash` over `--paper` (calendar selected date) | light | 2.45:1 | fails → fixed with `--accent-text` (5.10:1) |
+| `--accent` text vs `--accent-wash` over `--paper` | dark | 5.8:1 | passes (unchanged, `--accent-text` aliases `--accent` in dark) |
+| `--accent` text vs `--paper-raised` (composer bg, "Back to today") | light | 3.06:1 | fails → fixed with `--accent-text` (6.79:1) |
+| `--accent` text vs `--paper-raised` | dark | 7.13:1 | passes (unchanged) |
+
+### Insights — built fresh
+
+No self-critique needed here (nothing to inherit from) — built directly
+against the finished Field Log tokens/type/icons from the start, per
+the phase instructions. Design notes:
+
+- **Year Grain** — the exact `YearGrain.tsx` component from Today is
+  reused unmodified; Insights is simply a new, permanent full-size home
+  for it (Today keeps its compact copy as a preview/link). No changes
+  needed to the component itself — its existing responsive pattern
+  (horizontal scroll on mobile, full width on desktop) already is the
+  "full size" presentation this phase asked for.
+- **Habit consistency bars use `--good`, never `--brass`.** Per the
+  scarcity rule (brass reserved for today/active/completion moments),
+  weeks that met a habit's target render in `--good`; other weeks
+  render in a muted `--ink-faint`-toned bar. No raw streak count is
+  computed or displayed anywhere — only a 12-week hit-rate bar strip
+  plus a plain-language trend word ("picking up" / "steady" /
+  "quieter lately"), comparing the last 4 weeks' average hit-rate
+  against the previous 4 weeks'.
+- **The quiet-observation card** is the one place doing real
+  computation: it pairs weeks that have both a completed weekly review
+  score and a habit-completion rate, requires at least 4 such paired
+  weeks (chosen as "a reasonable minimum" per the phase's own
+  suggestion — a smaller sample makes any comparison noise, not
+  signal), splits them by a median completion-rate split, and only
+  surfaces a sentence if the score gap between the two halves is at
+  least 0.4 (on the 1–5 scale) — otherwise it stays silent rather than
+  asserting a marginal, likely-spurious pattern. See DECISIONS.md for
+  the exact thresholds and reasoning.
+
+### Known issues / follow-ups
+
+None blocking. Verified in-browser: fresh/wiped data shows calm,
+distinct empty-state copy in every Insights section; seeded test data
+(a habit created 10 weeks ago with a rising completion rate, weekly
+reviews with correlated scores, 60 days of journal mood/energy, ~15
+days of daily reviews) correctly produced a "picking up" trend label,
+a real quiet observation ("Your week tends to score a bit higher when
+you keep up with more of your habits — just a pattern, not a rule."),
+a chart-blue Year Grain cluster, and a chart-blue week-score line that
+visibly jumps at the point the seeded data's completion rate improves.
+Confirmed via `getComputedStyle` that a habit week hitting its target
+renders in `--good` (`rgb(92, 122, 86)`, i.e. `#5c7a56`) — brass never
+appears in the habit consistency chart. Confirmed both the Journal and
+Insights contrast fixes resolve to the correct `--accent-text` value
+in both themes. Grepped the full codebase for "streak" — the only
+hits are in code comments documenting the no-streak-counts rule, never
+a displayed number. Verified both themes at 393px and 1280px. All
+seeded test data removed from IndexedDB after verification. `npm run
+build` (zero errors) and `npm run test` (95 tests, 15 new, all green).
