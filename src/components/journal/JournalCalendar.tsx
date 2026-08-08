@@ -67,7 +67,7 @@ export function JournalCalendar({ month, selectedDate, onSelectDate, onNavigateM
               <span
                 className={`flex h-7 w-7 items-center justify-center rounded-full font-mono text-caption ${
                   isToday ? 'ring-1 ring-accent-ring' : ''
-                } ${isSelected ? 'font-semibold text-accent' : inMonth ? 'text-text' : 'text-text-faint'}`}
+                } ${isSelected ? 'font-semibold text-accent-text' : inMonth ? 'text-text' : 'text-text-faint'}`}
               >
                 {Number(day.slice(-2))}
               </span>

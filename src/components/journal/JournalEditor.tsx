@@ -125,7 +125,7 @@ export function JournalEditor({ date, today, onBackToToday }: JournalEditorProps
             <button
               type="button"
               onClick={onBackToToday}
-              className="ios-press mt-1 flex min-h-9 items-center gap-1 text-caption font-medium text-accent"
+              className="ios-press mt-1 flex min-h-9 items-center gap-1 text-caption font-medium text-accent-text"
             >
               <IconChevronRight className="h-3 w-3 rotate-180" />
               Back to today
