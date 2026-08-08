@@ -168,3 +168,25 @@ describe('resumeStepForYearly', () => {
     ).toBe(3)
   })
 })
+
+describe('reviews.getCompletedWeeklyReviews', () => {
+  it('returns only completed weekly reviews within range, sorted oldest-first', async () => {
+    await reviews.upsert('weekly', '2026-08-03', { score: 4, completedAt: '2026-08-04T00:00:00.000Z' })
+    await reviews.upsert('weekly', '2026-07-27', { score: 3, completedAt: '2026-07-28T00:00:00.000Z' })
+    // Not completed yet — should be excluded.
+    await reviews.upsert('weekly', '2026-08-10', { score: 5 })
+    // A different type sharing a periodKey — should never leak in.
+    await reviews.upsert('daily', '2026-08-03', { score: 1, completedAt: '2026-08-03T12:00:00.000Z' })
+
+    const result = await reviews.getCompletedWeeklyReviews('2026-07-01', '2026-08-31')
+    expect(result.map((r) => r.periodKey)).toEqual(['2026-07-27', '2026-08-03'])
+    expect(result[0].score).toBe(3)
+    expect(result[1].score).toBe(4)
+  })
+
+  it('excludes reviews outside the requested range', async () => {
+    await reviews.upsert('weekly', '2026-01-05', { score: 4, completedAt: '2026-01-06T00:00:00.000Z' })
+    const result = await reviews.getCompletedWeeklyReviews('2026-07-01', '2026-08-31')
+    expect(result).toHaveLength(0)
+  })
+})

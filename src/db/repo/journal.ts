@@ -44,3 +44,15 @@ export async function getForMonth(yyyymm: string): Promise<JournalEntry[]> {
     .filter((entry) => !entry.deletedAt)
     .toArray()
 }
+
+/** Entries with `date` within [startDate, endDate] (inclusive), sorted
+ * oldest-first. Unlike getForMonth, spans month/year boundaries — used by
+ * Insights' mood/energy sparklines over a rolling ~60-day window. */
+export async function getForRange(startDate: string, endDate: string): Promise<JournalEntry[]> {
+  const entries = await db.journalEntries
+    .where('date')
+    .between(startDate, endDate, true, true)
+    .filter((entry) => !entry.deletedAt)
+    .toArray()
+  return entries.sort((a, b) => a.date.localeCompare(b.date))
+}

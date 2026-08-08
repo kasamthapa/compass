@@ -60,3 +60,26 @@ export async function getByPeriod(
     .filter((review) => !review.deletedAt)
     .first()
 }
+
+export interface WeeklyReviewSummary {
+  periodKey: string
+  score?: 1 | 2 | 3 | 4 | 5
+  completedAt: string
+}
+
+/** Completed 'weekly' reviews (periodKey + score + completedAt) whose
+ * periodKey (a Monday, YYYY-MM-DD) falls within [startWeekOf, endWeekOf].
+ * Used by Insights' week-score trend. */
+export async function getCompletedWeeklyReviews(
+  startWeekOf: string,
+  endWeekOf: string,
+): Promise<WeeklyReviewSummary[]> {
+  const reviews = await db.reviews
+    .where('[type+periodKey]')
+    .between(['weekly', startWeekOf], ['weekly', endWeekOf], true, true)
+    .filter((review) => !review.deletedAt && Boolean(review.completedAt))
+    .toArray()
+  return reviews
+    .map((review) => ({ periodKey: review.periodKey, score: review.score, completedAt: review.completedAt! }))
+    .sort((a, b) => a.periodKey.localeCompare(b.periodKey))
+}

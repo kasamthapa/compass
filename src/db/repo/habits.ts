@@ -62,6 +62,17 @@ export async function getActive(): Promise<Habit[]> {
     .toArray()
 }
 
+/** Active AND paused habits (excludes archived) — used by Insights' habit
+ * consistency section, which shows a paused habit's history too rather
+ * than dropping it silently. */
+export async function getActiveAndPaused(): Promise<Habit[]> {
+  return db.habits
+    .where('status')
+    .anyOf(['active', 'paused'])
+    .filter((habit) => !habit.deletedAt)
+    .toArray()
+}
+
 export interface HabitWithTodayLog extends Habit {
   todayStatus: HabitLog['status'] | null
 }

@@ -67,3 +67,16 @@ describe('weeklyHitRate', () => {
     expect(rate).toEqual({ done: 2, target: 4 })
   })
 })
+
+describe('habits.getActiveAndPaused', () => {
+  it('includes both active and paused habits but excludes archived', async () => {
+    const active = await habits.create({ name: 'Active', cue: '', targetPerWeek: 3 })
+    const paused = await habits.create({ name: 'Paused', cue: '', targetPerWeek: 3, status: 'paused' })
+    const archived = await habits.create({ name: 'Archived', cue: '', targetPerWeek: 3 })
+    await habits.setStatus(archived.id, 'archived')
+
+    const result = await habits.getActiveAndPaused()
+    const ids = result.map((h) => h.id).sort()
+    expect(ids).toEqual([active.id, paused.id].sort())
+  })
+})

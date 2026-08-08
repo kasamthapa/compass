@@ -51,3 +51,14 @@ describe('journal.getForMonth', () => {
     expect(august).toHaveLength(0)
   })
 })
+
+describe('journal.getForRange', () => {
+  it('spans across a month boundary, sorted oldest-first', async () => {
+    await journal.upsertForDate('2026-07-20', { text: 'mid July' })
+    await journal.upsertForDate('2026-08-05', { text: 'early August' })
+    await journal.upsertForDate('2026-06-01', { text: 'too early, out of range' })
+
+    const range = await journal.getForRange('2026-07-01', '2026-08-31')
+    expect(range.map((entry) => entry.date)).toEqual(['2026-07-20', '2026-08-05'])
+  })
+})
