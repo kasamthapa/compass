@@ -206,6 +206,18 @@ export function IconClose({ className }: IconProps) {
   )
 }
 
+/** iOS-style share glyph — a tray with an arrow lifting out of it. */
+export function IconShare({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M5.5 12v6.5a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V12" />
+      <path d="M12 3.5v11" />
+      <path d="M8.3 7.2L12 3.5l3.7 3.7" />
+      <circle cx="12" cy="3.5" r="1" fill="var(--brass)" stroke="none" />
+    </svg>
+  )
+}
+
 /** A life-ring rendered as a compass bezel — quiet notches, one brass tick. */
 export function IconLifebuoy({ className }: IconProps) {
   return (

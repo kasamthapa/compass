@@ -7,6 +7,7 @@ import { FocusMode } from '../components/today/FocusMode'
 import { StuckOverlay } from '../components/today/StuckOverlay'
 import { TodayFocus } from '../components/today/TodayFocus'
 import { TodayHabits } from '../components/today/TodayHabits'
+import { InstallHintCard } from '../components/today/InstallHintCard'
 import { EveningReviewCard } from '../components/today/EveningReviewCard'
 import { EveningReviewDialog } from '../components/today/EveningReviewDialog'
 import * as reviewsRepo from '../db/repo/reviews'
@@ -58,6 +59,7 @@ export function TodayPage() {
       <RightNowCard onOpen={() => setFocusModeOpen(true)} />
       <TodayFocus today={today} />
       <TodayHabits today={today} weekStart={weekStart} />
+      <InstallHintCard />
       {showEveningCard && <EveningReviewCard onOpen={() => setReviewDialogOpen(true)} />}
       <EveningReviewDialog
         isOpen={reviewDialogOpen}
