@@ -718,3 +718,77 @@ or a Tailwind utility backed by one — confirmed with the same "grep for
 raw hex" discipline established in Phase 6A, and contrast-checked via
 `getComputedStyle` in-browser before considering the phase done, not
 after a bug was found.
+
+## App icons are theme-invariant, drawn once against the dark palette
+
+Unlike in-app UI (which fully re-themes light/dark), the manifest/
+favicon icon assets are a single static set, drawn against the dark
+"Night — chart table" palette (`--paper` #1b1b17, `--ink` #e8e2d0,
+`--brass` #d4a853) regardless of the user's in-app theme preference.
+This matches how essentially every OS treats install/favicon icons —
+they're not live-themed, and the manifest's own `theme_color` is
+already pinned to the same dark paper value (set in Phase 6A). Picking
+one icon rather than generating light+dark variants keeps the home-
+screen/dock icon recognizable and stable regardless of OS chrome.
+
+## Maskable icons are separate assets, not the "any" icon resized
+
+Android's adaptive-icon system can crop a maskable icon to a circle,
+squircle, rounded-square, or other shape at the OS's discretion — an
+icon meant for `purpose: 'any'` (which browsers render as-is) will
+clip its outer content if reused for `purpose: 'maskable'` without
+adjustment. `icon-192-maskable.png`/`icon-512-maskable.png` draw the
+same compass-rose mark scaled down so every stroke sits inside the
+inner 80% "safe zone" the Android spec guarantees survives any mask
+shape, with the background color filling the canvas edge-to-edge (no
+rounded corners baked into the maskable asset itself — the OS applies
+its own shape). This was verified, not assumed: the generation script
+rendered a debug overlay of the 80%-safe-zone circle on top of the
+icon, and separately simulated a worst-case circular crop, confirming
+nothing meaningful falls outside either. See PROGRESS.md.
+
+## The install-hint card shows a real action or nothing — never a dead end
+
+`InstallHintCard` only renders when there's something the user can
+actually do: a captured `beforeinstallprompt` event (Android/desktop
+Chromium) or iOS's Share-sheet path (always available on iOS Safari,
+no API needed to detect it). On any other browser — desktop Safari,
+Firefox, or Android before Chrome has decided the app is installable —
+the component renders nothing rather than showing generic "install
+this app" copy with no way to follow through. This is a deliberate
+product-quality choice: a calm app doesn't nag with instructions it
+can't back up.
+
+## Dismissing the install card is UI state, not user data
+
+The dismissal flag lives in `localStorage`
+(`compass-install-hint-dismissed`), not a Dexie table. CLAUDE.md's
+local-first architecture is about the user's actual data (habits,
+tasks, journal entries, goals) living in IndexedDB as the source of
+truth — "I don't want to see this card again" is a device-local UI
+preference in the same category as the theme toggle's stored
+preference (also `localStorage`, see `themeStore.ts`), not something
+that needs to survive a data export/import or sync to another device.
+
+## Discovered: Tailwind's spacing-key override also silently reshapes height/minHeight
+
+`tailwind.config.js` remaps spacing keys 1-9 to the app's `--space-*`
+tokens so `mt-3`/`gap-4`/`px-5` etc. follow the 8pt rhythm — but
+Tailwind's default `height`/`minHeight` theme scales are themselves
+derived from `spacing`, so `h-8`, `h-9`, `min-h-8`, `min-h-9` (and
+their `w-*` counterparts) silently inherited the large spacing values
+too (`--space-8` = 64px, `--space-9` = 80px) instead of Tailwind's own
+default ~32-36px. Confirmed via `getComputedStyle` while building
+`InstallHintCard` in Phase 7A — a plain `h-9 w-9` div measured
+80×80px in the actual rendered page. The identical `min-h-9` pattern
+already exists on several goal/priority-link chips elsewhere in the
+app (`WeekPriorities.tsx`, `TaskConvertForm.tsx`,
+`HabitConvertForm.tsx`, `TodayHabits.tsx`,
+`MonthlyReviewDialog.tsx`'s `GoalMilestoneAdder`) — meaning those
+chips have likely rendered oversized since Phase 4A without being
+caught, because screenshots at normal scale don't make an 80px pill
+look obviously wrong next to other 44px+ controls. `InstallHintCard`
+itself was built avoiding keys 8/9 for sizing entirely. Fixing the
+pre-existing chips is out of this phase's scope (icons/install, not a
+general UI audit) and is left as recorded debt rather than folded in
+here — see PROGRESS.md's "Known issue found" note.

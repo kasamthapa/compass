@@ -2351,3 +2351,100 @@ hits are in code comments documenting the no-streak-counts rule, never
 a displayed number. Verified both themes at 393px and 1280px. All
 seeded test data removed from IndexedDB after verification. `npm run
 build` (zero errors) and `npm run test` (95 tests, 15 new, all green).
+
+## Phase 7A — App icons + install experience
+
+### What was built
+
+- **App icon artwork** — a simplified derivative of the compass-rose
+  signature (thin ink-toned ring, four cardinal ticks, one brass kite
+  at north), generated with Python/PIL (as in Phase 0) into
+  `icon-192.png`, `icon-512.png`, dedicated maskable variants at both
+  sizes, an `apple-touch-icon.png` (180px), and a multi-resolution
+  `favicon.ico` (16/32/48). `icon.svg` was rewritten by hand to match
+  the same construction, for the browser-tab SVG favicon.
+  - Legibility was actually checked at target size, not assumed: the
+    full ring+ticks+kite mark reads clearly down to 180px (used for
+    `apple-touch-icon.png` and the 192/512 "any" icons), but a
+    simplified version — just the brass kite/needle on a solid rounded
+    disc, no thin ring or ticks — is used for `favicon.ico`'s 16/32/48
+    sizes, where the ring would have gone muddy. Both were visually
+    confirmed by rendering and inspecting the actual PNGs before
+    shipping them, not by eyeballing the source at drawing size.
+  - The maskable variants are genuinely distinct assets, not the "any"
+    icon resized and relabeled — the mark is drawn inside the inner
+    80% safe-zone Android's adaptive-icon mask guarantees will survive.
+    Verified explicitly with a debug render: the safe-zone circle
+    overlaid on the icon, and a simulated worst-case circular crop —
+    both confirmed nothing (ring, ticks, or kite) sits outside the
+    safe area. See DECISIONS.md.
+- **Manifest & theme-color** — `vite.config.ts`'s PWA manifest `icons`
+  array now lists four entries: `icon-192.png`/`icon-512.png` with
+  `purpose: 'any'`, and the two dedicated `*-maskable.png` files with
+  `purpose: 'maskable'`. `theme_color`/`background_color` were already
+  corrected to the Field Log dark-paper hex in Phase 6A and needed no
+  further change. The live theme-color-on-toggle behavior
+  (`themeStore.ts`'s `applyTheme` updating
+  `meta[name="theme-color"]` on every preference change and system-
+  theme change) already existed from Phase 1 and was verified working,
+  not rebuilt.
+- **iOS meta tags** — `index.html` gained
+  `apple-mobile-web-app-capable`, `apple-mobile-web-app-status-bar-style`
+  (`black-translucent`), and `apple-mobile-web-app-title` ("Compass"),
+  plus updated `apple-touch-icon`/favicon `<link>`s pointing at the new
+  assets.
+- **`InstallHintCard`** — a calm, platform-aware nudge on `/today`:
+  captures the `beforeinstallprompt` event and offers a real "Install"
+  button on Android/desktop Chromium; shows a one-line "Share → Add to
+  Home Screen" pointer (with the new `IconShare` glyph) on iOS Safari,
+  which has no programmatic install API; renders nothing at all once
+  the app is already running in `display-mode: standalone` (or iOS's
+  legacy `navigator.standalone` flag); renders nothing if neither
+  path is available (e.g. desktop Safari/Firefox, or Android before
+  the browser has fired its prompt) rather than showing a dead-end
+  card. Dismissal is permanent, stored in `localStorage` (UI
+  state, not user data — doesn't belong in Dexie).
+- **New `IconShare` glyph** in `icons.tsx`, same hand-drawn
+  construction as every other icon (thin stroke, one brass accent —
+  a dot at the arrow's tip).
+- **`.claude/launch.json`** gained a `compass-preview` entry (`vite
+  preview` on port 4173) — needed because `vite-plugin-pwa`'s manifest
+  injection only happens against a production build; the dev server
+  doesn't serve `manifest.webmanifest` at all, so verifying the actual
+  shipped PWA behavior required building and previewing, not just
+  running `npm run dev`.
+
+### Known issue found and worked around (not fixed — out of scope)
+
+While sizing `InstallHintCard`'s icon-circle and buttons, discovered
+that `tailwind.config.js`'s `spacing` override (keys 1-9 remapped to
+the app's 8pt-rhythm `--space-*` tokens for margin/gap/padding use)
+also silently changes Tailwind's derived `height`/`minHeight` scale,
+since Tailwind derives those from the same `spacing` object. Confirmed
+via `getComputedStyle` in-browser: `h-9`/`w-9`/`min-h-9` all render at
+80px (`--space-9`), not the ~36px a reader would expect from Tailwind's
+own default scale — and the identical `min-h-9` chip pattern already
+exists elsewhere in the app (goal/priority-link chips in
+`WeekPriorities.tsx`, `TaskConvertForm.tsx`, `HabitConvertForm.tsx`,
+`TodayHabits.tsx`, `GoalMilestoneAdder`), meaning those chips have
+likely been rendering ~80px tall since Phase 4A without anyone
+noticing at normal screenshot scale. `InstallHintCard` itself was
+built avoiding keys 8/9 entirely (`h-11`/`h-10`/`min-h-10`, all outside
+the overridden range). The pre-existing chips were left untouched —
+fixing them is unrelated to this phase's icon/install scope and
+deserves its own deliberate pass rather than an incidental fix buried
+in an icon phase.
+
+### Known issues / follow-ups
+
+None blocking for this phase's own scope. The Tailwind height/spacing
+collision above is recorded as real, pre-existing debt for a future
+phase. Verified in-browser via a production build + `vite preview`
+(not just `npm run dev`, since the manifest only exists in a real
+build): the manifest's icon list resolves correctly (`purpose: 'any'`
+vs `'maskable'`), `beforeinstallprompt` correctly surfaces the Install
+card, dismissal persists across reload, and the card correctly
+disappears when `display-mode: standalone` is simulated. Both themes,
+mobile (393px, via device-width viewport) and desktop (1280px)
+checked. `npm run build` (zero errors) and `npm run test` (95 tests,
+unchanged — no new computation logic this phase, so no new tests).
