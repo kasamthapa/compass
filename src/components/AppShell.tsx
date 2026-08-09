@@ -3,6 +3,7 @@ import { LeftRail } from './LeftRail'
 import { BottomTabBar } from './BottomTabBar'
 import { CaptureButton } from './CaptureButton'
 import { CaptureDialog } from './CaptureDialog'
+import { UpdateToast } from './UpdateToast'
 
 interface AppShellProps {
   children: ReactNode
@@ -22,6 +23,7 @@ export function AppShell({ children }: AppShellProps) {
       <BottomTabBar />
       <CaptureButton />
       <CaptureDialog />
+      <UpdateToast />
     </div>
   )
 }
