@@ -2448,3 +2448,132 @@ disappears when `display-mode: standalone` is simulated. Both themes,
 mobile (393px, via device-width viewport) and desktop (1280px)
 checked. `npm run build` (zero errors) and `npm run test` (95 tests,
 unchanged — no new computation logic this phase, so no new tests).
+
+## Phase 7B — Offline correctness and graceful updates
+
+### Precache audit (done first, before any fix)
+
+Built production (`npm run build`) and parsed the actual generated
+`dist/sw.js` precache manifest directly (not just trusted the config).
+
+- **Fonts:** cross-checked every `.woff2` URL referenced by the built
+  CSS against the precache list — all 19 currently-used font files
+  (Fraunces 500/600/500-italic × latin/latin-ext/vietnamese, Karla
+  400/500 × latin/latin-ext, Space Mono 400/700 × latin/latin-ext/
+  vietnamese) matched exactly, one-to-one. No gap.
+- **Icons/manifest:** all 4 manifest icons (192/512 × any/maskable),
+  `favicon.ico`, `apple-touch-icon.png`, and `icon.svg` were present —
+  but **6 of them were double-precached** (each listed twice in the
+  manifest array, wasting entries though not breaking correctness).
+  Root causes, found and fixed separately:
+  - `icon.svg` and `apple-touch-icon.png` were both explicitly listed
+    in `includeAssets` in Phase 7A *and* already auto-matched by
+    `workbox.globPatterns` (which includes `.svg`/`.png`) — fixed by
+    trimming `includeAssets` down to only `favicon.ico` (the one file
+    `.ico` isn't covered by the glob).
+  - The 4 manifest-icon files (`icon-192.png`, `icon-512.png`, and
+    their maskable variants) are auto-injected into the precache by
+    vite-plugin-pwa *because* they're listed in `manifest.icons`,
+    independently of `globPatterns` also matching them in `dist/` —
+    fixed with a `globIgnores` entry for those 4 filenames, since the
+    manifest-icon injection alone already guarantees them precached.
+  - Final precache manifest: **31 entries, 31 unique — zero
+    duplicates** (verified by re-parsing `dist/sw.js` after the fix).
+- **Route-level JS/CSS chunks:** the app has no route-level code-
+  splitting (`App.tsx` imports every page eagerly, no `React.lazy`) —
+  there's a single JS bundle and a single CSS bundle, both already in
+  the precache manifest. Confirmed this is genuinely a non-issue for
+  this app's architecture, not something overlooked.
+
+### Offline navigation fallback — a real gap, now fixed
+
+`workbox.navigateFallback` was never configured. In `generateSW` mode,
+without it, only the *exact* precached URLs are servable offline —
+`index.html` is precached, but a request for `/week` or `/journal` as
+a navigation (a hard refresh or a fresh deep link) doesn't match any
+precached entry and fails outright, even though the SW is active and
+the app shell is fully cached. Added
+`navigateFallback: 'index.html'`, which registers a Workbox
+`NavigationRoute` — confirmed in the built `sw.js`
+(`registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html")))`).
+**Verified live**: stopped the preview server entirely (so the origin
+had no working connection at all, not just simulated offline), then
+did a hard navigation straight to `/week` and separately to
+`/journal` — both rendered the full app correctly, `200 OK` per
+`read_network_requests`, serving from the SW cache with the real
+server down. React Router then resolved the route client-side as
+expected.
+
+### Graceful update flow
+
+- **`registerType: 'prompt'`** (was `'autoUpdate'`) — a new service
+  worker now sits in the "waiting" state until the user explicitly
+  acts, instead of activating and reloading the page out from under
+  whatever the user was doing.
+- **`injectRegister: false`**, registering manually via
+  `useRegisterSW` from `virtual:pwa-register/react`
+  (`src/components/UpdateToast.tsx`) instead of vite-plugin-pwa's
+  auto-injected script — this is what gives the app a hook to know
+  "a new version is waiting" and render something for it.
+  `tsconfig.app.json`'s `types` array needed
+  `"vite-plugin-pwa/react"` added for the virtual module's types to
+  resolve.
+- **`UpdateToast`**, rendered globally from `AppShell` (so it shows
+  regardless of which page is open): a small card, not a modal,
+  positioned above the tab bar on mobile / bottom-left past the rail
+  on desktop (clear of both the capture FAB and the install hint
+  card). "Refresh" calls `updateServiceWorker(true)`, which messages
+  the waiting worker to skip waiting and reloads once it takes
+  control — refresh never happens without that explicit tap.
+  Dismissing just clears local `needRefresh` state; it will only
+  re-flip to `true` when a genuinely newer service worker reaches the
+  "waiting" state again, so a dismissed toast doesn't nag again for
+  the same pending update.
+- **In-flight-data reasoning confirmed, not just assumed**: every
+  local write in the app goes through a repo function into Dexie
+  immediately (or after Journal's short ~800ms debounce) — nothing is
+  held only in memory long-term. Since the update toast never
+  refreshes automatically, the only data ever at risk from an update
+  is whatever's typed in the ~800ms between a keystroke and the
+  debounced Journal save firing, and only if the user chooses to tap
+  Refresh during that exact window — an acceptable, expected tradeoff
+  of any manual refresh, not a regression this phase introduces.
+
+### What was verified here vs. what needs real-device confirmation
+
+**Verified in this environment** (via a production build + `vite
+preview`, a new `compass-preview` launch config added to
+`.claude/launch.json` for this): the precache manifest's exact
+contents (parsed `dist/sw.js` directly); offline navigation fallback,
+with the real server process stopped, not just simulated; the update
+toast's rendering, copy, layout at both breakpoints/themes, and
+dismiss behavior (verified by temporarily forcing `needRefresh` true
+via a `?forceUpdateToast=1` query-param escape hatch added and then
+removed from the component — never shipped). This same pass caught
+and fixed a real layout bug: the toast's single-row layout broke at
+narrow (~334px) widths, wrapping "A newer version is ready." into an
+unreadable 3-character-wide column — restructured to a two-row layout
+(icon + text + dismiss, then a full-width Refresh button below) before
+shipping.
+
+**Cannot be fully verified from this dev environment — needs Kasam's
+real-device confirmation**, per the phase's own instruction:
+- True airplane-mode behavior on an actually-installed PWA (this
+  session verified "origin unreachable" offline, which exercises the
+  same SW code path, but isn't identical to a real device's network
+  stack going fully dark).
+- The real end-to-end service-worker waiting→installed→activated
+  lifecycle timing across an actual deployed update (this session
+  confirmed the mechanism via source-code reasoning over
+  vite-plugin-pwa's `registerSW` implementation plus a forced-visible
+  UI check, not a genuine two-deployment update cycle against a live
+  server).
+- The install-then-update flow on a real Android/iOS home-screen
+  install specifically (Phase 7A's install card and this phase's
+  update toast interacting correctly once actually installed, not
+  just running as a browser tab).
+
+**This phase needs to be pushed and deployed (Vercel) before any of
+the above can be confirmed on a real device** — flagging clearly per
+the phase instructions, not claiming device-level verification from
+here.

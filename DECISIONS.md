@@ -792,3 +792,60 @@ itself was built avoiding keys 8/9 for sizing entirely. Fixing the
 pre-existing chips is out of this phase's scope (icons/install, not a
 general UI audit) and is left as recorded debt rather than folded in
 here — see PROGRESS.md's "Known issue found" note.
+
+## registerType: 'prompt', not 'autoUpdate' — updates never happen silently
+
+Phase 7B switched vite-plugin-pwa's `registerType` from `'autoUpdate'`
+to `'prompt'`. With `autoUpdate`, the new service worker activates and
+the page force-reloads the moment an update finishes downloading —
+including mid-keystroke in the Journal composer, mid-drag on the Week
+grid, or mid-step in a review dialog. `'prompt'` leaves the new worker
+in the "waiting" state indefinitely; the app surfaces this via
+`UpdateToast` and only calls `updateServiceWorker(true)` (which sends
+the skip-waiting message and reloads once the new worker takes
+control) on an explicit "Refresh" tap. This is a one-way product
+decision, not just a technical default: an update should never be
+allowed to interrupt an in-progress action, full stop.
+
+## The precache manifest needs auditing after every phase that touches fonts, icons, or routes — not just assumed current
+
+Found during the Phase 7B precache audit: `workbox.globPatterns` (set
+once, in Phase 0) still worked correctly through the entire Phase 6
+font/icon overhaul purely by luck — it matches by *file extension*
+(`.woff2`, `.png`, etc.), not by filename, so it kept picking up
+whatever files each phase's build produced without anyone needing to
+touch it. But `includeAssets` (added in Phase 7A) and `manifest.icons`
+(also Phase 7A) are filename-specific, and together they produced 6
+duplicate precache entries — each icon file done being listed twice —
+without failing the build or looking wrong in a quick glance at
+`vite.config.ts`. The only way this surfaced was parsing the actual
+generated `dist/sw.js` and counting entries, which is now the standard
+this project holds itself to: never assume the precache config is
+still correct after a phase that adds/renames static assets — parse
+the built manifest and check.
+
+## navigateFallback was missing since Phase 0 and nobody noticed because nobody deep-linked while offline
+
+`workbox.navigateFallback` has no default in `generateSW` mode — it
+was never set, meaning every phase through Phase 7A was, in fact,
+broken for the "hard refresh a non-root route while offline" case,
+silently, because normal development/testing always either starts at
+`/` or is online. This is exactly the kind of gap that "the app works
+offline" claims paper over without a phase specifically auditing for
+it. Fixed with `navigateFallback: 'index.html'` and verified against a
+genuinely stopped server (not simulated offline), deep-linking
+straight into `/week` and `/journal`.
+
+## The update toast's layout broke at narrow widths — found by actually forcing it visible, not just reading the JSX
+
+`UpdateToast`'s first draft used a single flex row (icon, text, Refresh
+button, dismiss button) that looked fine mentally but, once forced
+visible and screenshotted at a real ~334px mobile viewport, wrapped
+"A newer version is ready." into an unreadable single-character-wide
+column — there simply wasn't room for two buttons and a text block on
+one row at that width. Restructured to two rows (icon + text + dismiss
+on top, a full-width Refresh button below) before shipping. Recorded
+here as a reminder that a component only used in a rare, hard-to-
+trigger state (a pending update) still needs the same real-width
+visual verification as everything else — its rarity is exactly why a
+layout bug in it could otherwise ship unnoticed for a long time.
