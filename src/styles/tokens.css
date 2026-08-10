@@ -73,6 +73,12 @@
   --brass-text: var(--brass);
   --chart-blue: #7b9ab5;
   --seal: #c1614f;
+  /* Phase 7C: --seal is bright enough in dark theme that neither a near-
+     white nor a near-black text reliably clears 4.5:1 against it (best
+     case, near-black, only 4.13:1) — needed for the destructive-action
+     button labels ("Yes, erase everything") in Settings. This near-black
+     clears 4.68:1. See DECISIONS.md. */
+  --seal-on: #0f0e0b;
   --good: #7fa372;
 
   /* operational tokens — what components actually consume */
@@ -145,6 +151,10 @@
   --brass-text: #654e24;
   --chart-blue: #3b5166;
   --seal: #8c3b2e;
+  /* Phase 7C: near-white text against light theme's --seal clears 6.94:1 —
+     comfortably passes, no retuning needed here (unlike dark theme, see
+     the dark block above). */
+  --seal-on: #f8f5ee;
   --good: #5c7a56;
 
   /* operational tokens — what components actually consume */

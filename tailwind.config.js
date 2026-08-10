@@ -20,6 +20,7 @@ export default {
         skip: 'var(--skip-fill)',
         'chart-blue': 'var(--chart-blue)',
         seal: 'var(--seal)',
+        'seal-on': 'var(--seal-on)',
         'grid-empty': 'var(--grid-empty)',
         overlay: 'var(--overlay)',
         tabbar: 'var(--tabbar-bg)',
