@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { NAV_ITEMS } from './navConfig'
+import { IconSettings } from './icons'
 import * as capturesRepo from '../db/repo/captures'
 
 /**
@@ -68,6 +69,26 @@ export function LeftRail() {
           )}
         </NavLink>
       ))}
+
+      <div className="mt-auto border-t border-border-hairline pt-1">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) =>
+            `ios-press flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-subhead font-medium outline-none transition-colors focus-visible:ring-2 focus-visible:ring-accent-ring ${
+              isActive
+                ? 'bg-accent-wash text-accent'
+                : 'text-text-muted hover:bg-bg hover:text-text'
+            }`
+          }
+        >
+          {({ isActive }) => (
+            <>
+              <IconSettings className="h-5 w-5 shrink-0" active={isActive} />
+              Settings
+            </>
+          )}
+        </NavLink>
+      </div>
     </nav>
   )
 }
