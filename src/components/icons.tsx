@@ -306,3 +306,26 @@ export function IconTrash({ className }: IconProps) {
     </svg>
   )
 }
+
+/** A gear: six short teeth around a circle, with a brass-filled hub. */
+export function IconSettings({ className, active }: NavIconProps) {
+  return (
+    <svg {...base} className={className} strokeWidth={active ? 1.8 : base.strokeWidth} aria-hidden="true">
+      <circle cx="12" cy="12" r="6.3" />
+      <path d="M12 5.7V3.5M17.5 8.9l1.9-2.3M17.5 15.2l1.9 2.3M12 18.3v2.2M6.5 15.2l-1.9 2.3M6.5 8.9l-1.9-2.3" />
+      <circle cx="12" cy="12" r="1.8" fill="var(--brass)" stroke="none" />
+    </svg>
+  )
+}
+
+/** iOS-style import glyph — an arrow settling down into a tray. Pairs with IconShare. */
+export function IconImport({ className }: IconProps) {
+  return (
+    <svg {...base} className={className} aria-hidden="true">
+      <path d="M5.5 12v6.5a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V12" />
+      <path d="M12 3.5v11" />
+      <path d="M8.3 11.3L12 15l3.7-3.7" />
+      <circle cx="12" cy="15" r="1" fill="var(--brass)" stroke="none" />
+    </svg>
+  )
+}
