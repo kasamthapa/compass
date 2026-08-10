@@ -4,6 +4,13 @@ import { VitePWA } from 'vite-plugin-pwa'
 
 // https://vite.dev/config/
 export default defineConfig({
+  // Settings' About section shows this as a build indicator — the app has
+  // no formal release versioning (package.json's version is a placeholder),
+  // so a build date is the honest, low-effort thing to show instead of a
+  // fabricated version number. See DECISIONS.md.
+  define: {
+    __BUILD_DATE__: JSON.stringify(new Date().toISOString().slice(0, 10)),
+  },
   plugins: [
     react(),
     VitePWA({
