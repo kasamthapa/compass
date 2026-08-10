@@ -186,8 +186,20 @@ What's actually built so far:
     lines and one brass-filled kite at north — appears exactly once, in
     the desktop rail's wordmark.
 - **Light and dark themes**, following the system setting by default.
-- **Installable, offline-first PWA** — the app shell is precached, so it
-  loads and works with no network connection.
+- **Installable, offline-first PWA** — the app shell (including every route,
+  font, and icon) is precached, so it loads and works with no network
+  connection, including a fresh deep link straight into any page. A calm,
+  dismissible install hint appears on Today for browsers that support it;
+  iOS gets Share-sheet instructions instead. Updates are graceful — a new
+  version waits until you tap "Refresh" on a small toast, never swapping
+  code out from under an in-progress edit.
+- **Settings** (`/settings`, reachable from a small gear icon on every page)
+  — theme preference; export all data as one JSON file, import it back
+  (with a clear "this replaces everything" confirmation), or erase
+  everything; an honestly-scoped evening-review reminder that works while
+  the app is open or recently active (Compass has no server, so it can't
+  promise true background delivery — it says so plainly instead of
+  overpromising).
 - **Local-first storage** — all data lives in IndexedDB on-device; nothing
   leaves your browser today.
 
@@ -260,7 +272,8 @@ which is the only layer that touches the database.
 - [x] Insights
 - [x] "Field Log" visual identity (tokens, type, hand-drawn icons, applied
       app-wide)
-- [ ] PWA hardening
+- [x] PWA hardening (app icons, install flow, offline correctness, graceful
+      updates, Settings — data export/import, reminders)
 - [ ] Cloud sync (Supabase)
 
 ---

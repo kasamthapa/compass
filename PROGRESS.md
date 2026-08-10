@@ -2577,3 +2577,137 @@ real-device confirmation**, per the phase's own instruction:
 the above can be confirmed on a real device** — flagging clearly per
 the phase instructions, not claiming device-level verification from
 here.
+
+## Phase 7C — Settings route, theme toggle consolidation, data management, reminders
+
+### What was built
+
+- **Settings entry point** — a new hand-drawn gear icon (`IconSettings`:
+  circle + six radial ticks + a brass-filled hub, active state bumps
+  stroke weight like the other nav icons) appears consistently on every
+  page without becoming a 7th primary nav item: on desktop it's pinned
+  to the bottom of the left rail below the main six, separated by a
+  hairline divider (`mt-auto` on a flex-col nav pushes it down); on
+  mobile it lives in `PageHeader`'s right-side utility slot
+  (`md:hidden`, since desktop already has the rail). Journal doesn't
+  use `PageHeader` (it has its own header with the History pill), so
+  the same mobile-only gear link was added there directly, sitting
+  next to History rather than replacing it.
+- **Theme toggle consolidated** — `ThemeToggle` no longer renders from
+  `PageHeader` on every page (Today/Inbox/Week/Goals/Insights all lost
+  it automatically since they share `PageHeader`). It now has exactly
+  one home: Settings' Appearance section. Zero changes to the
+  component itself or `themeStore.ts` — purely relocated.
+- **`/settings` route** (`src/pages/SettingsPage.tsx`) — four sections:
+  Appearance (the relocated `ThemeToggle`), Data (export/import/erase),
+  Reminders (the evening-review notification), and a one-line About
+  (`Compass · Built {date}`, using a build-time constant injected via
+  Vite's `define` — see Key decisions).
+- **Consolidated data layer** (`src/db/repo/data.ts`) — the single
+  canonical `wipeAllData()` (moved out of `seed.ts`, which is
+  documented dev-only and shouldn't be the source of a production
+  feature), plus new `exportAllData()` (serializes every Dexie table
+  to plain arrays), `isValidExport()` (a permissive structural check —
+  correct version, correct shape, only known table names — that
+  rejects malformed/foreign JSON calmly rather than crashing), and
+  `importAllData()` (wipe + bulk-write in one transaction). Both
+  `DevPage.tsx` and `SettingsPage.tsx` import `wipeAllData` from this
+  one place — no duplicated wipe logic anywhere.
+- **Export** downloads `compass-export-YYYY-MM-DD.json` via a
+  Blob + temporary `<a download>` click, no server involved.
+- **Import** — file picker → parse/validate → an inline confirmation
+  panel stating plainly that this replaces everything (with the exact
+  record count and export date from the file, so the user isn't
+  confirming blind) → a second, native `window.confirm` as a genuine
+  second layer → wipe + bulk-write. Verified end-to-end in-browser
+  with real seeded data: export → wipe → import through the actual
+  file-input UI (not just calling the repo function) → re-exported and
+  diffed the table counts against the original — identical.
+- **Erase all data** in Settings mirrors the same two-layer pattern
+  (inline warning panel + native `window.confirm`) — see Key decisions
+  for why this is now stronger than `/dev`'s single-`confirm` wipe
+  even though both call the identical `wipeAllData()`.
+- **Reminders** — `src/store/reminderStore.ts` (localStorage-backed,
+  same manual-persistence pattern as `themeStore.ts`: `enabled`,
+  `time`, `lastFiredDate`), `src/lib/reminders.ts`'s pure
+  `shouldFireReminder()` (enabled + not already fired today + within a
+  15-minute window after the configured time — a window, not an exact
+  instant, so the check doesn't need to run at the precise minute),
+  and `src/components/ReminderScheduler.tsx` (mounted once in
+  `AppShell`, polls every 30s while `enabled` is true, fires
+  `new Notification(...)` when due and permission is granted). The
+  Settings UI shows the honest scoping copy before any permission
+  prompt, then branches on `Notification.permission`:
+  `unsupported` → calm "not available in this browser";
+  `denied` → calm "turned off in your browser, here's how to change
+  it," no retry button (browsers don't allow re-prompting after
+  denial); `granted` → the actual toggle + time picker. No per-habit
+  notification UI was built — the existing cue text is pointed to as
+  the honest answer, exactly as scoped.
+
+### Key decisions
+
+- **`--seal-on` is a new token, not a reuse of `--accent-on`.** The
+  destructive-action buttons ("Yes, erase everything", "Replace my
+  data") use `bg-seal` per the palette's existing scarcity rule (seal
+  = rare, ceremonial, and a data-wipe confirmation is exactly that kind
+  of weighty, one-time moment). Measured `--accent-on` against `--seal`
+  before shipping, per the 6A-onward discipline of checking rather
+  than assuming a token pairing carries over: light theme measured
+  2.25:1 (fails badly), dark theme 4.19:1 (fails narrowly). `--seal`'s
+  dark-theme value is bright enough that neither a near-white nor a
+  near-black "on" color clears 4.5:1 against both surfaces at once —
+  a near-black (`#0f0e0b`) was the best available, landing at 4.68:1.
+  Light theme's near-white `#f8f5ee` clears 6.94:1 comfortably. See
+  the measured table below.
+- **`/dev`'s wipe confirmation was NOT actually "double" before this
+  phase — checked rather than assumed.** The phase brief described
+  Settings' wipe as needing "the same double-confirmation pattern
+  already used in /dev," but `DevPage.tsx` only ever had a single
+  `window.confirm()`. Rather than silently trusting that description,
+  Settings got a genuine two-layer confirmation (an inline warning
+  panel showing exactly what's about to be lost, THEN a native
+  `window.confirm` as the final trigger); `/dev` was left with its
+  existing single confirm, since it's an explicitly "hidden dev
+  convenience" the brief said to leave in place, not a call site to
+  upgrade. Both call the identical shared `wipeAllData()` — the
+  divergence is only in each call site's own confirmation UI, not in
+  the destructive logic itself.
+- **Reminders fire from the page, not the service worker.** A
+  `new Notification()` call from an open tab is simpler than routing
+  through `ServiceWorkerRegistration.showNotification()` and message-
+  passing, and doesn't change the honesty of the scoping: both
+  approaches equally fail to fire once the browser/tab is genuinely
+  closed, since neither has a server to wake anything up. Using the
+  simpler page-level API was the pragmatic choice given the ceiling is
+  identical either way.
+- **Build date over a fabricated version number.** `package.json`'s
+  `"version": "0.0.0"` has never been bumped and isn't meaningful for
+  a personal single-developer project with no formal releases.
+  Injecting the actual build date via Vite's `define` (`__BUILD_DATE__`)
+  gives Settings' About line something genuinely informative instead
+  of a placeholder that would read as broken.
+
+### Contrast measurements (new pairings introduced this phase)
+
+| Pairing | Theme | Ratio | Verdict |
+|---|---|---|---|
+| `--seal-on` text vs `--seal` (destructive buttons) | light | 6.94:1 | passes (was 2.25:1 with `--accent-on` — fixed) |
+| `--seal-on` text vs `--seal` | dark | 4.68:1 | passes (was 4.19:1 with `--accent-on` — fixed) |
+
+### Known issues / follow-ups
+
+**True closed-app/closed-browser reminder delivery cannot be verified
+from this environment** — this requires a real device with the app
+actually installed, backgrounded, or fully closed, which is exactly
+the scenario Settings' Reminders copy is honest about not being able
+to guarantee. What WAS verified in-browser: the permission-flow states
+(unsupported/denied/granted all render their correct calm copy —
+`denied` was actually exercised live, since this browser environment
+already had notifications denied for the origin), the due-window
+logic (`shouldFireReminder`, unit-tested), and that `ReminderScheduler`
+correctly gates on both `enabled` and `Notification.permission`.
+**This phase needs to be pushed and deployed (Vercel) before real-
+device reminder delivery and true backgrounded-tab behavior can be
+confirmed** — flagging clearly per the phase's own instruction, not
+claiming device-level verification from here.

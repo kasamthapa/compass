@@ -849,3 +849,62 @@ here as a reminder that a component only used in a rare, hard-to-
 trigger state (a pending update) still needs the same real-width
 visual verification as everything else — its rarity is exactly why a
 layout bug in it could otherwise ship unnoticed for a long time.
+
+## Settings is a real route, not a Sheet, and not a 7th nav item
+
+Consistent with Insights' precedent (a full page, not a modal) rather
+than the app's other "Sheet" pattern (capture, task edit, review
+dialogs) — Settings has enough independent sections (Appearance, Data,
+Reminders, About) that treating it as a transient overlay would undersell
+its permanence. It's deliberately NOT added to `NAV_ITEMS` / the primary
+6-item nav (tab bar is already full) — instead it gets its own small,
+consistent entry point (a gear icon) present on every page: bottom of
+the left rail on desktop, the page header's utility slot on mobile. This
+keeps the primary nav's cognitive load exactly where it was while still
+making Settings reachable in at most one tap from anywhere.
+
+## `seed.ts`'s `wipeAllData` moved to `src/db/repo/data.ts`
+
+`seed.ts` is explicitly documented as dev-only, not imported by any
+production code path — but Settings' "Erase all data" is a real,
+user-facing production feature that needs the exact same wipe logic.
+Rather than duplicate the function (violating the "one shared
+implementation" requirement) or import dev-only code into production
+(violating `seed.ts`'s own stated contract), the wipe implementation
+moved to `src/db/repo/data.ts` — genuine repo-layer code — and both
+`seed.ts`'s dev-route caller and Settings import it from there. This is
+the same instinct as every other "found overlapping logic, consolidated
+to one place" decision recorded elsewhere in this file.
+
+## `--seal-on`: a second "on-accent" token, because one AA-safe answer
+## doesn't cover two different accent colors
+
+Phase 6B established `--accent-on` for text against `--accent` (brass).
+Reusing it for `--seal`-filled buttons was the obvious first instinct
+and the wrong one — measured contrast (not assumed): light theme
+2.25:1, dark theme 4.19:1, both failing AA. Brass and seal have
+different luminance profiles per theme, so a single "on" color tuned
+for one doesn't carry over to the other. `--seal-on` was added as its
+own token (light: near-white `#f8f5ee`, 6.94:1; dark: near-black
+`#0f0e0b`, 4.68:1) rather than trying to force one shared "on-accent"
+value to serve two different backgrounds. The lesson generalizes: any
+future new accent-family color (a third "on" case) should get its own
+measured "on" token rather than assuming an existing one transfers.
+
+## Reminders are honestly scoped to "while the app is open or recently
+## active" — no service-worker push, no per-habit scheduling
+
+Compass has no server by design (CLAUDE.md rule 1: local-first,
+Dexie is the source of truth, no network calls except the future sync
+module). A genuinely reliable background reminder — one that fires even
+with the browser fully closed — requires a push service with a server
+component to wake the device; there is no way to honestly promise that
+from a local-only PWA. Rather than build something that silently fails
+most of the time and erodes trust, Settings says so directly, before
+the permission prompt, in plain language. The single "Evening review
+reminder" control (not per-habit scheduling) exists because the
+underlying limitation is identical for every possible reminder — adding
+more scheduling surface wouldn't buy any additional reliability, just
+more UI for the same ceiling. Per-habit reminders are explicitly not
+built; the habit's own cue text (already captured at creation) is
+pointed to as the honest, low-tech answer instead.
