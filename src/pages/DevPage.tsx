@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { seedDatabase, wipeAllData } from '../db/seed'
+import { seedDatabase } from '../db/seed'
+import { wipeAllData } from '../db/repo/data'
 
 export function DevPage() {
   const [status, setStatus] = useState<string | null>(null)

@@ -115,9 +115,3 @@ export async function seedDatabase(): Promise<{ seeded: boolean }> {
 
   return { seeded: true }
 }
-
-export async function wipeAllData(): Promise<void> {
-  await db.transaction('rw', db.tables, async () => {
-    await Promise.all(db.tables.map((table) => table.clear()))
-  })
-}
