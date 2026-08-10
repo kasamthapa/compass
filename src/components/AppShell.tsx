@@ -4,6 +4,7 @@ import { BottomTabBar } from './BottomTabBar'
 import { CaptureButton } from './CaptureButton'
 import { CaptureDialog } from './CaptureDialog'
 import { UpdateToast } from './UpdateToast'
+import { ReminderScheduler } from './ReminderScheduler'
 
 interface AppShellProps {
   children: ReactNode
@@ -24,6 +25,7 @@ export function AppShell({ children }: AppShellProps) {
       <CaptureButton />
       <CaptureDialog />
       <UpdateToast />
+      <ReminderScheduler />
     </div>
   )
 }
