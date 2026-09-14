@@ -33,11 +33,11 @@ function MilestoneAuditRow({
         onClick={onToggleDone}
         aria-pressed={done}
         aria-label={done ? `Mark "${milestone.title}" not done` : `Mark "${milestone.title}" done`}
-        className={`ios-press flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors duration-[250ms] ease-ios ${
+        className={`ios-press flex h-7 w-7 shrink-0 items-center justify-center rounded-full border transition-colors duration-[250ms] ease-ios ${
           done ? 'border-accent bg-accent text-accent-on' : 'border-border-hairline'
         }`}
       >
-        {done && <IconCheck className="h-3.5 w-3.5" />}
+        {done && <IconCheck className="h-4 w-4" />}
       </button>
       <div className="min-w-0 flex-1">
         <p className={`text-body ${done ? 'text-text-faint line-through' : 'text-text'}`}>{milestone.title}</p>
