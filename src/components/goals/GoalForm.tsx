@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Sheet } from '../Sheet'
 import * as goalsRepo from '../../db/repo/goals'
+import { useFocusAtStart } from '../../lib/focusAtStart'
 import type { Goal } from '../../types/models'
 
 interface GoalFormProps {
@@ -17,6 +18,7 @@ export function GoalForm({ isOpen, goal, onClose, defaultYear }: GoalFormProps) 
   const [title, setTitle] = useState('')
   const [why, setWhy] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
+  const titleRef = useFocusAtStart<HTMLInputElement>(isOpen)
 
   const activeGoals = useLiveQuery(() => goalsRepo.getActive(), []) ?? []
   // The 5-goal cap is a nudge, not a rule — only surfaced when creating a
@@ -53,7 +55,7 @@ export function GoalForm({ isOpen, goal, onClose, defaultYear }: GoalFormProps) 
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Goal title"
-          autoFocus
+          ref={titleRef}
           className="min-h-11 w-full rounded-lg bg-bg px-4 py-3 text-body text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent-ring"
         />
 

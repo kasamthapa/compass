@@ -3,6 +3,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import * as habitsRepo from '../../db/repo/habits'
 import * as capturesRepo from '../../db/repo/captures'
 import * as goalsRepo from '../../db/repo/goals'
+import { useFocusAtStart } from '../../lib/focusAtStart'
 import type { CaptureItem } from '../../types/models'
 
 interface HabitConvertFormProps {
@@ -13,6 +14,7 @@ interface HabitConvertFormProps {
 
 export function HabitConvertForm({ capture, onDone, onCancel }: HabitConvertFormProps) {
   const [name, setName] = useState(capture.text)
+  const nameRef = useFocusAtStart<HTMLInputElement>()
   const [cue, setCue] = useState('')
   const [target, setTarget] = useState(5)
   const [goalId, setGoalId] = useState<string | null>(null)
@@ -48,7 +50,7 @@ export function HabitConvertForm({ capture, onDone, onCancel }: HabitConvertForm
         type="text"
         value={name}
         onChange={(event) => setName(event.target.value)}
-        autoFocus
+        ref={nameRef}
         className="min-h-11 w-full rounded-lg bg-bg px-4 py-3 text-body text-text focus:outline-none focus:ring-2 focus:ring-accent-ring"
       />
       <input

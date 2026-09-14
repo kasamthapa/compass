@@ -2,6 +2,7 @@ import { useEffect, useState, type ComponentType, type FormEvent } from 'react'
 import * as capturesRepo from '../../db/repo/captures'
 import { convertCaptureToNote, convertCaptureToSomeday, deleteCapture } from '../../lib/inboxActions'
 import type { CaptureItem } from '../../types/models'
+import { useFocusAtStart } from '../../lib/focusAtStart'
 import { Sheet } from '../Sheet'
 import { IconCheck, IconChecklist, IconRepeat, IconJournal, IconBookmark, IconEdit, IconTrash } from '../icons'
 import { TaskConvertForm } from './TaskConvertForm'
@@ -48,6 +49,7 @@ function EditCaptureForm({
   onCancel: () => void
 }) {
   const [text, setText] = useState(capture.text)
+  const textRef = useFocusAtStart<HTMLInputElement>()
 
   async function handleSave(event: FormEvent) {
     event.preventDefault()
@@ -64,7 +66,7 @@ function EditCaptureForm({
         type="text"
         value={text}
         onChange={(event) => setText(event.target.value)}
-        autoFocus
+        ref={textRef}
         className="min-h-11 w-full rounded-lg bg-bg px-4 py-3 text-body text-text focus:outline-none focus:ring-2 focus:ring-accent-ring"
       />
       <div className="flex items-center justify-between">

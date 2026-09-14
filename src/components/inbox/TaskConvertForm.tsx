@@ -5,6 +5,7 @@ import * as capturesRepo from '../../db/repo/captures'
 import * as goalsRepo from '../../db/repo/goals'
 import { RuleViolationError } from '../../db/rules'
 import { todayISO, addDays, weekOf } from '../../lib/dates'
+import { useFocusAtStart } from '../../lib/focusAtStart'
 import type { CaptureItem } from '../../types/models'
 
 interface TaskConvertFormProps {
@@ -21,6 +22,7 @@ export function TaskConvertForm({ capture, onDone, onCancel }: TaskConvertFormPr
   const weekEnd = addDays(weekOf(today), 6)
 
   const [title, setTitle] = useState(capture.text)
+  const titleRef = useFocusAtStart<HTMLInputElement>()
   const [dateChip, setDateChip] = useState<DateChip>(null)
   const [isMIT, setIsMIT] = useState(false)
   const [showFirstMove, setShowFirstMove] = useState(false)
@@ -91,7 +93,7 @@ export function TaskConvertForm({ capture, onDone, onCancel }: TaskConvertFormPr
         type="text"
         value={title}
         onChange={(event) => setTitle(event.target.value)}
-        autoFocus
+        ref={titleRef}
         className="min-h-11 w-full rounded-lg bg-bg px-4 py-3 text-body text-text focus:outline-none focus:ring-2 focus:ring-accent-ring"
       />
 

@@ -6,6 +6,7 @@ import * as goalsRepo from '../../db/repo/goals'
 import * as weeklyPrioritiesRepo from '../../db/repo/weeklyPriorities'
 import { RuleViolationError } from '../../db/rules'
 import { addDays, formatDayHeader, todayISO } from '../../lib/dates'
+import { useFocusAtStart } from '../../lib/focusAtStart'
 import type { Task } from '../../types/models'
 
 interface TaskEditFormProps {
@@ -24,6 +25,7 @@ export function TaskEditForm({ isOpen, task, weekOf, onClose }: TaskEditFormProp
   const [firstMove, setFirstMove] = useState('')
   const [goalId, setGoalId] = useState<string | null>(null)
   const [priorityId, setPriorityId] = useState<string | null>(null)
+  const titleRef = useFocusAtStart<HTMLInputElement>(isOpen)
 
   const goals = useLiveQuery(() => goalsRepo.getActive(), []) ?? []
   const priorities = useLiveQuery(() => weeklyPrioritiesRepo.getForWeek(weekOf), [weekOf]) ?? []
@@ -88,7 +90,7 @@ export function TaskEditForm({ isOpen, task, weekOf, onClose }: TaskEditFormProp
           type="text"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          autoFocus
+          ref={titleRef}
           className="min-h-11 w-full rounded-lg bg-bg px-4 py-3 text-body text-text focus:outline-none focus:ring-2 focus:ring-accent-ring"
         />
 

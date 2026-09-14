@@ -5,6 +5,7 @@ import * as tasksRepo from '../../db/repo/tasks'
 import { RuleViolationError } from '../../db/rules'
 import { nowISO } from '../../lib/dates'
 import { resumeStepFor } from '../../lib/reviewResume'
+import { useFocusAtStart } from '../../lib/focusAtStart'
 import { IconCheck } from '../icons'
 import { ReviewDialog, type ReviewStep } from '../reviews/ReviewDialog'
 import { ScoreStep } from '../reviews/ScoreStep'
@@ -23,6 +24,8 @@ export function EveningReviewDialog({ isOpen, onClose, today, tomorrow }: Evenin
   const [score, setScore] = useState<1 | 2 | 3 | 4 | 5 | undefined>(undefined)
   const [win, setWin] = useState('')
   const [lesson, setLesson] = useState('')
+  const winRef = useFocusAtStart<HTMLInputElement>()
+  const lessonRef = useFocusAtStart<HTMLInputElement>()
 
   // Resume: hydrate local state, but only when the dialog transitions
   // open — not on every autosave re-fetch, or in-progress typing would get
@@ -99,7 +102,7 @@ export function EveningReviewDialog({ isOpen, onClose, today, tomorrow }: Evenin
             onChange={(event) => setWin(event.target.value)}
             onBlur={() => void saveWin()}
             placeholder="Something that went well"
-            autoFocus
+            ref={winRef}
             className="mt-3 min-h-11 w-full rounded-md bg-bg px-4 py-3 text-body text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent-ring"
           />
         </div>
@@ -115,7 +118,7 @@ export function EveningReviewDialog({ isOpen, onClose, today, tomorrow }: Evenin
             onChange={(event) => setLesson(event.target.value)}
             onBlur={() => void saveLesson()}
             placeholder="Something worth remembering"
-            autoFocus
+            ref={lessonRef}
             className="mt-3 min-h-11 w-full rounded-md bg-bg px-4 py-3 text-body text-text placeholder:text-text-faint focus:outline-none focus:ring-2 focus:ring-accent-ring"
           />
         </div>
