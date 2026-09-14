@@ -20,7 +20,14 @@ function RatingDots({
   return (
     <div className="flex items-center gap-2">
       <p className="text-caption-2 font-medium text-text-faint">{label}</p>
-      <div className="flex gap-1.5">
+      {/* Real 34px targets with a 2-unit gap (~42px center-to-center) —
+          the previous h-5/gap-1.5 (24px, 6px gap via the spacing-key
+          remap, see tailwind.config.js) packed five daily-use rating
+          dots too small and too close together for a reliable tap.
+          Arbitrary px values used deliberately, matching the precedent
+          set by YearGrain's own cell sizing, since the remapped 1-9
+          scale can't express 34px directly. */}
+      <div className="flex gap-2">
         {RATING_VALUES.map((rating) => (
           <button
             key={rating}
@@ -28,7 +35,7 @@ function RatingDots({
             onClick={() => onChange(rating)}
             aria-label={`${label} ${rating} out of 5`}
             aria-pressed={value === rating}
-            className={`ios-press h-5 w-5 rounded-full border transition-colors duration-[250ms] ease-ios ${
+            className={`ios-press h-[34px] w-[34px] rounded-full border transition-colors duration-[250ms] ease-ios ${
               value === rating ? 'border-accent bg-accent' : 'border-border-hairline'
             }`}
           />
