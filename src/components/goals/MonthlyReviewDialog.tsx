@@ -54,7 +54,7 @@ function MilestoneAuditRow({
           <IconMore className="h-5 w-5" />
         </button>
         {showMenu && (
-          <div className="absolute right-0 top-full z-10 mt-1 w-48 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated">
+          <div className="absolute right-0 top-full z-40 mt-1 w-48 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated">
             <button
               type="button"
               onClick={() => {
