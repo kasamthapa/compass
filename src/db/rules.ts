@@ -10,6 +10,15 @@ const MAX_WEEKLY_PRIORITIES = 3
 // RuleViolationError-throwing function like the hard caps above.
 const GOAL_SOFT_CAP = 5
 
+// Sprints are a new (non-CLAUDE.md-specified) concept, so this cap is a
+// deliberate design choice, not inherited product law: kept soft (nudge,
+// never blocks) to match the app's general "never block, always allow"
+// ethos for anything above the original hard caps. 3 matches the scale of
+// MITs/weekly priorities, since a sprint is meant to be a focused push —
+// too many running at once undermines the point, but the app still never
+// stops you. See DECISIONS.md.
+const SPRINT_SOFT_CAP = 3
+
 export type RuleViolationCode = 'MAX_ACTIVE_HABITS' | 'MAX_MITS' | 'MAX_WEEKLY_PRIORITIES'
 
 export class RuleViolationError extends Error {
@@ -57,4 +66,14 @@ export async function isAtGoalSoftCap(): Promise<boolean> {
     .filter((goal) => !goal.deletedAt)
     .count()
   return count >= GOAL_SOFT_CAP
+}
+
+/** Advisory only — never throws. UI shows a calm nudge, save proceeds either way. */
+export async function isAtSprintSoftCap(): Promise<boolean> {
+  const count = await db.sprints
+    .where('status')
+    .equals('active')
+    .filter((sprint) => !sprint.deletedAt)
+    .count()
+  return count >= SPRINT_SOFT_CAP
 }

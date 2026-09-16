@@ -6,6 +6,7 @@ import type {
   Task,
   Goal,
   Milestone,
+  Sprint,
   WeeklyPriority,
   JournalEntry,
   Review,
@@ -28,6 +29,7 @@ export class CompassDB extends Dexie {
   tasks!: Table<Task, string>
   goals!: Table<Goal, string>
   milestones!: Table<Milestone, string>
+  sprints!: Table<Sprint, string>
   weeklyPriorities!: Table<WeeklyPriority, string>
   journalEntries!: Table<JournalEntry, string>
   reviews!: Table<Review, string>
@@ -58,6 +60,14 @@ export class CompassDB extends Dexie {
     // v3 (Phase 3): CaptureItem gained `someday?: boolean`. Also not
     // indexed (boolean — see DECISIONS.md), so again no store redeclared.
     this.version(3).stores({})
+
+    // v4: new `sprints` table — short, custom-length focused pushes,
+    // distinct from the year-scoped `goals`/`milestones` cascade. Indexed
+    // on `status` only, matching `goals`' exact indexing shape, since both
+    // are queried the same way (active vs archived).
+    this.version(4).stores({
+      sprints: 'id, status',
+    })
   }
 }
 

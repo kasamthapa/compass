@@ -959,3 +959,32 @@ height/width (Tailwind allows scoping the override to `spacing` used by
 padding/margin/gap without also feeding `height`/`width`) or introduce a
 dedicated, separately-named token scale for the 8pt rhythm so `h-*`/`w-*`
 keep their standard meaning.
+
+## Sprints are a separate concept from Goals, not a goal sub-type
+
+A `Sprint` is its own model/table (`src/types/models.ts`, `src/db/db.ts`),
+not a variant of `Goal` with a duration field bolted on. Goals are
+year-scoped and cascade into months/milestones; a sprint is a short,
+self-contained push with no cascade and no milestone structure — trying
+to force one schema to cover both would mean either dragging goal-only
+fields (milestones, monthly cascade) onto sprints or making them
+optional/nullable on Goal, weakening the type for both. The two still
+share visual and interaction language deliberately (the same soft-cap
+nudge copy pattern, the same "⋯" Edit/Mark-done/Drop menu, the same
+Cancel/Save form layout) by living on the same page and reusing the same
+components' conventions, so they read as siblings even though they're
+separate at the data layer.
+
+Day counting treats the start date as day 1, not day 0 (`computeSprint
+Progress`, `src/lib/sprints.ts`) — "day 1 of 7" reads naturally the
+moment you create a sprint, whereas "day 0 of 7" would look like a bug on
+day one. Running past the sprint's length shows a calm "Time's up —
+resolve when ready" rather than auto-marking it dropped or failed —
+consistent with the app's product law that "skipped"/incomplete states
+stay neutral, never punitive, everywhere else (streaks, MITs, weekly
+priorities).
+
+The soft cap is 3 active sprints, not 5 (unlike goals) — a sprint is
+explicitly a *narrow, short-term* focus mechanism ("focus beats
+breadth"), so a lower ceiling before the nudge appears fits the feature's
+own premise better than reusing the goal cap number.

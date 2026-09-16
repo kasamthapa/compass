@@ -2815,3 +2815,72 @@ touch-usability bugs from the token/spacing cleanup a future pass
 should do deliberately (ideally by revisiting the `tailwind.config.js`
 spacing-key remap itself, which is the root cause behind nearly every
 finding in this pass).
+
+## Sprints feature
+
+### What was built
+
+A short, custom-length focused-push feature living on the Goals page,
+distinct from the year-long goal cascade: "sprint on something for 5, 7,
+15, or any number of days you pick, then let it go."
+
+- **Data model**: new `Sprint` interface (`src/types/models.ts`) —
+  `title`, optional `why`, `startDate`, `days`, and `status` (`active` /
+  `completed` / `dropped`). New Dexie table `sprints` added via a schema
+  migration (`db.version(4).stores({ sprints: 'id, status' })`,
+  `src/db/db.ts`).
+- **Repo layer** (`src/db/repo/sprints.ts`): `create`, `update`,
+  `setStatus`, `getActive`, `getArchived` — modeled directly on the
+  existing `goals.ts` repo for consistency.
+- **Progress math** (`src/lib/sprints.ts`): pure `computeSprintProgress
+  (startDate, totalDays, today)` function — day 1 is the start date
+  itself (not day 0), `currentDay` clamps to `[1, totalDays]`,
+  `isOverdue` flips true once elapsed days exceed the sprint's length,
+  and a future-dated start clamps to day 1 rather than going negative.
+  Backed by a new `daysBetween` date helper (`src/lib/dates.ts`) and 7
+  unit tests (`src/lib/__tests__/sprints.test.ts`).
+- **Soft cap of 3 active sprints** (`isAtSprintSoftCap`, `src/db/
+  rules.ts`) — advisory only, same "nudge, never block" pattern as the
+  5-goal soft cap. Surfaced only when creating a new sprint, not when
+  editing an existing one.
+- **UI**: `SprintForm` (title, optional "why this, why now?", day-count
+  presets of 5/7/15 plus a free-form custom number input) and
+  `SprintCard` (title + italic why, "DAY X OF N" mono readout with a
+  chart-blue progress bar, a calm "Time's up — resolve when ready" once
+  overdue instead of an automatic fail, and a "⋯" menu for Edit/Mark
+  complete/Drop). Both reuse already-fixed infrastructure rather than
+  reintroducing old bugs: `useFocusAtStart` for the title input and
+  `useDropdownPlacement` for the overflow menu.
+- **Placement**: a new "Sprints" section on `GoalsPage`, between the
+  Monthly/Yearly review cards and the existing goal list (now labeled
+  "This year's goals" for clarity now that two goal concepts coexist).
+  Resolved sprints collapse into a "Past sprints (N)" archive, same
+  pattern as Archived goals.
+- Color: the progress bar uses `bg-chart-blue`, not brass — brass stays
+  reserved for today/active/completion moments per the design system's
+  scarcity rule; a sprint in progress is closer to Week's structural
+  accents than to a completion moment.
+- Tests: `src/db/__tests__/sprints.test.ts` (create, getActive/
+  getArchived split, update, soft-cap behavior) plus the 7
+  `computeSprintProgress` tests above — 17 new tests total, all passing
+  alongside the existing suite.
+
+### Verified working, no changes needed
+
+Full browser walkthrough on mobile (375×812) and desktop (1280px), light
+and dark themes: opening the form via "+ New sprint," title autofocus,
+clicking a day-count preset chip (and confirming it syncs the custom
+number input), creating a sprint and seeing it render immediately with
+correct "DAY 1 OF N" / "N left" text and progress bar, editing an
+existing sprint (title and day count both pre-fill correctly, label
+switches to "Length" with an extend/shorten note), the overflow menu's
+Edit/Mark complete/Drop actions, a dropped sprint correctly moving into
+"Past sprints (1)" labeled "Dropped," and the soft-cap nudge ("Focus
+beats breadth — consider finishing or dropping one sprint first")
+correctly appearing only once 3 sprints are active. No console errors
+in any of the above.
+
+### Known issues / follow-ups
+
+None currently — this is a small, self-contained feature that reused
+existing, already-hardened patterns end to end.

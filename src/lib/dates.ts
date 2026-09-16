@@ -199,3 +199,10 @@ export function formatRelativeTime(isoTimestamp: string, now: Date = new Date())
   const diffWeek = Math.floor(diffDay / 7)
   return `${diffWeek}w ago`
 }
+
+/** Whole days from `startDate` to `endDate` (both YYYY-MM-DD) — negative if `endDate` is earlier. */
+export function daysBetween(startDate: string, endDate: string): number {
+  const start = parseDateISO(startDate)
+  const end = parseDateISO(endDate)
+  return Math.round((end.getTime() - start.getTime()) / 86_400_000)
+}

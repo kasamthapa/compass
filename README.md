@@ -95,6 +95,13 @@ What's actually built so far:
   - Both reuse the same step-dialog engine as the daily and weekly
     reviews, so they autosave and resume correctly if closed partway
     through, ending with the same calm completion moment.
+  - **Sprints**: a short, custom-length focused push (5, 7, 15, or any
+    number of days you pick), separate from the year-long goal cascade.
+    Each card shows "DAY X OF N" and a quiet progress bar, with a
+    calm "Time's up — resolve when ready" once the days run out (never
+    an automatic fail). A soft cap of 3 active sprints nudges rather
+    than blocks. A quiet "⋯" menu carries Edit, Mark complete, or Drop;
+    resolved sprints collapse into a "Past sprints (N)" section.
 - **Week** — the priorities-and-schedule view at `/week`:
   - Header with the week's date range and a week number ("AUG 3–9 ·
     WEEK 32"), `<` `>` controls to navigate weeks, defaulting to the
@@ -266,6 +273,7 @@ which is the only layer that touches the database.
 - [x] Focus mode & "I'm stuck" support
 - [x] Inbox (quick capture triage)
 - [x] Goals cascade (year → month)
+- [x] Sprints (short, custom-length focused pushes)
 - [x] Week view
 - [x] Journal
 - [x] Guided reviews (daily, weekly, monthly, yearly)

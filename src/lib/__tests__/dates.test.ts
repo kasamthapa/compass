@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import {
   addDays,
   addMonths,
+  daysBetween,
   formatMonthYear,
   formatWeekRange,
   getMonthGridDays,
@@ -173,5 +174,23 @@ describe('isYearlyReviewDue', () => {
 
   it('is false in the middle of the year', () => {
     expect(isYearlyReviewDue(new Date(2026, 6, 15))).toBe(false)
+  })
+})
+
+describe('daysBetween', () => {
+  it('is 0 for the same date', () => {
+    expect(daysBetween('2026-08-01', '2026-08-01')).toBe(0)
+  })
+
+  it('counts whole days forward', () => {
+    expect(daysBetween('2026-08-01', '2026-08-08')).toBe(7)
+  })
+
+  it('is negative when endDate is earlier', () => {
+    expect(daysBetween('2026-08-08', '2026-08-01')).toBe(-7)
+  })
+
+  it('spans a month boundary correctly', () => {
+    expect(daysBetween('2026-07-28', '2026-08-02')).toBe(5)
   })
 })

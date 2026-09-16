@@ -57,6 +57,22 @@ export interface Milestone extends Base {
   status: 'active' | 'done' | 'dropped'
 }
 
+/**
+ * A short, custom-length focused push (5 days, 7, 15, whatever the user
+ * picks) — distinct from `Goal`'s year-scoped cascade. No monthly
+ * milestones, no year field: just a title, a start date, and a day count.
+ * See DECISIONS.md.
+ */
+export interface Sprint extends Base {
+  title: string
+  why?: string
+  /** YYYY-MM-DD, the sprint's first day. */
+  startDate: string
+  /** Length in days — any positive integer the user picks (5, 7, 15, ...). */
+  days: number
+  status: 'active' | 'completed' | 'dropped'
+}
+
 export interface WeeklyPriority extends Base {
   title: string
   weekOf: string
