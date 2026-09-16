@@ -5,6 +5,7 @@ import * as goalsRepo from '../../db/repo/goals'
 import { canAddWeeklyPriority, RuleViolationError } from '../../db/rules'
 import { addDays } from '../../lib/dates'
 import { IconCheck, IconMore } from '../icons'
+import { useDropdownPlacement } from '../../lib/useDropdownPlacement'
 import type { WeeklyPriority } from '../../types/models'
 
 interface PriorityRowProps {
@@ -17,6 +18,7 @@ interface PriorityRowProps {
 
 function PriorityRow({ priority, goalTitle, onToggleDone, onCarry, onDrop }: PriorityRowProps) {
   const [showMenu, setShowMenu] = useState(false)
+  const { triggerRef, openUpward } = useDropdownPlacement(showMenu)
   const done = priority.status === 'done'
 
   return (
@@ -41,6 +43,7 @@ function PriorityRow({ priority, goalTitle, onToggleDone, onCarry, onDrop }: Pri
       <div className="relative shrink-0">
         {showMenu && <div className="fixed inset-0 z-0" onClick={() => setShowMenu(false)} />}
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => setShowMenu((value) => !value)}
           aria-label="More options"
@@ -49,7 +52,11 @@ function PriorityRow({ priority, goalTitle, onToggleDone, onCarry, onDrop }: Pri
           <IconMore className="h-5 w-5" />
         </button>
         {showMenu && (
-          <div className="absolute right-0 top-full z-40 mt-1 w-44 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated">
+          <div
+            className={`absolute right-0 z-40 w-44 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated ${
+              openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
+            }`}
+          >
             <button
               type="button"
               onClick={() => {

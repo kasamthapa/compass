@@ -6,6 +6,7 @@ import * as reviewsRepo from '../../db/repo/reviews'
 import { addMonths, nowISO } from '../../lib/dates'
 import { resumeStepForMonthly } from '../../lib/reviewResume'
 import { IconCheck, IconMore } from '../icons'
+import { useDropdownPlacement } from '../../lib/useDropdownPlacement'
 import { ReviewDialog, type ReviewStep } from '../reviews/ReviewDialog'
 import { ScoreStep } from '../reviews/ScoreStep'
 import type { Milestone } from '../../types/models'
@@ -24,6 +25,7 @@ function MilestoneAuditRow({
   onDrop: () => void
 }) {
   const [showMenu, setShowMenu] = useState(false)
+  const { triggerRef, openUpward } = useDropdownPlacement(showMenu)
   const done = milestone.status === 'done'
 
   return (
@@ -46,6 +48,7 @@ function MilestoneAuditRow({
       <div className="relative shrink-0">
         {showMenu && <div className="fixed inset-0 z-0" onClick={() => setShowMenu(false)} />}
         <button
+          ref={triggerRef}
           type="button"
           onClick={() => setShowMenu((value) => !value)}
           aria-label="More options"
@@ -54,7 +57,11 @@ function MilestoneAuditRow({
           <IconMore className="h-5 w-5" />
         </button>
         {showMenu && (
-          <div className="absolute right-0 top-full z-40 mt-1 w-48 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated">
+          <div
+            className={`absolute right-0 z-40 w-48 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated ${
+              openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
+            }`}
+          >
             <button
               type="button"
               onClick={() => {

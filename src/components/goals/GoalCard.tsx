@@ -5,6 +5,7 @@ import * as milestonesRepo from '../../db/repo/milestones'
 import { GoalForm } from './GoalForm'
 import { IconCheck, IconChevronDown, IconMore } from '../icons'
 import { formatMonthLabel, monthKey, todayISO } from '../../lib/dates'
+import { useDropdownPlacement } from '../../lib/useDropdownPlacement'
 import type { Goal, Milestone } from '../../types/models'
 
 function MilestoneRow({ milestone }: { milestone: Milestone }) {
@@ -84,6 +85,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
   const [showAddMilestone, setShowAddMilestone] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const [editing, setEditing] = useState(false)
+  const { triggerRef, openUpward } = useDropdownPlacement(showMenu)
 
   const progress = useLiveQuery(() => goalsRepo.progress(goal.id), [goal.id]) ?? 0
   const milestones = useLiveQuery(() => milestonesRepo.getForGoal(goal.id), [goal.id]) ?? []
@@ -165,6 +167,7 @@ export function GoalCard({ goal }: { goal: Goal }) {
               <div className="fixed inset-0 z-0" onClick={() => setShowMenu(false)} />
             )}
             <button
+              ref={triggerRef}
               type="button"
               onClick={() => setShowMenu((value) => !value)}
               aria-label="More options"
@@ -173,7 +176,11 @@ export function GoalCard({ goal }: { goal: Goal }) {
               <IconMore className="h-5 w-5" />
             </button>
             {showMenu && (
-              <div className="absolute right-0 top-full z-40 mt-1 w-44 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated">
+              <div
+                className={`absolute right-0 z-40 w-44 overflow-hidden rounded-lg bg-surface-elevated py-1 shadow-elevated ${
+                  openUpward ? 'bottom-full mb-1' : 'top-full mt-1'
+                }`}
+              >
                 <button
                   type="button"
                   onClick={() => {
