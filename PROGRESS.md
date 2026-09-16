@@ -2711,3 +2711,107 @@ correctly gates on both `enabled` and `Notification.permission`.
 device reminder delivery and true backgrounded-tab behavior can be
 confirmed** — flagging clearly per the phase's own instruction, not
 claiming device-level verification from here.
+
+## Mobile end-to-end bug-hunt pass
+
+A dedicated pass through every module at 393px (and spot-checked at
+1280px) specifically to find real touch-usability and functional
+bugs — not the token/type/spacing work covered in the "Field Log"
+phases. Found and fixed seven real, reproducible bugs, each verified
+in-browser before and after, each its own commit:
+
+1. **Capture FAB overlapping page content.** `AppShell`'s bottom
+   padding only reserved `nav-height + 1.5rem`, but the FAB's own
+   footprint (`bottom` offset + its `h-14` height) needed roughly
+   `nav-height + 6rem` on mobile and even more on desktop, because the
+   FAB's `bottom-8`/`right-8` are *also* hit by
+   `tailwind.config.js`'s spacing-key-1-9 remap (space-8 = 4rem/64px,
+   not the 2rem the className implies). Confirmed via
+   `getBoundingClientRect()` that "Close the day" on Today rendered
+   with its chevron literally behind the FAB. Fixed by correcting the
+   padding formula for both breakpoints, measured against the FAB's
+   real position rather than assumed from its className.
+2. **Autofocus hid the start of pre-filled text.** Editing a capture,
+   task, or goal with a title/text longer than the input's width
+   showed it scrolled to the END — "Look into caching strategy for the
+   API" rendered as "ook into caching strategy for the API", which
+   reads as data loss even though the stored value was intact. Root
+   cause: the browser's default autofocus behavior places the caret at
+   the end of a pre-filled value and scrolls to keep it visible.
+   Confirmed the fix couldn't rely on a plain `onFocus` handler
+   alongside `autoFocus` — in this environment the focus React fires
+   from the `autoFocus` prop never reached a sibling `onFocus` handler
+   at all (proved with a `document`-level native `focus`/`focusin`
+   listener that never fired despite `document.activeElement` already
+   being the input). Replaced with `useFocusAtStart`
+   (`src/lib/focusAtStart.ts`), a ref + `useEffect` hook that calls
+   `.focus()` itself and fixes `selectionStart`/`scrollLeft`
+   immediately after, with no dependency on any focus event being
+   dispatched. Applied to all 6 real occurrences (skipped the 4 "add a
+   new, currently-empty item" forms, where the bug can't manifest).
+3. **Done-toggle checkboxes were 32px, below the 44px guideline, and
+   inconsistent with Today's 48px version of the same control.**
+   `GoalCard`, `WeekPriorities`, and `MonthlyReviewDialog`'s milestone/
+   priority toggles used `h-6 w-6` (32px, per the same spacing-key
+   remap) as the entire clickable element. Standardized all three to
+   `h-7 w-7` (48px), matching the value already shipped and working on
+   `TodayFocus`'s equivalent control, rather than inventing a fourth
+   size.
+4. **Journal's mood/energy rating dots were too small and too close
+   together.** `h-5 w-5` (24px) circles with `gap-1.5` (6px) — roughly
+   30px center-to-center for a control used daily. The remapped 1-9
+   scale can't express a better size directly, so this uses an
+   arbitrary `h-[34px] w-[34px]` with `gap-2`, matching the precedent
+   `YearGrain` already set for exact pixel cell sizing.
+5. **The "⋯" overflow menu (Edit/Mark achieved/Mark dropped, Carry/
+   Drop) rendered behind the bottom tab bar.** Its `z-10` sat below
+   `BottomTabBar`'s `z-30`, so opening the menu on a card in the lower
+   half of the screen showed its items faded/blended into the tab
+   bar's translucent background. Raised to `z-40` (same tier as
+   `Sheet`) across all three occurrences (`GoalCard`,
+   `WeekPriorities`, `MonthlyReviewDialog`).
+6. **The same overflow menu could also render partially or entirely
+   below the viewport**, a separate issue z-index alone didn't fix —
+   confirmed "Mark dropped" sitting at y:825-869 in an 812px-tall
+   viewport, unreachable without scrolling first. Built
+   `useDropdownPlacement` (`src/lib/useDropdownPlacement.ts`): measures
+   the trigger's position via `getBoundingClientRect()` when the menu
+   opens and flips it to `bottom-full` instead of `top-full` when
+   there isn't enough room below. Applied to the same three menus.
+7. **`UpdateToast`'s dismiss button had an invisible, oversized tap
+   zone.** `h-9 w-9` (80px, same remap) with no background fill and
+   negative margins meant to tuck a small icon into the toast's
+   corner — the real hit zone was far larger than the visible glyph
+   and sat right beside the icon badge. Fixed using the same
+   remap-safe sizing (`h-11`/`h-10`) `InstallHintCard.tsx` already
+   established.
+
+### Verified working, no changes needed
+
+MIT checkbox toggle, the habit week-strip's today-square (pointer-
+event-based, real tap target ≈46×44px), Focus Mode, the Stuck
+overlay, Inbox capture → `ProcessSheet`'s 4-tile picker, the weekly
+priority carry/drop flow, a full Monthly Review walkthrough (audit →
+score → next-month milestones → finish), the Journal History
+calendar's day-select, Insights' empty states and charts, and —
+critically — a genuine **Export → Wipe → Import round-trip** on
+Settings' Data section: captured the real downloaded JSON via a
+`URL.createObjectURL` intercept, wiped every table via the UI's
+double-confirmation flow, imported the same file back, and confirmed
+every table's row count matched the original export exactly, with the
+restored data rendering correctly back on Today. Re-checked the FAB-
+clearance and menu-flip fixes at 1280px too — both hold on desktop.
+
+### Known issues / follow-ups
+
+The remaining `min-h-9`/`h-9` instances across the app (chip buttons
+in TaskConvertForm/HabitConvertForm/WeekPriorities/TaskEditForm/
+TodayHabits/MonthlyReviewDialog/SettingsPage, and a few number/text
+inputs) are all visually filled or are genuine `<input>` elements —
+oversized (per the same remap) but not invisible/hidden, so not a
+mistap risk the way the fixed cases were. Left as known cosmetic debt
+rather than fixed here, consistent with distinguishing genuine
+touch-usability bugs from the token/spacing cleanup a future pass
+should do deliberately (ideally by revisiting the `tailwind.config.js`
+spacing-key remap itself, which is the root cause behind nearly every
+finding in this pass).

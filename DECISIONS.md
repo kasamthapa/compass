@@ -908,3 +908,54 @@ more scheduling surface wouldn't buy any additional reliability, just
 more UI for the same ceiling. Per-habit reminders are explicitly not
 built; the habit's own cue text (already captured at creation) is
 pointed to as the honest, low-tech answer instead.
+
+## Autofocus on a pre-filled field needs an imperative ref, not `onFocus`
+
+`useFocusAtStart` (`src/lib/focusAtStart.ts`) replaces `autoFocus` with a
+`ref` + `useEffect` that calls `.focus()` itself, rather than pairing
+`autoFocus` with a sibling `onFocus` handler. This was a deliberate choice
+after proving the simpler approach doesn't work reliably: a `document`-level
+native `focus`/`focusin` listener, attached before the field ever mounted,
+never fired even though `document.activeElement` was already the input —
+the focus that `autoFocus` produces doesn't reliably dispatch an event a
+sibling handler can catch. Calling `.focus()` ourselves sidesteps the
+question entirely. Applied wherever a form field's initial value can
+already be non-empty (editing existing text), not to fields that start
+blank (adding something new), since the bug it fixes — the browser
+scrolling a pre-filled field to show its end, hiding the start — cannot
+occur on an empty string.
+
+## Dropdown menus must measure real viewport space, not assume it
+
+`useDropdownPlacement` (`src/lib/useDropdownPlacement.ts`) exists because
+raising a menu's z-index only fixes *visibility* (it stops rendering behind
+the tab bar) — it does nothing for a menu whose trigger sits low enough on
+a scrollable page that the menu's own height pushes part of it below the
+viewport entirely. The hook measures the trigger's `getBoundingClientRect()`
+the moment the menu opens and flips it to open upward when there isn't
+enough room below, rather than always assuming downward is safe. Every
+"⋯" overflow menu in the app (`GoalCard`, `WeekPriorities`,
+`MonthlyReviewDialog`) uses this now — a future one should too, rather
+than reintroducing the fixed `top-full` bug.
+
+## The tailwind.config.js spacing-key remap is the root cause behind most mobile touch bugs found in the end-to-end pass
+
+Overriding spacing keys 1-9 to the app's 8pt-rhythm tokens (done for
+margin/padding/gap purposes) also silently reshapes every `h-`/`w-`/
+`min-h-`/`min-w-` utility in that range, since Tailwind derives all of
+them from the same `spacing` scale by default. `h-9` renders at 80px,
+`h-8` at 64px, `h-6` at 32px — none of what a reader would assume from
+the className. This was flagged as debt back in Phase 7A
+(`InstallHintCard.tsx`'s sizing note) and, as predicted there, kept
+surfacing: the capture FAB's own `bottom-8`/`right-8` on desktop, several
+undersized checkboxes, and `UpdateToast`'s invisible dismiss button all
+trace back to it. Each was fixed locally (arbitrary px values, or
+reusing an existing remapped-but-safe size like `h-7`/`h-11`) rather than
+touching the shared Tailwind config, to keep each fix small and
+verifiable in isolation — but the remap itself is still live and will keep
+producing this exact class of bug for any new `h-1` through `h-9` usage.
+A future phase should either stop overriding those specific keys for
+height/width (Tailwind allows scoping the override to `spacing` used by
+padding/margin/gap without also feeding `height`/`width`) or introduce a
+dedicated, separately-named token scale for the 8pt rhythm so `h-*`/`w-*`
+keep their standard meaning.
