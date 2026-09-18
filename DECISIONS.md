@@ -988,3 +988,15 @@ The soft cap is 3 active sprints, not 5 (unlike goals) — a sprint is
 explicitly a *narrow, short-term* focus mechanism ("focus beats
 breadth"), so a lower ceiling before the nudge appears fits the feature's
 own premise better than reusing the goal cap number.
+
+## Vercel gets a rewrite, not a redirect, for deep links
+
+`vercel.json` rewrites every non-file path to `/index.html` rather than
+redirecting to `/`. A redirect would change the address bar and drop the
+path the visitor came for (a shared `/goals` link would land on Today); a
+rewrite serves the same app shell at the original URL and lets React
+Router pick the route. This is the same job the service worker's
+navigation fallback already does for returning users — the rewrite covers
+first-time visitors, who have no service worker yet. It's a single
+catch-all rather than an allow-list of routes so adding a page later
+doesn't require remembering to touch deployment config.

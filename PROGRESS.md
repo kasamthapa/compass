@@ -2884,3 +2884,27 @@ in any of the above.
 
 None currently — this is a small, self-contained feature that reused
 existing, already-hardened patterns end to end.
+
+## Fix: shared links 404'd for new visitors on Vercel
+
+**Symptom:** a link shared with other people opened Vercel's own "404
+NOT_FOUND" page instead of Compass, while it always worked on the
+owner's phone.
+
+**Cause:** Compass is a single-page app — `/today`, `/goals`, etc. are
+client-side routes with no file behind them. Confirmed against the live
+deployment: `/` returned 200 but `/today` and `/goals` returned 404, and
+the repo had no `vercel.json`. The owner never saw it because the
+installed PWA's service worker answers every navigation with the cached
+`index.html`; a first-time visitor has no service worker yet, so their
+request goes straight to Vercel, which looked for a file at that path. A
+shared link often carries a deep path because `/` redirects to `/today`
+and the address bar (or a share sheet) copies the redirected URL.
+
+**Fix:** added `vercel.json` with a single rewrite sending any path that
+isn't a real file to `/index.html`. Vercel checks real files first, so
+`sw.js`, `manifest.webmanifest`, icons, and `/assets/*` are still served
+as themselves.
+
+**Verify after deploy:** `/today` and `/goals` should return 200 from a
+fresh browser (no service worker), e.g. a private window.
