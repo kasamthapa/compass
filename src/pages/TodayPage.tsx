@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { PageHeader } from '../components/PageHeader'
 import { TodayHeader } from '../components/today/TodayHeader'
+import { LoveNote } from '../components/today/LoveNote'
 import { RightNowCard } from '../components/today/RightNowCard'
 import { FocusMode } from '../components/today/FocusMode'
 import { StuckOverlay } from '../components/today/StuckOverlay'
@@ -56,6 +57,7 @@ export function TodayPage() {
         scoresByDate={scoresByDate}
         onStuck={() => setStuckOpen(true)}
       />
+      <LoveNote />
       <RightNowCard onOpen={() => setFocusModeOpen(true)} />
       <TodayFocus today={today} />
       <TodayHabits today={today} weekStart={weekStart} />
