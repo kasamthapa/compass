@@ -2908,17 +2908,3 @@ as themselves.
 
 **Verify after deploy:** `/today` and `/goals` should return 200 from a
 fresh browser (no service worker), e.g. a private window.
-
-## Temporary: love note on Today
-
-A just-for-fun, deliberately short-lived note ("I love you, Khusi") on
-the Today screen between the year grid and the "Right now" card: a
-seal-red heart that slowly breathes (reusing the Stuck overlay's
-`breathe-pulse`, which already stops under reduced motion) above a
-Fraunces italic line. Tokens only — `--seal` for the heart (the palette's
-"ceremonial moment" color), `--brass` for one small accent dot, matching
-the icon set's one-accent-detail convention.
-
-**To remove:** delete `src/components/today/LoveNote.tsx` and the
-`LoveNote` import plus `<LoveNote />` line in `src/pages/TodayPage.tsx`.
-Nothing else references it.
