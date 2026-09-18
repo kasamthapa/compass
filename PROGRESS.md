@@ -2908,3 +2908,45 @@ as themselves.
 
 **Verify after deploy:** `/today` and `/goals` should return 200 from a
 fresh browser (no service worker), e.g. a private window.
+
+## Daily quote on Today
+
+### What was built
+
+A quote card on Today, between the year grid and the "Right now" card
+(the slot the temporary love note used), that shows a different
+encouraging quote each day.
+
+- `src/lib/quotes.ts`: 34 bundled quotes and `quoteForDate(date)`, which
+  picks by the number of days since 2026-01-01 modulo the list length. So
+  it needs no network, no storage and no sync: the same quote all day, on
+  every device, changing at local midnight. Dates before the starting
+  point wrap correctly.
+- `src/components/today/DailyQuote.tsx`: a centered card — a short brass
+  rule, the quote in Fraunces italic (500, the loaded italic weight, so
+  nothing is faux-bolded), the author in mono caps, and the work it comes
+  from when there is one. Tokens only; 17px on mobile, 22px from `md:` up.
+- Tests (`src/lib/__tests__/quotes.test.ts`, 8): same date gives the same
+  quote, the next day gives the next quote, a full cycle shows every
+  quote once, pre-epoch dates resolve, no duplicates, every quote has an
+  author, every quote fits the card (≤140 chars), and none uses guilt or
+  hustle words.
+
+### Verified working
+
+375px and 1280px, light and dark: today's quote matched the date maths
+(18 Sep is entry 23, Wooden). Worst case at 375px (the longest quote with
+the longest attribution) wraps to four lines plus a two-line credit with
+no horizontal overflow. Computed font weight was 500 italic at both
+sizes. No console errors.
+
+### Adding or removing quotes
+
+Edit the `QUOTES` array in `src/lib/quotes.ts`. Adding or removing shifts
+which quote lands on which day, which is fine. The tests will fail on a
+duplicate, a missing author, an over-long quote or guilt/hustle wording.
+
+### Known issues / follow-ups
+
+Two entries (Jim Ryun's and David Allen's) are consistently attributed to
+them but no specific work could be pinned down; see DECISIONS.md.

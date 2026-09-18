@@ -51,6 +51,11 @@ What's actually built so far:
     small physical starting action (e.g. "open the doc") and a rough
     `~min` estimate, both off by default behind a quiet "+" affordance —
     never required fields.
+  - **Daily quote**: a short, encouraging line under the year grid that
+    changes every day. The quotes are bundled with the app (so it works
+    offline), each credited to a real source, and chosen to match the
+    calm tone — small steps, patience, forgiving a rough day — never
+    hustle or guilt.
 - **Inbox** — the frictionless capture-and-process screen:
   - A calm list of unprocessed captures, newest first, with a quiet
     unprocessed-count badge on the Inbox tab (hidden when empty).

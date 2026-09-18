@@ -1000,3 +1000,38 @@ navigation fallback already does for returning users — the rewrite covers
 first-time visitors, who have no service worker yet. It's a single
 catch-all rather than an allow-list of routes so adding a page later
 doesn't require remembering to touch deployment config.
+
+## The daily quote is a bundled, date-indexed list, and only sourced quotes get in
+
+The quotes ship inside the app (`src/lib/quotes.ts`) rather than coming
+from a quote API, because the app must work fully offline and makes no
+network calls outside the future sync module. The pick is by day number,
+not random, so the same quote shows all day on every device with nothing
+stored or synced; the cost is that adding a quote reshuffles which one
+lands on which day, which nobody will notice.
+
+Two filters decided what got in. **Tone:** quotes about starting small,
+patience, rest, forgiving a rough day and focusing on less match the
+flexible streaks, the three-MIT cap and the no-guilt rule. Hustle,
+"no excuses" and "the pain of regret" quotes contradict product law, so
+they stay out, and a test denylists a few such words to keep later
+additions honest. **Attribution:** each quote was checked against the
+work itself, the author's own site or post, or a quote-history reference.
+Popular ones that failed were dropped rather than kept under a hopeful
+name: the "it does not matter how slowly you go" line (not in the
+Analects, so not Confucius), Arthur Ashe's "start where you are" (no
+traceable source), Mother Teresa's "small things with great love" (no
+traceable origin), Sam Levenson's clock line (no source found),
+Epictetus's "first say to yourself what you would be" (the common wording
+comes from a modern paraphrase) and "make each day your masterpiece"
+(the creed it comes from has been traced to a 1931 magazine article, not
+to Wooden). Emerson's passage
+is quoted as one contiguous run because the popular version splices two
+sentences and changes "every" to "each". Song lyrics are left out.
+
+Where a credit needs a caveat it carries one: Voltaire's line is marked
+as quoting an Italian proverb, and the Marcus Aurelius line names its
+translator because the wording is Gregory Hays's. Two entries, Jim
+Ryun's and David Allen's, are consistently credited to them with no
+conflicting claim, but no specific work could be pinned down. They are
+the first to drop if a better source ever contradicts them.
